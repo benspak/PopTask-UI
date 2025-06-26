@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Box,
   Flex,
@@ -10,47 +11,76 @@ import {
   Checkbox,
   Button,
   useBreakpointValue,
-  Divider,
   SimpleGrid,
   Tag,
-  Image
+  Image,
+  IconButton,
+  Collapse,
+  useDisclosure
 } from '@chakra-ui/react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const { isOpen: isSidebarOpen, onToggle: toggleSidebar } = useDisclosure({ defaultIsOpen: true });
+  const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: true });
 
   return (
     <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg="gray.900" color="white">
       {/* Sidebar */}
-      <Box w={{ base: '100%', md: '250px' }} bg="gray.800" p={4}>
-        <Heading size="md" mb={4}>Dashboard</Heading>
-        <VStack align="start" spacing={4}>
-          <Box>
-            <Text fontSize="sm" mb={1} color="gray.400">Projects</Text>
-            <VStack align="start" spacing={1}>
-              <Text cursor="pointer">Marketing</Text>
-              <Text cursor="pointer">TechDev</Text>
-            </VStack>
-          </Box>
+      {isSidebarOpen && (
+        <Box w={{ base: '100%', md: '250px' }} bg="gray.800" p={4} position="relative">
+          <IconButton
+            icon={<ChevronLeftIcon />}
+            aria-label="Collapse Sidebar"
+            onClick={toggleSidebar}
+            position="absolute"
+            top="10px"
+            right="-12px"
+            size="sm"
+            zIndex={1}
+          />
+          <Heading size="md" mb={4}>Dashboard</Heading>
+          <VStack align="start" spacing={4}>
+            <Box>
+              <Text fontSize="sm" mb={1} color="gray.400">Projects</Text>
+              <VStack align="start" spacing={1}>
+                <Text cursor="pointer">Marketing</Text>
+                <Text cursor="pointer">TechDev</Text>
+              </VStack>
+            </Box>
 
-          <Box>
-            <Text fontSize="sm" mb={1} color="gray.400">Tags</Text>
-            <VStack align="start" spacing={1}>
-              <Text>#marketing</Text>
-              <Text>#design</Text>
-            </VStack>
-          </Box>
+            <Box>
+              <Text fontSize="sm" mb={1} color="gray.400">Tags</Text>
+              <VStack align="start" spacing={1}>
+                <Text>#marketing</Text>
+                <Text>#design</Text>
+              </VStack>
+            </Box>
 
-          <Box>
-            <Text fontSize="sm" mb={1} color="gray.400">Folders of Images</Text>
-            <SimpleGrid columns={3} spacing={2}>
-              <Image bg="gray.700" boxSize="50px" borderRadius="md" />
-              <Image bg="gray.700" boxSize="50px" borderRadius="md" />
-              <Image bg="gray.700" boxSize="50px" borderRadius="md" />
-            </SimpleGrid>
-          </Box>
-        </VStack>
-      </Box>
+            <Box>
+              <Text fontSize="sm" mb={1} color="gray.400">Folders of Images</Text>
+              <SimpleGrid columns={3} spacing={2}>
+                <Image bg="gray.700" boxSize="50px" borderRadius="md" />
+                <Image bg="gray.700" boxSize="50px" borderRadius="md" />
+                <Image bg="gray.700" boxSize="50px" borderRadius="md" />
+              </SimpleGrid>
+            </Box>
+          </VStack>
+        </Box>
+      )}
+      {!isSidebarOpen && (
+        <IconButton
+          icon={<ChevronRightIcon />}
+          aria-label="Expand Sidebar"
+          onClick={toggleSidebar}
+          position="absolute"
+          top="10px"
+          left="10px"
+          size="sm"
+          zIndex={10}
+        />
+      )}
 
       {/* Main Content */}
       <Box flex={1} p={6} bg="gray.850">
@@ -65,40 +95,64 @@ export default function TaskDashboard() {
       </Box>
 
       {/* Detail Panel */}
-      <Box w={{ base: '100%', md: '350px' }} bg="gray.800" p={6}>
-        <Heading size="md" mb={4}>Current Task</Heading>
-        <Checkbox mb={4}>Complete task</Checkbox>
-        <Heading size="sm" mb={2}>Update campaign strategy</Heading>
-        <Textarea placeholder="Task description" mb={4} />
+      {isDetailOpen && (
+        <Box w={{ base: '100%', md: '350px' }} bg="gray.800" p={6} position="relative">
+          <IconButton
+            icon={<ChevronRightIcon />}
+            aria-label="Collapse Detail Panel"
+            onClick={toggleDetail}
+            position="absolute"
+            top="10px"
+            left="-12px"
+            size="sm"
+            zIndex={1}
+          />
+          <Heading size="md" mb={4}>Current Task</Heading>
+          <Checkbox mb={4}>Complete task</Checkbox>
+          <Heading size="sm" mb={2}>Update campaign strategy</Heading>
+          <Textarea placeholder="Task description" mb={4} />
 
-        <Box mb={4}>
-          <Text fontSize="sm" mb={2} color="gray.400">Checklist / Subtasks</Text>
-          <VStack align="start" spacing={2}>
-            <Checkbox>First task</Checkbox>
-            <Checkbox>Second task</Checkbox>
-            <Checkbox>Third task</Checkbox>
-          </VStack>
-        </Box>
+          <Box mb={4}>
+            <Text fontSize="sm" mb={2} color="gray.400">Checklist / Subtasks</Text>
+            <VStack align="start" spacing={2}>
+              <Checkbox>First task</Checkbox>
+              <Checkbox>Second task</Checkbox>
+              <Checkbox>Third task</Checkbox>
+            </VStack>
+          </Box>
 
-        <Box mb={4}>
-          <Text fontSize="sm" mb={1} color="gray.400">Tags</Text>
-          <HStack>
-            <Tag colorScheme="green">category</Tag>
-            <Tag colorScheme="purple">Q3</Tag>
-          </HStack>
-        </Box>
+          <Box mb={4}>
+            <Text fontSize="sm" mb={1} color="gray.400">Tags</Text>
+            <HStack>
+              <Tag colorScheme="green">category</Tag>
+              <Tag colorScheme="purple">Q3</Tag>
+            </HStack>
+          </Box>
 
-        <Box mb={4}>
-          <Text fontSize="sm" mb={1} color="gray.400">Due Date</Text>
-          <Input type="date" bg="gray.700" border={0} />
-        </Box>
+          <Box mb={4}>
+            <Text fontSize="sm" mb={1} color="gray.400">Due Date</Text>
+            <Input type="date" bg="gray.700" border={0} />
+          </Box>
 
-        <Box>
-          <Text fontSize="sm" mb={2} color="gray.400">Task Assets</Text>
-          <Image bg="gray.700" boxSize="60px" borderRadius="md" mb={3} />
-          <Button colorScheme="green" w="full">Generate with AI</Button>
+          <Box>
+            <Text fontSize="sm" mb={2} color="gray.400">Task Assets</Text>
+            <Image bg="gray.700" boxSize="60px" borderRadius="md" mb={3} />
+            <Button colorScheme="green" w="full">Generate with AI</Button>
+          </Box>
         </Box>
-      </Box>
+      )}
+      {!isDetailOpen && (
+        <IconButton
+          icon={<ChevronLeftIcon />}
+          aria-label="Expand Detail Panel"
+          onClick={toggleDetail}
+          position="absolute"
+          top="10px"
+          right="10px"
+          size="sm"
+          zIndex={10}
+        />
+      )}
     </Flex>
   );
 }
