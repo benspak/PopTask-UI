@@ -27,6 +27,7 @@ export default function TaskDashboard() {
   const { isOpen: isSidebarOpen, onToggle: toggleSidebar } = useDisclosure({ defaultIsOpen: true });
   const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: true });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: true });
 
   // State for expanded days
   const [expandedDays, setExpandedDays] = React.useState({});
@@ -300,7 +301,7 @@ export default function TaskDashboard() {
       <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg="gray.900" color="white">
         {/* Sidebar */}
         {isSidebarOpen && (
-          <Box w={{ base: '100%', md: '250px' }} bg="gray.800" p={4} position="relative">
+          <Box w={{ base: '100%', md: isCenterOpen ? '250px' : '400px' }} bg="gray.800" p={4} position="relative">
             <IconButton
               icon={<ChevronLeftIcon />}
               aria-label="Collapse Sidebar"
@@ -335,18 +336,27 @@ export default function TaskDashboard() {
                       <Collapse in={expandedDays[day]} animateOpacity>
                         <VStack align="start" spacing={1} mt={1} ml={4} w="full">
                           {dayTasks[day].map((task, index) => (
-                            <Text
-                              key={index}
-                              fontSize="sm"
-                              color="gray.300"
-                              cursor="pointer"
-                              p={1}
-                              w="full"
-                              _hover={{ color: 'white' }}
-                              onClick={() => handleWeeklyTaskClick(task)}
-                            >
-                              • {task.title}
-                            </Text>
+                            <Box key={index} w="full">
+                              <Text
+                                fontSize="sm"
+                                color="gray.300"
+                                cursor="pointer"
+                                p={1}
+                                w="full"
+                                _hover={{ color: 'white' }}
+                                onClick={() => handleWeeklyTaskClick(task)}
+                              >
+                                • {task.title}
+                              </Text>
+                              <Text
+                                fontSize="xs"
+                                color="gray.500"
+                                ml={4}
+                                mb={1}
+                              >
+                                Due: {task.dueDate}
+                              </Text>
+                            </Box>
                           ))}
                         </VStack>
                       </Collapse>
@@ -380,70 +390,85 @@ export default function TaskDashboard() {
         )}
 
         {/* Main Content */}
-        <Box flex={1} p={6} bg="gray.850">
-          {/* Navbar */}
-          <Flex justify="space-between" align="center" mb={6} p={4} bg="gray.800" borderRadius="lg">
-            <Input
-              placeholder="Search tasks..."
-              bg="gray.700"
-              border={0}
-              w="300px"
-              _placeholder={{ color: 'gray.400' }}
-            />
-            <Avatar size="sm" name="User" bg="blue.500" />
-          </Flex>
+        <Box flex={1} p={6} bg="gray.850" position="relative">
+          {/* Toggle Button for Center Panel */}
+          <IconButton
+            icon={isCenterOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            aria-label="Toggle Center Panel"
+            onClick={toggleCenter}
+            position="fixed"
+            top="10px"
+            left="50%"
+            transform="translateX(-50%)"
+            size="sm"
+            zIndex={30}
+          />
 
-          <Heading size="lg" mb={4}>Tasks for Today</Heading>
-          <VStack align="stretch" spacing={3}>
-            {Object.keys(taskData).map((task, idx) => (
-              <Box key={idx}>
-                <Box
-                  p={3}
-                  bg={selectedTask === task ? 'gray.700' : 'gray.800'}
-                  borderRadius="md"
-                  cursor="pointer"
-                  onClick={() => handleTaskClick(task)}
-                  _hover={{ bg: 'gray.700' }}
-                  border={selectedTask === task ? '2px solid' : '1px solid'}
-                  borderColor={selectedTask === task ? 'blue.400' : 'transparent'}
-                >
-                  <Flex justify="space-between" align="center" mb={2}>
-                    <Text color={selectedTask === task ? 'green.300' : 'white'} fontWeight={selectedTask === task ? 'bold' : 'normal'}>
-                      {task}
-                    </Text>
-                    {taskData[task].expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                  </Flex>
+          <Collapse in={isCenterOpen} animateOpacity>
+            {/* Navbar */}
+            <Flex justify="space-between" align="center" mb={6} p={4} bg="gray.800" borderRadius="lg">
+              <Input
+                placeholder="Search tasks..."
+                bg="gray.700"
+                border={0}
+                w="300px"
+                _placeholder={{ color: 'gray.400' }}
+              />
+              <Avatar size="sm" name="User" bg="blue.500" />
+            </Flex>
 
-                  {/* Task metadata */}
-                  <VStack align="start" spacing={1}>
-                    <HStack spacing={4} fontSize="xs" color="gray.400">
-                      <Text>Due: {taskData[task].dueDate}</Text>
-                      <Text>Project: {taskData[task].project}</Text>
-                    </HStack>
-                    <HStack spacing={1}>
-                      {taskData[task].tags.map((tag, tagIndex) => (
-                        <Tag key={tagIndex} size="sm" colorScheme="blue" variant="subtle">
-                          {tag}
-                        </Tag>
-                      ))}
-                    </HStack>
-                  </VStack>
-                </Box>
-                <Collapse in={taskData[task].expanded} animateOpacity>
-                  <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
-                    <Text fontSize="sm" color="gray.300" lineHeight="1.6">
-                      {taskData[task].description}
-                    </Text>
+            <Heading size="lg" mb={4}>Tasks for Today</Heading>
+            <VStack align="stretch" spacing={3}>
+              {Object.keys(taskData).map((task, idx) => (
+                <Box key={idx}>
+                  <Box
+                    p={3}
+                    bg={selectedTask === task ? 'gray.700' : 'gray.800'}
+                    borderRadius="md"
+                    cursor="pointer"
+                    onClick={() => handleTaskClick(task)}
+                    _hover={{ bg: 'gray.700' }}
+                    border={selectedTask === task ? '2px solid' : '1px solid'}
+                    borderColor={selectedTask === task ? 'blue.400' : 'transparent'}
+                  >
+                    <Flex justify="space-between" align="center" mb={2}>
+                      <Text color={selectedTask === task ? 'green.300' : 'white'} fontWeight={selectedTask === task ? 'bold' : 'normal'}>
+                        {task}
+                      </Text>
+                      {taskData[task].expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                    </Flex>
+
+                    {/* Task metadata */}
+                    <VStack align="start" spacing={1}>
+                      <HStack spacing={4} fontSize="xs" color="gray.400">
+                        <Text>Due: {taskData[task].dueDate}</Text>
+                        <Text>Project: {taskData[task].project}</Text>
+                      </HStack>
+                      <HStack spacing={1}>
+                        {taskData[task].tags.map((tag, tagIndex) => (
+                          <Tag key={tagIndex} size="sm" colorScheme="blue" variant="subtle">
+                            {tag}
+                          </Tag>
+                        ))}
+                      </HStack>
+                    </VStack>
                   </Box>
-                </Collapse>
-              </Box>
-            ))}
-          </VStack>
+                  <Collapse in={taskData[task].expanded} animateOpacity>
+                    <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                      <Text fontSize="sm" color="gray.300" lineHeight="1.6">
+                        {taskData[task].description}
+                      </Text>
+                    </Box>
+                  </Collapse>
+                </Box>
+              ))}
+            </VStack>
+          </Collapse>
         </Box>
 
         {/* Detail Panel */}
         {isDetailOpen && (
-          <Box w={{ base: '100%', md: '350px' }} bg="gray.800" p={6} position="relative">
+          <Box w={{ base: '100%', md: isCenterOpen ? '350px' : '500px' }} bg="gray.800" p={6} position="relative">
             <IconButton
               icon={<ChevronRightIcon />}
               aria-label="Collapse Detail Panel"
@@ -530,7 +555,7 @@ export default function TaskDashboard() {
             <Box>
               <Text fontSize="sm" mb={2} color="gray.400">Task Assets</Text>
               <Image bg="gray.700" boxSize="60px" borderRadius="md" mb={3} />
-              <Button colorScheme="green" w="full">Save</Button>
+              <Button colorScheme="green" w="full">Generate with AI</Button>
             </Box>
           </Box>
         )}
