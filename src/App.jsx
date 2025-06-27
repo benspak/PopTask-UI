@@ -25,14 +25,14 @@ import {
   AlertDescription,
   Select
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, ViewIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const { isOpen: isSidebarOpen, onToggle: toggleSidebar } = useDisclosure({ defaultIsOpen: true });
+  const { isOpen: isSidebarOpen, onToggle: toggleSidebar } = useDisclosure({ defaultIsOpen: !isMobile });
   const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: true });
+  const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: !isMobile });
 
   // PWA State
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
@@ -108,8 +108,14 @@ export default function TaskDashboard() {
     }
   };
 
+  // State for search
+  const [searchTerm, setSearchTerm] = React.useState('');
+
   // State for expanded days
   const [expandedDays, setExpandedDays] = React.useState({});
+
+  // State for expanded filtered tasks
+  const [expandedFilteredTasks, setExpandedFilteredTasks] = React.useState({});
 
   // State for task title
   const [taskTitle, setTaskTitle] = React.useState('Update campaign strategy');
@@ -127,6 +133,7 @@ export default function TaskDashboard() {
   const [editingDueDate, setEditingDueDate] = React.useState('');
   const [editingProject, setEditingProject] = React.useState('');
   const [editingTags, setEditingTags] = React.useState(['category', 'Q3']);
+  const [editingCompleted, setEditingCompleted] = React.useState(false);
 
   // State for selected task
   const [selectedTask, setSelectedTask] = React.useState(null);
@@ -476,6 +483,7 @@ export default function TaskDashboard() {
       setEditingDueDate(taskData[taskName].dueDate);
       setEditingProject(taskData[taskName].project);
       setEditingTags([...taskData[taskName].tags]);
+      setEditingCompleted(taskData[taskName].completed);
 
       // Open detail panel if it's not already open
       if (!isDetailOpen) {
@@ -506,6 +514,7 @@ export default function TaskDashboard() {
       setEditingDueDate(task.dueDate);
       setEditingProject(task.project);
       setEditingTags([...task.tags]);
+      setEditingCompleted(task.completed);
 
       // Open detail panel if it's not already open
       if (!isDetailOpen) {
@@ -516,32 +525,45 @@ export default function TaskDashboard() {
     }
   };
 
-  const handleDayClick = (day) => {
-    // Open main pane if it's closed
-    if (!isCenterOpen) {
-      toggleCenter();
-    }
+  const handleFilteredTaskClick = (task) => {
+    try {
+      // Update selected task
+      setSelectedTask(task.title);
+      setTaskTitle(task.title);
+      setTaskDescription(task.description);
 
+      // Populate editing panel fields
+      setEditingDueDate(task.dueDate);
+      setEditingProject(task.project);
+      setEditingTags([...task.tags]);
+      setEditingCompleted(task.completed);
+
+      // Open detail panel if it's not already open
+      if (!isDetailOpen) {
+        toggleDetail();
+      }
+
+      // Toggle expanded state for the clicked task
+      setExpandedFilteredTasks(prev => ({
+        ...prev,
+        [task.title]: !prev[task.title]
+      }));
+    } catch (error) {
+      console.error('Error in handleFilteredTaskClick:', error);
+    }
+  };
+
+  const handleDayClick = (day) => {
     setCurrentView('day');
     setCurrentFilter(day);
   };
 
   const handleProjectClick = (project) => {
-    // Open main pane if it's closed
-    if (!isCenterOpen) {
-      toggleCenter();
-    }
-
     setCurrentView('project');
     setCurrentFilter(project);
   };
 
   const handleTagClick = (tag) => {
-    // Open main pane if it's closed
-    if (!isCenterOpen) {
-      toggleCenter();
-    }
-
     setCurrentView('tag');
     setCurrentFilter(tag);
   };
@@ -562,11 +584,16 @@ export default function TaskDashboard() {
             console.error('Task not found in taskData:', taskName);
             return prev;
           }
+          const newCompleted = !prev[taskName].completed;
+          // Sync editingCompleted if this is the selected task
+          if (selectedTask === taskName) {
+            setEditingCompleted(newCompleted);
+          }
           return {
             ...prev,
             [taskName]: {
               ...prev[taskName],
-              completed: !prev[taskName].completed
+              completed: newCompleted
             }
           };
         });
@@ -581,8 +608,13 @@ export default function TaskDashboard() {
             newDayTasks[day] = newDayTasks[day].map(task => {
               if (task.title === taskName) {
                 taskFound = true;
+                const newCompleted = !task.completed;
+                // Sync editingCompleted if this is the selected task
+                if (selectedTask === taskName) {
+                  setEditingCompleted(newCompleted);
+                }
                 console.log('Found task to toggle:', { day, task: task.title, currentCompleted: task.completed });
-                return { ...task, completed: !task.completed };
+                return { ...task, completed: newCompleted };
               }
               return task;
             });
@@ -642,17 +674,139 @@ export default function TaskDashboard() {
     }
   };
 
+  // Update task with edited content
+  const onUpdateTask = () => {
+    if (!selectedTask) return;
+    const updatedTask = {
+      description: taskDescription,
+      dueDate: editingDueDate,
+      project: editingProject,
+      tags: [...editingTags],
+      completed: editingCompleted,
+      expanded: false
+    };
+    if (currentView === 'all' && taskData[selectedTask]) {
+      // If title changed, rename key
+      if (taskTitle !== selectedTask) {
+        setTaskData(prev => {
+          const { [selectedTask]: oldTask, ...rest } = prev;
+          return {
+            ...rest,
+            [taskTitle]: { ...updatedTask }
+          };
+        });
+        setSelectedTask(taskTitle);
+      } else {
+        setTaskData(prev => ({
+          ...prev,
+          [selectedTask]: { ...prev[selectedTask], ...updatedTask }
+        }));
+      }
+    } else {
+      // Update in dayTasks for filtered/weekly views
+      setDayTasks(prev => {
+        const newDayTasks = { ...prev };
+        Object.keys(newDayTasks).forEach(day => {
+          newDayTasks[day] = newDayTasks[day].map(task => {
+            if (task.title === selectedTask) {
+              return {
+                ...task,
+                title: taskTitle,
+                description: taskDescription,
+                dueDate: editingDueDate,
+                project: editingProject,
+                tags: [...editingTags],
+                completed: editingCompleted
+              };
+            }
+            return task;
+          });
+        });
+        return newDayTasks;
+      });
+      setSelectedTask(taskTitle);
+    }
+    toggleDetail();
+  };
+
+  // Search handler
+  const handleSearch = (searchValue) => {
+    setSearchTerm(searchValue);
+  };
+
+  // Filter tasks based on search term
+  const getFilteredTasksBySearch = (tasks) => {
+    if (!searchTerm.trim()) return tasks;
+
+    const searchLower = searchTerm.toLowerCase();
+
+    const filtered = tasks.filter(task => {
+      // Search in title
+      const titleMatch = task.title && task.title.toLowerCase().includes(searchLower);
+
+      // Search in description
+      const descriptionMatch = task.description && task.description.toLowerCase().includes(searchLower);
+
+      // Search in due date
+      const dueDateMatch = task.dueDate && task.dueDate.toLowerCase().includes(searchLower);
+
+      // Search in tags
+      const taskTags = Array.isArray(task.tags) ? task.tags : [];
+      const tagMatch = taskTags.some(tag => tag.toLowerCase().includes(searchLower));
+
+      // Return true if any field matches
+      return titleMatch || descriptionMatch || dueDateMatch || tagMatch;
+    });
+
+    console.log('Search term:', searchTerm, 'Filtered tasks:', filtered.length, 'from', tasks.length);
+    return filtered;
+  };
+
+  // Get all tasks from all sources for global search
+  const getAllTasksForSearch = () => {
+    const allTasks = [];
+
+    // Add tasks from taskData (My Tasks)
+    Object.keys(taskData).forEach(taskName => {
+      allTasks.push({
+        title: taskName,
+        description: taskData[taskName].description,
+        dueDate: taskData[taskName].dueDate,
+        project: taskData[taskName].project,
+        tags: taskData[taskName].tags,
+        completed: taskData[taskName].completed,
+        expanded: taskData[taskName].expanded,
+        source: 'today'
+      });
+    });
+
+    // Add tasks from dayTasks (Weekly tasks)
+    Object.keys(dayTasks).forEach(day => {
+      dayTasks[day].forEach(task => {
+        allTasks.push({
+          ...task,
+          source: 'week'
+        });
+      });
+    });
+
+    return allTasks;
+  };
+
   return (
     <Box position="relative" minH="100vh">
       {/* Search Bar - Always Visible at Top */}
       <Box position="sticky" top={0} zIndex={50} bg="gray.900" borderBottom="1px solid" borderColor="gray.700">
         <Flex justify="space-between" align="center" p={4}>
           <Input
-            placeholder="Search tasks..."
+            placeholder="Search tasks by title, description, due date, or tags..."
             bg="gray.700"
             border={0}
             w={{ base: "200px", md: "300px" }}
             _placeholder={{ color: 'gray.400' }}
+            color="white"
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
           />
           <Flex align="center" position="relative">
             <Avatar size="sm" name="User" bg="blue.500" />
@@ -844,7 +998,7 @@ export default function TaskDashboard() {
         <Box flex={1} p={6} bg="gray.850" position="relative">
           {/* Toggle Button for Center Panel */}
           <IconButton
-            icon={isCenterOpen ? <ViewIcon /> : <ViewIcon />}
+            icon={isCenterOpen ? <StarIcon /> : <StarIcon />}
             aria-label="Toggle Center Panel"
             onClick={toggleCenter}
             position="fixed"
@@ -872,217 +1026,246 @@ export default function TaskDashboard() {
             )}
           </Flex>
 
+          {/* Projects Section - Now above tasks on mobile */}
           <Collapse in={isCenterOpen} animateOpacity>
+            <Box mb={6} display={{ base: 'block', md: 'none' }}>
+              <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
+              <SimpleGrid columns={2} spacing={3}>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
+                  <Text fontWeight="medium" mb={1}>Marketing</Text>
+                  <Text fontSize="sm" color="gray.400">Campaign management & analytics</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
+                  <Text fontWeight="medium" mb={1}>TechDev</Text>
+                  <Text fontSize="sm" color="gray.400">Development & technical tasks</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('design')}>
+                  <Text fontWeight="medium" mb={1}>Design</Text>
+                  <Text fontSize="sm" color="gray.400">UI/UX & creative work</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('sales')}>
+                  <Text fontWeight="medium" mb={1}>Sales</Text>
+                  <Text fontSize="sm" color="gray.400">Client relations & deals</Text>
+                </Box>
+              </SimpleGrid>
+            </Box>
+          </Collapse>
+
+          {/* Large Title - Now below projects */}
+          <Flex justify="space-between" align="center" mb={4}>
+            <Heading size="lg">
+              {currentView === 'all' && 'My Tasks'}
+              {currentView === 'day' && `${currentFilter} Tasks`}
+              {currentView === 'project' && `${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Tasks`}
+              {currentView === 'tag' && `#${currentFilter} Tasks`}
+            </Heading>
+            <Text fontSize="sm" color="gray.400">
+              {(() => {
+                if (currentView === 'all') {
+                  return getFilteredTasksBySearch(getAllTasksForSearch()).length;
+                } else {
+                  return getFilteredTasksBySearch(filteredTasks).length;
+                }
+              })()} tasks
+            </Text>
+          </Flex>
+
+          {/* Tasks Label */}
+          <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Tasks</Text>
+
+          <VStack align="stretch" spacing={3}>
             {(() => {
               try {
                 console.log('Rendering main content:', { currentView, currentFilter, taskDataKeys: Object.keys(taskData), filteredTasksLength: filteredTasks.length });
 
                 return (
                   <>
-                    <Flex justify="space-between" align="center" mb={4}>
-                      <Heading size="lg">
-                        {currentView === 'all' && 'My Tasks'}
-                        {currentView === 'day' && `${currentFilter} Tasks`}
-                        {currentView === 'project' && `${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Tasks`}
-                        {currentView === 'tag' && `#${currentFilter} Tasks`}
-                      </Heading>
-                    </Flex>
-
-        <VStack align="stretch" spacing={3}>
-                      {currentView === 'all' ? (
-                        // Show all tasks from taskData
-                        Object.keys(taskData).map((task, idx) => {
-                          try {
-                            const taskInfo = taskData[task];
-                            if (!taskInfo) {
-                              console.error('Task info not found for:', task);
-                              return null;
-                            }
-
-                            return (
-                              <Box key={idx}>
-                                <Box
-                                  p={3}
-                                  bg={selectedTask === task ? 'gray.700' : 'gray.800'}
-                                  borderRadius="md"
-                                  cursor="pointer"
-                                  onClick={() => handleTaskClick(task)}
-                                  _hover={{ bg: 'gray.700' }}
-                                  border={selectedTask === task ? '2px solid' : '1px solid'}
-                                  borderColor={selectedTask === task ? 'blue.400' : 'transparent'}
-                                >
-                                  <Flex justify="space-between" align="center" mb={2}>
-                                    <Flex align="center" flex={1}>
-                                      <Checkbox
-                                        isChecked={taskInfo.completed}
-                                        onChange={(e) => {
-                                          e.stopPropagation();
-                                          toggleTaskCompleted(task, 'today');
-                                        }}
-                                        colorScheme="green"
-                                        size="md"
-                                        mr={3}
-                                      />
-                                      <Text
-                                        color={selectedTask === task ? 'green.300' : taskInfo.completed ? 'gray.500' : 'white'}
-                                        fontWeight={selectedTask === task ? 'bold' : 'normal'}
-                                        textDecoration={taskInfo.completed ? "line-through" : "none"}
-                                      >
-                                        {task}
-                                      </Text>
-                                    </Flex>
-                                    <HStack spacing={2}>
-                                      <Tag size="sm" colorScheme={getDueDateCategory(taskInfo.dueDate) === 'Today' ? 'red' : getDueDateCategory(taskInfo.dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskInfo.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
-                                        {getDueDateCategory(taskInfo.dueDate)}
-                                      </Tag>
-                                      {taskInfo.expanded ? <InfoIcon /> : <InfoIcon />}
-                                    </HStack>
-                                  </Flex>
-
-                                  {/* Task metadata */}
-                                  <VStack align="start" spacing={1}>
-                                    <HStack spacing={4} fontSize="xs" color="gray.400">
-                                      <Text>Due: {taskInfo.dueDate}</Text>
-                                      <Text>Project: {taskInfo.project}</Text>
-                                    </HStack>
-                                    <HStack spacing={1}>
-                                      {taskInfo.tags.map((tag, tagIndex) => (
-                                        <Tag
-                                          key={tagIndex}
-                                          size="sm"
-                                          colorScheme="blue"
-                                          variant="subtle"
-                                          cursor="pointer"
-                                          onClick={() => handleTagClick(tag)}
-                                          _hover={{ bg: 'blue.600' }}
-                                        >
-                                          {tag}
-                                        </Tag>
-                                      ))}
-                                    </HStack>
-                                  </VStack>
-                                </Box>
-                                <Collapse in={taskInfo.expanded} animateOpacity>
-                                  <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
-                                    <Text fontSize="sm" color="gray.300" lineHeight="1.6">
-                                      {taskInfo.description}
-                                    </Text>
-                                  </Box>
-                                </Collapse>
-            </Box>
-                            );
-                          } catch (error) {
-                            console.error('Error rendering task:', task, error);
+                    {currentView === 'all' ? (
+                      // Show all tasks from taskData
+                      getFilteredTasksBySearch(getAllTasksForSearch()).map((task, idx) => {
+                        try {
+                          const taskInfo = task;
+                          if (!taskInfo) {
+                            console.error('Task info not found for:', task.title);
                             return null;
                           }
-                        }).filter(Boolean)
-                      ) : (
-                        // Show filtered tasks
-                        (() => {
-                          try {
-                            return filteredTasks.map((task, idx) => {
-                              try {
-                                return (
-                                  <Box key={idx}>
-                                    <Box
-                                      p={3}
-                                      bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
-                                      borderRadius="md"
-                                      cursor="pointer"
-                                      onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleWeeklyTaskClick(task)}
-                                      _hover={{ bg: 'gray.700' }}
-                                      border={selectedTask === task.title ? '2px solid' : '1px solid'}
-                                      borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
+
+                          return (
+                            <Box key={idx}>
+                              <Box
+                                p={3}
+                                bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
+                                borderRadius="md"
+                                cursor="pointer"
+                                onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
+                                _hover={{ bg: 'gray.700' }}
+                                border={selectedTask === task.title ? '2px solid' : '1px solid'}
+                                borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
+                              >
+                                <Flex justify="space-between" align="center" mb={2}>
+                                  <Flex align="center" flex={1}>
+                                    <Checkbox
+                                      isChecked={taskInfo.completed}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleTaskCompleted(task.title, task.source);
+                                      }}
+                                      colorScheme="green"
+                                      size="md"
+                                      mr={3}
+                                    />
+                                    <Text
+                                      color={selectedTask === task.title ? 'green.300' : taskInfo.completed ? 'gray.500' : 'white'}
+                                      fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
+                                      textDecoration={taskInfo.completed ? "line-through" : "none"}
                                     >
-                                      <Flex justify="space-between" align="center" mb={2}>
-                                        <Flex align="center" flex={1}>
-                                          <Checkbox
-                                            isChecked={task.completed}
-                                            onChange={(e) => {
-                                              e.stopPropagation();
-                                              toggleTaskCompleted(task.title, task.source);
-                                            }}
-                                            colorScheme="green"
-                                            size="md"
-                                            mr={3}
-                                          />
-                                          <Text
-                                            color={selectedTask === task.title ? 'green.300' : task.completed ? 'gray.500' : 'white'}
-                                            fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
-                                            textDecoration={task.completed ? "line-through" : "none"}
-                                          >
-                                            {task.title}
-                                          </Text>
-                                        </Flex>
+                                      {task.title}
+                                    </Text>
+                                  </Flex>
+                                  <HStack spacing={2}>
+                                    <Tag size="sm" colorScheme={getDueDateCategory(taskInfo.dueDate) === 'Today' ? 'red' : getDueDateCategory(taskInfo.dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskInfo.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
+                                      {getDueDateCategory(taskInfo.dueDate)}
+                                    </Tag>
+                                    {task.source === 'week' && <Tag size="sm" colorScheme="purple" variant="subtle">Week</Tag>}
+                                    {taskInfo.expanded ? <InfoIcon /> : <InfoIcon />}
+                                  </HStack>
+                                </Flex>
+
+                                {/* Task metadata */}
+                                <VStack align="start" spacing={1}>
+                                  <HStack spacing={4} fontSize="xs" color="gray.400">
+                                    <Text>Due: {taskInfo.dueDate}</Text>
+                                    <Text>Project: {taskInfo.project}</Text>
+                                  </HStack>
+                                  <HStack spacing={1}>
+                                    {taskInfo.tags.map((tag, tagIndex) => (
+                                      <Tag
+                                        key={tagIndex}
+                                        size="sm"
+                                        colorScheme="blue"
+                                        variant="subtle"
+                                        cursor="pointer"
+                                        onClick={() => handleTagClick(tag)}
+                                        _hover={{ bg: 'blue.600' }}
+                                      >
+                                        {tag}
+                                      </Tag>
+                                    ))}
+                                  </HStack>
+                                </VStack>
+                              </Box>
+                              <Collapse in={taskInfo.expanded} animateOpacity>
+                                <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                                  <Text fontSize="sm" color="gray.300" lineHeight="1.6">
+                                    {taskInfo.description.length > 150
+                                      ? taskInfo.description.slice(0, 150) + '...'
+                                      : taskInfo.description}
+                                  </Text>
+                                </Box>
+                              </Collapse>
+                            </Box>
+                          );
+                        } catch (error) {
+                          console.error('Error rendering task:', task.title, error);
+                          return null;
+                        }
+                      }).filter(Boolean)
+                    ) : (
+                      // Show filtered tasks
+                      (() => {
+                        try {
+                          return getFilteredTasksBySearch(filteredTasks).map((task, idx) => {
+                            try {
+                              return (
+                                <Box key={idx}>
+                                  <Box
+                                    p={3}
+                                    bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
+                                    borderRadius="md"
+                                    cursor="pointer"
+                                    onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
+                                    _hover={{ bg: 'gray.700' }}
+                                    border={selectedTask === task.title ? '2px solid' : '1px solid'}
+                                    borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
+                                  >
+                                    <Flex justify="space-between" align="center" mb={2}>
+                                      <Flex align="center" flex={1}>
+                                        <Checkbox
+                                          isChecked={task.completed}
+                                          onChange={(e) => {
+                                            e.stopPropagation();
+                                            toggleTaskCompleted(task.title, task.source);
+                                          }}
+                                          colorScheme="green"
+                                          size="md"
+                                          mr={3}
+                                        />
+                                        <Text
+                                          color={selectedTask === task.title ? 'green.300' : task.completed ? 'gray.500' : 'white'}
+                                          fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
+                                          textDecoration={task.completed ? "line-through" : "none"}
+                                        >
+                                          {task.title}
+                                        </Text>
+                                      </Flex>
+                                      <HStack spacing={2}>
                                         <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
                                           {getDueDateCategory(task.dueDate)}
                                         </Tag>
-                                      </Flex>
+                                        {task.source === 'week' && <Tag size="sm" colorScheme="purple" variant="subtle">Week</Tag>}
+                                        {expandedFilteredTasks[task.title] ? <InfoIcon /> : <InfoIcon />}
+                                      </HStack>
+                                    </Flex>
 
-                                      {/* Task metadata */}
-                                      <VStack align="start" spacing={1}>
-                                        <HStack spacing={4} fontSize="xs" color="gray.400">
-                                          <Text>Due: {task.dueDate}</Text>
-                                          <Text>Project: {task.project}</Text>
-                                        </HStack>
-                                        <HStack spacing={1}>
-                                          {task.tags.map((tag, tagIndex) => (
-                                            <Tag
-                                              key={tagIndex}
-                                              size="sm"
-                                              colorScheme="blue"
-                                              variant="subtle"
-                                              cursor="pointer"
-                                              onClick={() => handleTagClick(tag)}
-                                              _hover={{ bg: 'blue.600' }}
-                                            >
-                                              {tag}
-                                            </Tag>
-                                          ))}
-                                        </HStack>
-        </VStack>
-                                    </Box>
+                                    {/* Task metadata */}
+                                    <VStack align="start" spacing={1}>
+                                      <HStack spacing={4} fontSize="xs" color="gray.400">
+                                        <Text>Due: {task.dueDate}</Text>
+                                        <Text>Project: {task.project}</Text>
+                                      </HStack>
+                                      <HStack spacing={1}>
+                                        {task.tags.map((tag, tagIndex) => (
+                                          <Tag
+                                            key={tagIndex}
+                                            size="sm"
+                                            colorScheme="blue"
+                                            variant="subtle"
+                                            cursor="pointer"
+                                            onClick={() => handleTagClick(tag)}
+                                            _hover={{ bg: 'blue.600' }}
+                                          >
+                                            {tag}
+                                          </Tag>
+                                        ))}
+                                      </HStack>
+                                    </VStack>
                                   </Box>
-                                );
-                              } catch (error) {
-                                console.error('Error rendering filtered task:', task, error);
-                                return null;
-                              }
-                            }).filter(Boolean);
-                          } catch (error) {
-                            console.error('Error rendering filtered tasks:', error);
-                            return (
-                              <Box p={4} bg="red.900" borderRadius="md">
-                                <Text color="red.200">Error loading tasks. Please refresh the page.</Text>
-                              </Box>
-                            );
-                          }
-                        })()
-                      )}
-                    </VStack>
-
-                    {/* Projects Section - Now below the task results */}
-                    <Box mt={8}>
-                      <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
-                      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
-                        <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
-                          <Text fontWeight="medium" mb={1}>Marketing</Text>
-                          <Text fontSize="sm" color="gray.400">Campaign management & analytics</Text>
-                        </Box>
-                        <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
-                          <Text fontWeight="medium" mb={1}>TechDev</Text>
-                          <Text fontSize="sm" color="gray.400">Development & technical tasks</Text>
-                        </Box>
-                        <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('design')}>
-                          <Text fontWeight="medium" mb={1}>Design</Text>
-                          <Text fontSize="sm" color="gray.400">UI/UX & creative work</Text>
-                        </Box>
-                        <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('sales')}>
-                          <Text fontWeight="medium" mb={1}>Sales</Text>
-                          <Text fontSize="sm" color="gray.400">Client relations & deals</Text>
-                        </Box>
-                      </SimpleGrid>
-                    </Box>
+                                  <Collapse in={expandedFilteredTasks[task.title]} animateOpacity>
+                                    <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                                      <Text fontSize="sm" color="gray.300" lineHeight="1.6">
+                                        {task.description.length > 150
+                                          ? task.description.slice(0, 150) + '...'
+                                          : task.description}
+                                      </Text>
+                                    </Box>
+                                  </Collapse>
+                                </Box>
+                              );
+                            } catch (error) {
+                              console.error('Error rendering filtered task:', task, error);
+                              return null;
+                            }
+                          }).filter(Boolean);
+                        } catch (error) {
+                          console.error('Error rendering filtered tasks:', error);
+                          return (
+                            <Box p={4} bg="red.900" borderRadius="md">
+                              <Text color="red.200">Error loading tasks. Please refresh the page.</Text>
+                            </Box>
+                          );
+                        }
+                      })()
+                    )}
                   </>
                 );
               } catch (error) {
@@ -1095,8 +1278,33 @@ export default function TaskDashboard() {
                 );
               }
             })()}
+          </VStack>
+
+          {/* Projects Section - Desktop view (below tasks) */}
+          <Collapse in={isCenterOpen} animateOpacity>
+            <Box mt={8} display={{ base: 'none', md: 'block' }}>
+              <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
+                  <Text fontWeight="medium" mb={1}>Marketing</Text>
+                  <Text fontSize="sm" color="gray.400">Campaign management & analytics</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
+                  <Text fontWeight="medium" mb={1}>TechDev</Text>
+                  <Text fontSize="sm" color="gray.400">Development & technical tasks</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('design')}>
+                  <Text fontWeight="medium" mb={1}>Design</Text>
+                  <Text fontSize="sm" color="gray.400">UI/UX & creative work</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('sales')}>
+                  <Text fontWeight="medium" mb={1}>Sales</Text>
+                  <Text fontSize="sm" color="gray.400">Client relations & deals</Text>
+                </Box>
+              </SimpleGrid>
+            </Box>
           </Collapse>
-      </Box>
+        </Box>
 
       {/* Detail Panel */}
       {isDetailOpen && (
@@ -1112,7 +1320,7 @@ export default function TaskDashboard() {
             zIndex={1}
               display={{ base: 'none', md: 'flex' }}
             />
-            <Heading size="md" mb={4}>Edit Selected Task</Heading>
+            <Heading size="md" mb={4}>Update Selected Task</Heading>
             <Input
               value={taskTitle}
               fontSize="lg"
@@ -1185,10 +1393,56 @@ export default function TaskDashboard() {
             </HStack>
           </Box>
 
+          <Box mb={4}>
+            <Text fontSize="sm" mb={1} color="gray.400">Completed</Text>
+            <Select
+              bg="gray.700"
+              border={0}
+              color="white"
+              placeholder="Select completion status"
+              value={editingCompleted.toString()}
+              onChange={(e) => {
+                const newCompleted = e.target.value === 'true';
+                setEditingCompleted(newCompleted);
+
+                // Update the actual task completion status
+                if (selectedTask) {
+                  if (currentView === 'all' && taskData[selectedTask]) {
+                    // Update taskData for "My Tasks" view
+                    setTaskData(prev => ({
+                      ...prev,
+                      [selectedTask]: {
+                        ...prev[selectedTask],
+                        completed: newCompleted
+                      }
+                    }));
+                  } else {
+                    // Update dayTasks for filtered views
+                    setDayTasks(prev => {
+                      const newDayTasks = { ...prev };
+                      Object.keys(newDayTasks).forEach(day => {
+                        newDayTasks[day] = newDayTasks[day].map(task => {
+                          if (task.title === selectedTask) {
+                            return { ...task, completed: newCompleted };
+                          }
+                          return task;
+                        });
+                      });
+                      return newDayTasks;
+                    });
+                  }
+                }
+              }}
+            >
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </Select>
+          </Box>
+
           <Box>
             <Text fontSize="sm" mb={2} color="gray.400">Task Assets</Text>
             <Image bg="gray.700" boxSize="60px" borderRadius="md" mb={3} />
-              <Button colorScheme="green" w="full">Update</Button>
+              <Button colorScheme="green" w="full" onClick={onUpdateTask}>Update</Button>
             </Box>
         </Box>
       )}
@@ -1231,7 +1485,7 @@ export default function TaskDashboard() {
             borderRadius="full"
           />
           <IconButton
-            icon={<ViewIcon />}
+            icon={<StarIcon />}
             aria-label="Toggle Center Panel"
             onClick={toggleCenter}
             size="md"
