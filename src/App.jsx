@@ -18,9 +18,13 @@ import {
   Collapse,
   useDisclosure,
   Avatar,
-  Select
+  useToast,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, ViewIcon, InfoIcon, ChatIcon, EditIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, ViewIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -28,6 +32,80 @@ export default function TaskDashboard() {
   const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: true });
+
+  // PWA State
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+  const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = React.useState(false);
+  const toast = useToast();
+
+  // PWA Installation Handler
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallPrompt(true);
+    };
+
+    const handleAppInstalled = () => {
+      setShowInstallPrompt(false);
+      setDeferredPrompt(null);
+      toast({
+        title: 'App Installed!',
+        description: 'Task Dashboard has been installed successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    };
+
+    const handleOnlineStatusChange = () => {
+      setIsOnline(navigator.onLine);
+      if (navigator.onLine) {
+        toast({
+          title: 'Back Online',
+          description: 'You are now connected to the internet.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: 'Offline Mode',
+          description: 'You are currently offline. Tasks will be saved locally.',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('online', handleOnlineStatusChange);
+    window.addEventListener('offline', handleOnlineStatusChange);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('online', handleOnlineStatusChange);
+      window.removeEventListener('offline', handleOnlineStatusChange);
+    };
+  }, [toast]);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      setDeferredPrompt(null);
+      setShowInstallPrompt(false);
+    }
+  };
 
   // State for expanded days
   const [expandedDays, setExpandedDays] = React.useState({});
@@ -733,6 +811,35 @@ export default function TaskDashboard() {
             zIndex={30}
             display={{ base: 'none', md: 'flex' }}
           />
+
+          {/* PWA Status Indicators */}
+          <Flex position="fixed" top="10px" right="10px" zIndex={40} gap={2}>
+            {/* Online/Offline Status */}
+            <Alert
+              status={isOnline ? 'success' : 'warning'}
+              variant="solid"
+              size="sm"
+              maxW="200px"
+              borderRadius="md"
+              display={{ base: 'none', md: 'flex' }}
+            >
+              <AlertIcon as={isOnline ? CheckCircleIcon : WarningIcon} />
+              <Text fontSize="xs">{isOnline ? 'Online' : 'Offline'}</Text>
+            </Alert>
+
+            {/* Install Prompt */}
+            {showInstallPrompt && (
+              <Button
+                leftIcon={<DownloadIcon />}
+                colorScheme="blue"
+                size="sm"
+                onClick={handleInstallClick}
+                borderRadius="md"
+              >
+                Install App
+              </Button>
+            )}
+          </Flex>
 
           {/* Search Bar - Always Visible */}
           <Flex justify="space-between" align="center" mb={6} p={4} bg="gray.800" borderRadius="lg">
