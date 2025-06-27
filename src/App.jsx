@@ -138,12 +138,18 @@ export default function TaskDashboard() {
   // State for selected task
   const [selectedTask, setSelectedTask] = React.useState(null);
 
+  // Utility function to convert date to Mountain Standard Time
+  const toMST = (date) => {
+    const mstDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Denver"}));
+    return mstDate;
+  };
+
   // State for task data with descriptions
   const [taskData, setTaskData] = React.useState({
     'Review analytics report': {
       description: 'Analyze weekly performance metrics, identify key trends, and prepare insights for the marketing team. Focus on conversion rates, user engagement, and ROI across all campaigns.',
       expanded: false,
-      dueDate: new Date().toISOString().split('T')[0], // Today
+      dueDate: toMST(new Date()).toISOString().split('T')[0], // Today in MST
       project: 'marketing',
       tags: ['analytics', 'reporting'],
       completed: false
@@ -151,7 +157,7 @@ export default function TaskDashboard() {
     'Prepare presentation slides': {
       description: 'Create compelling presentation materials for the quarterly business review. Include data visualizations, key achievements, and strategic recommendations for stakeholders.',
       expanded: false,
-      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 days from now
+      dueDate: toMST(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 2 days from now in MST
       project: 'marketing',
       tags: ['presentation', 'Q4'],
       completed: true
@@ -159,7 +165,7 @@ export default function TaskDashboard() {
     'Update campaign strategy': {
       description: 'Revise digital marketing campaign approach based on recent performance data. Optimize targeting parameters, adjust budget allocation, and refine messaging for better engagement.',
       expanded: false,
-      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 days from now
+      dueDate: toMST(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 5 days from now in MST
       project: 'marketing',
       tags: ['campaign', 'strategy'],
       completed: false
@@ -167,7 +173,7 @@ export default function TaskDashboard() {
     'Conduct user interviews': {
       description: 'Schedule and conduct user research interviews to gather feedback on product features. Document insights, pain points, and improvement suggestions for the development team.',
       expanded: false,
-      dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 15 days from now
+      dueDate: toMST(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 15 days from now in MST
       project: 'techdev',
       tags: ['research', 'user-feedback'],
       completed: false
@@ -175,7 +181,7 @@ export default function TaskDashboard() {
     'Organize team meeting': {
       description: 'Coordinate weekly team sync meeting, prepare agenda items, and ensure all team members have necessary materials. Focus on project updates and collaborative problem-solving.',
       expanded: false,
-      dueDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 45 days from now
+      dueDate: toMST(new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 45 days from now in MST
       project: 'techdev',
       tags: ['meeting', 'coordination'],
       completed: true
@@ -188,7 +194,7 @@ export default function TaskDashboard() {
       {
         title: 'Team standup meeting',
         description: 'Daily team synchronization meeting to discuss progress, blockers, and priorities for the day.',
-        dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 day from now
+        dueDate: toMST(new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 1 day from now in MST
         project: 'techdev',
         tags: ['meeting', 'standup'],
         completed: false
@@ -196,7 +202,7 @@ export default function TaskDashboard() {
       {
         title: 'Code review',
         description: 'Review pull requests and provide feedback on code quality, best practices, and potential improvements.',
-        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
+        dueDate: toMST(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 3 days from now in MST
         project: 'techdev',
         tags: ['code', 'review'],
         completed: true
@@ -204,7 +210,7 @@ export default function TaskDashboard() {
       {
         title: 'Bug fixes',
         description: 'Address critical bugs and issues reported by users or identified during testing.',
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+        dueDate: toMST(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 7 days from now in MST
         project: 'techdev',
         tags: ['bugs', 'fixes'],
         completed: false
@@ -214,7 +220,7 @@ export default function TaskDashboard() {
       {
         title: 'Content creation',
         description: 'Create blog posts, social media content, and marketing materials for upcoming campaigns.',
-        dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days from now
+        dueDate: toMST(new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 4 days from now in MST
         project: 'marketing',
         tags: ['content', 'creation'],
         completed: false
@@ -222,7 +228,7 @@ export default function TaskDashboard() {
       {
         title: 'SEO optimization',
         description: 'Optimize website content and structure for better search engine rankings and visibility.',
-        dueDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 8 days from now
+        dueDate: toMST(new Date(Date.now() + 8 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 8 days from now in MST
         project: 'marketing',
         tags: ['seo', 'optimization'],
         completed: false
@@ -230,7 +236,7 @@ export default function TaskDashboard() {
       {
         title: 'Email campaign',
         description: 'Design and send email marketing campaigns to engage subscribers and drive conversions.',
-        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 14 days from now
+        dueDate: toMST(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 14 days from now in MST
         project: 'marketing',
         tags: ['email', 'campaign'],
         completed: true
@@ -240,7 +246,7 @@ export default function TaskDashboard() {
       {
         title: 'UI/UX design',
         description: 'Create wireframes, mockups, and design prototypes for new features and improvements.',
-        dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 6 days from now
+        dueDate: toMST(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 6 days from now in MST
         project: 'design',
         tags: ['design', 'ui-ux'],
         completed: false
@@ -248,7 +254,7 @@ export default function TaskDashboard() {
       {
         title: 'Brand guidelines',
         description: 'Update and maintain brand guidelines to ensure consistency across all design materials.',
-        dueDate: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 11 days from now
+        dueDate: toMST(new Date(Date.now() + 11 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 11 days from now in MST
         project: 'design',
         tags: ['brand', 'guidelines'],
         completed: false
@@ -256,7 +262,7 @@ export default function TaskDashboard() {
       {
         title: 'Design system',
         description: 'Develop and maintain a comprehensive design system for consistent component usage.',
-        dueDate: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 18 days from now
+        dueDate: toMST(new Date(Date.now() + 18 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 18 days from now in MST
         project: 'design',
         tags: ['design-system', 'components'],
         completed: true
@@ -266,7 +272,7 @@ export default function TaskDashboard() {
       {
         title: 'Client meeting',
         description: 'Meet with clients to discuss project requirements, progress updates, and feedback.',
-        dueDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 9 days from now
+        dueDate: toMST(new Date(Date.now() + 9 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 9 days from now in MST
         project: 'sales',
         tags: ['client', 'meeting'],
         completed: false
@@ -274,7 +280,7 @@ export default function TaskDashboard() {
       {
         title: 'Proposal writing',
         description: 'Write and prepare project proposals for potential clients and business opportunities.',
-        dueDate: new Date(Date.now() + 13 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 13 days from now
+        dueDate: toMST(new Date(Date.now() + 13 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 13 days from now in MST
         project: 'sales',
         tags: ['proposal', 'writing'],
         completed: false
@@ -282,7 +288,7 @@ export default function TaskDashboard() {
       {
         title: 'Sales follow-up',
         description: 'Follow up with leads and prospects to nurture relationships and close deals.',
-        dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 20 days from now
+        dueDate: toMST(new Date(Date.now() + 20 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 20 days from now in MST
         project: 'sales',
         tags: ['sales', 'follow-up'],
         completed: false
@@ -292,7 +298,7 @@ export default function TaskDashboard() {
       {
         title: 'Performance review',
         description: 'Conduct performance reviews and provide feedback to team members on their work.',
-        dueDate: new Date(Date.now() + 16 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 16 days from now
+        dueDate: toMST(new Date(Date.now() + 16 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 16 days from now in MST
         project: 'techdev',
         tags: ['review', 'performance'],
         completed: false
@@ -300,7 +306,7 @@ export default function TaskDashboard() {
       {
         title: 'Documentation update',
         description: 'Update technical documentation and user guides based on recent feature releases and user feedback.',
-        dueDate: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 35 days from now
+        dueDate: toMST(new Date(Date.now() + 35 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 35 days from now in MST
         project: 'techdev',
         tags: ['documentation', 'update'],
         completed: true
@@ -308,7 +314,7 @@ export default function TaskDashboard() {
       {
         title: 'Next week planning',
         description: 'Plan and prioritize tasks for the upcoming week. Allocate resources and set realistic deadlines.',
-        dueDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
+        dueDate: toMST(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 90 days from now in MST
         project: 'marketing',
         tags: ['planning', 'priorities'],
         completed: false
@@ -318,7 +324,7 @@ export default function TaskDashboard() {
       {
         title: 'Personal project work',
         description: 'Dedicated time for personal development projects and skill building. Focus on learning new technologies.',
-        dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 10 days from now
+        dueDate: toMST(new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 10 days from now in MST
         project: 'techdev',
         tags: ['personal', 'development'],
         completed: false
@@ -326,7 +332,7 @@ export default function TaskDashboard() {
       {
         title: 'Skill development',
         description: 'Online course completion and skill enhancement activities. Focus on areas identified for improvement.',
-        dueDate: new Date(Date.now() + 40 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 40 days from now
+        dueDate: toMST(new Date(Date.now() + 40 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 40 days from now in MST
         project: 'techdev',
         tags: ['learning', 'skills'],
         completed: false
@@ -334,7 +340,7 @@ export default function TaskDashboard() {
       {
         title: 'Creative brainstorming',
         description: 'Free-form creative session to generate new ideas for projects and explore innovative solutions.',
-        dueDate: new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 100 days from now
+        dueDate: toMST(new Date(Date.now() + 100 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 100 days from now in MST
         project: 'design',
         tags: ['creative', 'brainstorming'],
         completed: false
@@ -344,7 +350,7 @@ export default function TaskDashboard() {
       {
         title: 'Week preparation',
         description: 'Prepare for the upcoming week by organizing tasks, setting priorities, and reviewing calendar commitments.',
-        dueDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 12 days from now
+        dueDate: toMST(new Date(Date.now() + 12 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 12 days from now in MST
         project: 'marketing',
         tags: ['preparation', 'planning'],
         completed: false
@@ -352,7 +358,7 @@ export default function TaskDashboard() {
       {
         title: 'Rest and recharge',
         description: 'Dedicated time for rest and personal activities. Important for maintaining work-life balance and productivity.',
-        dueDate: new Date(Date.now() + 50 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 50 days from now
+        dueDate: toMST(new Date(Date.now() + 50 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 50 days from now in MST
         project: 'personal',
         tags: ['rest', 'balance'],
         completed: false
@@ -360,7 +366,7 @@ export default function TaskDashboard() {
       {
         title: 'Goal setting',
         description: 'Review personal and professional goals, assess progress, and set new objectives for the upcoming period.',
-        dueDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 120 days from now
+        dueDate: toMST(new Date(Date.now() + 120 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 120 days from now in MST
         project: 'personal',
         tags: ['goals', 'planning'],
         completed: false
@@ -372,11 +378,43 @@ export default function TaskDashboard() {
   const [currentView, setCurrentView] = React.useState('all'); // 'all', 'day', 'project', 'tag'
   const [currentFilter, setCurrentFilter] = React.useState('');
 
+  // Get all tasks from all sources for global search
+  const getAllTasksForSearch = () => {
+    const allTasks = [];
+
+    // Add tasks from taskData (My Tasks)
+    Object.keys(taskData).forEach(taskName => {
+      allTasks.push({
+        title: taskName,
+        description: taskData[taskName].description,
+        dueDate: taskData[taskName].dueDate,
+        project: taskData[taskName].project,
+        tags: taskData[taskName].tags,
+        completed: taskData[taskName].completed,
+        expanded: taskData[taskName].expanded,
+        source: 'today'
+      });
+    });
+
+    // Add tasks from dayTasks (Weekly tasks)
+    Object.keys(dayTasks).forEach(day => {
+      dayTasks[day].forEach(task => {
+        allTasks.push({
+          ...task,
+          source: 'week'
+        });
+      });
+    });
+
+    return allTasks;
+  };
+
   // Memoize filtered tasks to prevent race conditions
   const filteredTasks = React.useMemo(() => {
     try {
       if (currentView === 'all') {
-        return [];
+        const result = getAllTasksForSearch();
+        return result;
       } else if (currentView === 'day' && currentFilter && dayTasks[currentFilter]) {
         const dayTasksArray = dayTasks[currentFilter];
         if (!Array.isArray(dayTasksArray)) {
@@ -401,6 +439,7 @@ export default function TaskDashboard() {
               project: taskData[taskName].project,
               tags: taskData[taskName].tags,
               completed: taskData[taskName].completed,
+              expanded: taskData[taskName].expanded,
               source: 'today'
             });
           }
@@ -432,6 +471,7 @@ export default function TaskDashboard() {
               project: taskData[taskName].project,
               tags: taskData[taskName].tags,
               completed: taskData[taskName].completed,
+              expanded: taskData[taskName].expanded,
               source: 'today'
             });
           }
@@ -543,11 +583,23 @@ export default function TaskDashboard() {
         toggleDetail();
       }
 
-      // Toggle expanded state for the clicked task
-      setExpandedFilteredTasks(prev => ({
-        ...prev,
-        [task.title]: !prev[task.title]
-      }));
+      // Toggle expanded state based on task source
+      if (task.source === 'today' && taskData[task.title]) {
+        // For tasks from taskData, update taskData expanded state
+        setTaskData(prev => ({
+          ...prev,
+          [task.title]: {
+            ...prev[task.title],
+            expanded: !prev[task.title].expanded
+          }
+        }));
+      } else {
+        // For tasks from dayTasks or filtered views, update expandedFilteredTasks
+        setExpandedFilteredTasks(prev => ({
+          ...prev,
+          [task.title]: !prev[task.title]
+        }));
+      }
     } catch (error) {
       console.error('Error in handleFilteredTaskClick:', error);
     }
@@ -571,17 +623,15 @@ export default function TaskDashboard() {
   const resetToAllTasks = () => {
     setCurrentView('all');
     setCurrentFilter('');
+    setSearchTerm('');
   };
 
   const toggleTaskCompleted = (taskName, source = 'today') => {
     try {
-      console.log('toggleTaskCompleted called:', { taskName, source, currentView, currentFilter });
-
       if (source === 'today') {
         setTaskData(prev => {
           // Validate that the task exists before accessing it
           if (!prev[taskName]) {
-            console.error('Task not found in taskData:', taskName);
             return prev;
           }
           const newCompleted = !prev[taskName].completed;
@@ -600,7 +650,6 @@ export default function TaskDashboard() {
       } else {
         // For weekly tasks, we need to find the task in the dayTasks structure
         setDayTasks(prev => {
-          console.log('Updating dayTasks:', { prev: Object.keys(prev), taskName });
           const newDayTasks = { ...prev };
           let taskFound = false;
 
@@ -613,7 +662,6 @@ export default function TaskDashboard() {
                 if (selectedTask === taskName) {
                   setEditingCompleted(newCompleted);
                 }
-                console.log('Found task to toggle:', { day, task: task.title, currentCompleted: task.completed });
                 return { ...task, completed: newCompleted };
               }
               return task;
@@ -624,53 +672,56 @@ export default function TaskDashboard() {
             console.error('Task not found in dayTasks:', taskName);
           }
 
-          console.log('New dayTasks structure:', Object.keys(newDayTasks));
           return newDayTasks;
         });
       }
     } catch (error) {
       console.error('Error in toggleTaskCompleted:', error);
-      console.log('Task details:', { taskName, source, currentView, currentFilter });
     }
   };
 
-  // Get current day of the week
+  // Get current day of the week in MST
   const getCurrentDay = () => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[new Date().getDay()];
+    const mstNow = toMST(new Date());
+    return days[mstNow.getDay()];
   };
 
-  // Get due date category for a task
+  // Get due date category for a task in MST
   const getDueDateCategory = (dueDate) => {
-    const today = new Date();
-    const due = new Date(dueDate);
+    try {
+      const today = toMST(new Date());
+      const due = toMST(new Date(dueDate));
 
-    // Reset time to compare dates only
-    today.setHours(0, 0, 0, 0);
-    due.setHours(0, 0, 0, 0);
+      // Reset time to compare dates only
+      today.setHours(0, 0, 0, 0);
+      due.setHours(0, 0, 0, 0);
 
-    // Get start of current week (Sunday)
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
+      // Get start of current week (Sunday) in MST
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
 
-    // Get end of current week (Saturday)
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
+      // Get end of current week (Saturday) in MST
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-    // Get start and end of current month
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      // Get start and end of current month in MST
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    if (due.getTime() === today.getTime()) {
-      return 'Today';
-    } else if (due >= startOfWeek && due <= endOfWeek) {
-      return 'Week';
-    } else if (due >= startOfMonth && due <= endOfMonth) {
-      return 'Month';
-    } else {
-      // Return month name for dates outside current month
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return months[due.getMonth()];
+      if (due.getTime() === today.getTime()) {
+        return 'Today';
+      } else if (due >= startOfWeek && due <= endOfWeek) {
+        return 'Week';
+      } else if (due >= startOfMonth && due <= endOfMonth) {
+        return 'Month';
+      } else {
+        // Return month name for dates outside current month
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return months[due.getMonth()];
+      }
+    } catch (error) {
+      return 'Unknown';
     }
   };
 
@@ -736,7 +787,9 @@ export default function TaskDashboard() {
 
   // Filter tasks based on search term
   const getFilteredTasksBySearch = (tasks) => {
-    if (!searchTerm.trim()) return tasks;
+    if (!searchTerm.trim()) {
+      return tasks;
+    }
 
     const searchLower = searchTerm.toLowerCase();
 
@@ -750,47 +803,59 @@ export default function TaskDashboard() {
       // Search in due date
       const dueDateMatch = task.dueDate && task.dueDate.toLowerCase().includes(searchLower);
 
-      // Search in tags
+      // Search in task tags
       const taskTags = Array.isArray(task.tags) ? task.tags : [];
       const tagMatch = taskTags.some(tag => tag.toLowerCase().includes(searchLower));
 
+      // Search in due date category tags (Today, Week, Month)
+      const dueDateCategory = getDueDateCategory(task.dueDate);
+      const categoryMatch = dueDateCategory.toLowerCase().includes(searchLower);
+
       // Return true if any field matches
-      return titleMatch || descriptionMatch || dueDateMatch || tagMatch;
+      return titleMatch || descriptionMatch || dueDateMatch || tagMatch || categoryMatch;
     });
 
-    console.log('Search term:', searchTerm, 'Filtered tasks:', filtered.length, 'from', tasks.length);
     return filtered;
   };
 
-  // Get all tasks from all sources for global search
-  const getAllTasksForSearch = () => {
-    const allTasks = [];
+  // Custom sorting function for tasks by priority (Today, Week, Month)
+  const sortTasksByPriority = (tasks) => {
+    const sorted = tasks.sort((a, b) => {
+      const aCategory = getDueDateCategory(a.dueDate);
+      const bCategory = getDueDateCategory(b.dueDate);
 
-    // Add tasks from taskData (My Tasks)
-    Object.keys(taskData).forEach(taskName => {
-      allTasks.push({
-        title: taskName,
-        description: taskData[taskName].description,
-        dueDate: taskData[taskName].dueDate,
-        project: taskData[taskName].project,
-        tags: taskData[taskName].tags,
-        completed: taskData[taskName].completed,
-        expanded: taskData[taskName].expanded,
-        source: 'today'
-      });
+      // Priority order: Today > Week > Month > Other months
+      const priorityOrder = {
+        'Today': 0,
+        'Week': 1,
+        'Month': 2
+      };
+
+      // If both are in the same priority category, sort by due date
+      if (priorityOrder[aCategory] !== undefined && priorityOrder[bCategory] !== undefined) {
+        if (priorityOrder[aCategory] === priorityOrder[bCategory]) {
+          return new Date(a.dueDate) - new Date(b.dueDate);
+        }
+        return priorityOrder[aCategory] - priorityOrder[bCategory];
+      }
+
+      // If one is Today/Week/Month and the other is a different month
+      if (priorityOrder[aCategory] !== undefined && priorityOrder[bCategory] === undefined) {
+        return -1; // Today/Week/Month comes first
+      }
+      if (priorityOrder[aCategory] === undefined && priorityOrder[bCategory] !== undefined) {
+        return 1; // Today/Week/Month comes first
+      }
+
+      // If both are different months, sort by month name alphabetically
+      if (priorityOrder[aCategory] === undefined && priorityOrder[bCategory] === undefined) {
+        return aCategory.localeCompare(bCategory);
+      }
+
+      return 0;
     });
 
-    // Add tasks from dayTasks (Weekly tasks)
-    Object.keys(dayTasks).forEach(day => {
-      dayTasks[day].forEach(task => {
-        allTasks.push({
-          ...task,
-          source: 'week'
-        });
-      });
-    });
-
-    return allTasks;
+    return sorted;
   };
 
   return (
@@ -798,16 +863,28 @@ export default function TaskDashboard() {
       {/* Search Bar - Always Visible at Top */}
       <Box position="sticky" top={0} zIndex={50} bg="gray.900" borderBottom="1px solid" borderColor="gray.700">
         <Flex justify="space-between" align="center" p={4}>
-          <Input
-            placeholder="Search tasks by title, description, due date, or tags..."
-            bg="gray.700"
-            border={0}
-            w={{ base: "200px", md: "300px" }}
-            _placeholder={{ color: 'gray.400' }}
-            color="white"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
+          <Flex align="center" gap={3}>
+            <IconButton
+              icon={<CheckCircleIcon />}
+              aria-label="Go to My Tasks"
+              onClick={resetToAllTasks}
+              size="sm"
+              colorScheme={currentView === 'all' && !searchTerm ? "blue" : "gray"}
+              variant="solid"
+              borderRadius="md"
+              title="My Tasks"
+            />
+            <Input
+              placeholder="Filter tasks"
+              bg="gray.700"
+              border={0}
+              w={{ base: "200px", md: "300px" }}
+              _placeholder={{ color: 'gray.400' }}
+              color="white"
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+          </Flex>
           <Flex align="center" position="relative">
             <Avatar size="sm" name="User" bg="blue.500" />
             {/* Online/Offline Status Dot */}
@@ -827,116 +904,105 @@ export default function TaskDashboard() {
         </Flex>
       </Box>
 
-      <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg="gray.900" color="white" pb={{ base: '80px', md: '0' }}>
+      <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg="gray.900" color="white" pb="80px">
       {/* Sidebar */}
       {isSidebarOpen && (
           <Box w={{ base: '100%', md: isCenterOpen ? '250px' : '400px' }} bg="gray.800" p={4} position="relative">
-          <IconButton
-              icon={<CalendarIcon />}
-            aria-label="Collapse Sidebar"
-            onClick={toggleSidebar}
-            position="absolute"
-            top="10px"
-            right="-12px"
-            size="sm"
-            zIndex={1}
-              display={{ base: 'none', md: 'flex' }}
-          />
             <Heading size="md" mb={4}>Workload</Heading>
-          <VStack align="start" spacing={4}>
-              <Box w="full">
-                <Text fontSize="sm" mb={1} color="gray.400">This Week</Text>
-                <VStack align="stretch" spacing={1} w="full">
-                  {Object.keys(dayTasks).map((day) => (
-                    <Box key={day} w="full">
-                      <Flex
-                        cursor="pointer"
-                        p={2}
-                        bg="gray.700"
-                        borderRadius="md"
-                        w="full"
-                        justify="space-between"
-                        align="center"
-                        onClick={() => handleDayClick(day)}
-                        _hover={{ bg: 'gray.600' }}
-                      >
-                        <HStack spacing={2}>
-                          <Text>{day}</Text>
-                          {day === getCurrentDay() && (
-                            <Text fontSize="xs" color="green.300" fontWeight="medium">(today)</Text>
-                          )}
-                        </HStack>
-                      </Flex>
-                      <Collapse in={expandedDays[day]} animateOpacity>
-                        <VStack align="start" spacing={1} mt={1} ml={4} w="full">
-                          {dayTasks[day].map((task, index) => (
-                            <Box key={index} w="full">
-                              <Flex align="center" w="full">
-                                <Checkbox
-                                  isChecked={task.completed}
-                                  onChange={() => toggleTaskCompleted(task.title, 'week')}
-                                  colorScheme="green"
-                                  size="sm"
-                                  mr={2}
-                                />
+            <VStack align="start" spacing={4}>
+                <Box w="full">
+                  <Text fontSize="sm" mb={1} color="gray.400">This Week</Text>
+                  <VStack align="stretch" spacing={1} w="full">
+                    {Object.keys(dayTasks).map((day) => (
+                      <Box key={day} w="full">
+                        <Flex
+                          cursor="pointer"
+                          p={2}
+                          bg="gray.700"
+                          borderRadius="md"
+                          w="full"
+                          justify="space-between"
+                          align="center"
+                          onClick={() => handleDayClick(day)}
+                          _hover={{ bg: 'gray.600' }}
+                        >
+                          <HStack spacing={2}>
+                            <Text>{day}</Text>
+                            {day === getCurrentDay() && (
+                              <Text fontSize="xs" color="green.300" fontWeight="medium">(today)</Text>
+                            )}
+                          </HStack>
+                        </Flex>
+                        <Collapse in={expandedDays[day]} animateOpacity>
+                          <VStack align="start" spacing={1} mt={1} ml={4} w="full">
+                            {dayTasks[day].map((task, index) => (
+                              <Box key={index} w="full">
+                                <Flex align="center" w="full">
+                                  <Checkbox
+                                    isChecked={task.completed}
+                                    onChange={() => toggleTaskCompleted(task.title, 'week')}
+                                    colorScheme="green"
+                                    size="sm"
+                                    mr={2}
+                                  />
+                                  <Text
+                                    fontSize="sm"
+                                    color={task.completed ? "gray.500" : "gray.300"}
+                                    cursor="pointer"
+                                    p={1}
+                                    flex={1}
+                                    _hover={{ color: 'white' }}
+                                    onClick={() => handleWeeklyTaskClick(task)}
+                                    textDecoration={task.completed ? "line-through" : "none"}
+                                  >
+                                    {task.title}
+                                  </Text>
+                                </Flex>
                                 <Text
-                                  fontSize="sm"
-                                  color={task.completed ? "gray.500" : "gray.300"}
-                                  cursor="pointer"
-                                  p={1}
-                                  flex={1}
-                                  _hover={{ color: 'white' }}
-                                  onClick={() => handleWeeklyTaskClick(task)}
-                                  textDecoration={task.completed ? "line-through" : "none"}
+                                  fontSize="xs"
+                                  color="gray.500"
+                                  ml={6}
+                                  mb={1}
                                 >
-                                  {task.title}
+                                  Due: {task.dueDate}
                                 </Text>
-                              </Flex>
-                              <Text
-                                fontSize="xs"
-                                color="gray.500"
-                                ml={6}
-                                mb={1}
-                              >
-                                Due: {task.dueDate}
-                              </Text>
-                            </Box>
-                          ))}
-                        </VStack>
-                      </Collapse>
-                    </Box>
-                  ))}
-              </VStack>
-            </Box>
+                              </Box>
+                            ))}
+                          </VStack>
+                        </Collapse>
+                      </Box>
+                    ))}
+                </VStack>
+              </Box>
 
-            <Box>
-                <Text fontSize="sm" mb={2} color="gray.400">Sponsors</Text>
-                <VStack align="start" spacing={2}>
-                  {/* First 2 sponsors - visible on all screen sizes */}
-                  <Box>
-                    <Text
-                      fontSize="sm"
-                      color="blue.300"
-                      cursor="pointer"
-                      _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                      onClick={() => window.open('https://www.notion.so', '_blank')}
-                    >
-                      Notion
-                    </Text>
-                    <Text fontSize="xs" color="gray.500">All-in-one workspace for notes & docs</Text>
-                  </Box>
-                  <Box>
-                    <Text
-                      fontSize="sm"
-                      color="blue.300"
-                      cursor="pointer"
-                      _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                      onClick={() => window.open('https://www.atlassian.com', '_blank')}
-                    >
-                      Atlassian
-                    </Text>
-                    <Text fontSize="xs" color="gray.500">Project management & team collaboration</Text>
-            </Box>
+              <Box>
+                  <Text fontSize="sm" mb={2} color="gray.400">Sponsors</Text>
+                  <VStack align="start" spacing={2}>
+                    {/* First 2 sponsors - visible on all screen sizes */}
+                    <Box>
+                      <Text
+                        fontSize="sm"
+                        color="blue.300"
+                        cursor="pointer"
+                        _hover={{ color: 'blue.200', textDecoration: 'underline' }}
+                        onClick={() => window.open('https://www.notion.so', '_blank')}
+                      >
+                        Notion
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">All-in-one workspace for notes & docs</Text>
+                    </Box>
+                    <Box>
+                      <Text
+                        fontSize="sm"
+                        color="blue.300"
+                        cursor="pointer"
+                        _hover={{ color: 'blue.200', textDecoration: 'underline' }}
+                        onClick={() => window.open('https://www.atlassian.com', '_blank')}
+                      >
+                        Atlassian
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">Project management & team collaboration</Text>
+                </Box>
 
                   {/* Remaining 3 sponsors - hidden on mobile, visible on desktop */}
                   <Box display={{ base: 'none', md: 'block' }}>
@@ -981,35 +1047,11 @@ export default function TaskDashboard() {
         </Box>
       )}
       {!isSidebarOpen && (
-        <IconButton
-            icon={<CalendarIcon />}
-          aria-label="Expand Sidebar"
-          onClick={toggleSidebar}
-          position="absolute"
-          top="10px"
-          left="10px"
-          size="sm"
-          zIndex={10}
-            display={{ base: 'none', md: 'flex' }}
-        />
+        <></>
       )}
 
       {/* Main Content */}
-        <Box flex={1} p={6} bg="gray.850" position="relative">
-          {/* Toggle Button for Center Panel */}
-          <IconButton
-            icon={isCenterOpen ? <StarIcon /> : <StarIcon />}
-            aria-label="Toggle Center Panel"
-            onClick={toggleCenter}
-            position="fixed"
-            top="10px"
-            left="50%"
-            transform="translateX(-50%)"
-            size="sm"
-            zIndex={30}
-            display={{ base: 'none', md: 'flex' }}
-          />
-
+        <Box flex={1} pt={2} px={6} bg="gray.850" position="relative">
           {/* PWA Status Indicators */}
           <Flex position="fixed" top="10px" right="10px" zIndex={40} gap={2}>
             {/* Install Prompt */}
@@ -1028,9 +1070,34 @@ export default function TaskDashboard() {
 
           {/* Projects Section - Now above tasks on mobile */}
           <Collapse in={isCenterOpen} animateOpacity>
-            <Box mb={6} display={{ base: 'block', md: 'none' }}>
+            <Box mb={2} display={{ base: 'block', md: 'none' }}>
               <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
               <SimpleGrid columns={2} spacing={3}>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
+                  <Text fontWeight="medium" mb={1}>Marketing</Text>
+                  <Text fontSize="sm" color="gray.400">Campaign management & analytics</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
+                  <Text fontWeight="medium" mb={1}>TechDev</Text>
+                  <Text fontSize="sm" color="gray.400">Development & technical tasks</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('design')}>
+                  <Text fontWeight="medium" mb={1}>Design</Text>
+                  <Text fontSize="sm" color="gray.400">UI/UX & creative work</Text>
+                </Box>
+                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('sales')}>
+                  <Text fontWeight="medium" mb={1}>Sales</Text>
+                  <Text fontSize="sm" color="gray.400">Client relations & deals</Text>
+                </Box>
+              </SimpleGrid>
+            </Box>
+          </Collapse>
+
+          {/* Projects Section - Desktop view (above tasks) */}
+          <Collapse in={isCenterOpen} animateOpacity>
+            <Box mb={2} display={{ base: 'none', md: 'block' }}>
+              <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
                 <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
                   <Text fontWeight="medium" mb={1}>Marketing</Text>
                   <Text fontSize="sm" color="gray.400">Campaign management & analytics</Text>
@@ -1062,7 +1129,7 @@ export default function TaskDashboard() {
             <Text fontSize="sm" color="gray.400">
               {(() => {
                 if (currentView === 'all') {
-                  return getFilteredTasksBySearch(getAllTasksForSearch()).length;
+                  return getFilteredTasksBySearch(filteredTasks).length;
                 } else {
                   return getFilteredTasksBySearch(filteredTasks).length;
                 }
@@ -1076,13 +1143,22 @@ export default function TaskDashboard() {
           <VStack align="stretch" spacing={3}>
             {(() => {
               try {
-                console.log('Rendering main content:', { currentView, currentFilter, taskDataKeys: Object.keys(taskData), filteredTasksLength: filteredTasks.length });
+                // Add a simple check to see if we have tasks
+                if (filteredTasks.length === 0) {
+                  return (
+                    <Box p={4} bg="gray.800" borderRadius="md">
+                      <Text color="gray.400">No tasks found. {searchTerm ? `No results for "${searchTerm}"` : 'Add some tasks to get started.'}</Text>
+                    </Box>
+                  );
+                }
 
                 return (
                   <>
                     {currentView === 'all' ? (
-                      // Show all tasks from taskData
-                      getFilteredTasksBySearch(getAllTasksForSearch()).map((task, idx) => {
+                      // Show all tasks from all sources
+                      sortTasksByPriority(
+                        getFilteredTasksBySearch(filteredTasks)
+                      ).map((task, idx) => {
                         try {
                           const taskInfo = task;
                           if (!taskInfo) {
@@ -1126,8 +1202,6 @@ export default function TaskDashboard() {
                                     <Tag size="sm" colorScheme={getDueDateCategory(taskInfo.dueDate) === 'Today' ? 'red' : getDueDateCategory(taskInfo.dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskInfo.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
                                       {getDueDateCategory(taskInfo.dueDate)}
                                     </Tag>
-                                    {task.source === 'week' && <Tag size="sm" colorScheme="purple" variant="subtle">Week</Tag>}
-                                    {taskInfo.expanded ? <InfoIcon /> : <InfoIcon />}
                                   </HStack>
                                 </Flex>
 
@@ -1154,7 +1228,7 @@ export default function TaskDashboard() {
                                   </HStack>
                                 </VStack>
                               </Box>
-                              <Collapse in={taskInfo.expanded} animateOpacity>
+                              <Collapse in={task.source === 'today' && taskData[task.title] ? taskInfo.expanded : expandedFilteredTasks[task.title]} animateOpacity>
                                 <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
                                   <Text fontSize="sm" color="gray.300" lineHeight="1.6">
                                     {taskInfo.description.length > 150
@@ -1174,7 +1248,7 @@ export default function TaskDashboard() {
                       // Show filtered tasks
                       (() => {
                         try {
-                          return getFilteredTasksBySearch(filteredTasks).map((task, idx) => {
+                          return sortTasksByPriority(getFilteredTasksBySearch(filteredTasks)).map((task, idx) => {
                             try {
                               return (
                                 <Box key={idx}>
@@ -1212,8 +1286,6 @@ export default function TaskDashboard() {
                                         <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
                                           {getDueDateCategory(task.dueDate)}
                                         </Tag>
-                                        {task.source === 'week' && <Tag size="sm" colorScheme="purple" variant="subtle">Week</Tag>}
-                                        {expandedFilteredTasks[task.title] ? <InfoIcon /> : <InfoIcon />}
                                       </HStack>
                                     </Flex>
 
@@ -1240,7 +1312,7 @@ export default function TaskDashboard() {
                                       </HStack>
                                     </VStack>
                                   </Box>
-                                  <Collapse in={expandedFilteredTasks[task.title]} animateOpacity>
+                                  <Collapse in={task.source === 'today' && taskData[task.title] ? taskData[task.title].expanded : expandedFilteredTasks[task.title]} animateOpacity>
                                     <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
                                       <Text fontSize="sm" color="gray.300" lineHeight="1.6">
                                         {task.description.length > 150
@@ -1279,47 +1351,11 @@ export default function TaskDashboard() {
               }
             })()}
           </VStack>
-
-          {/* Projects Section - Desktop view (below tasks) */}
-          <Collapse in={isCenterOpen} animateOpacity>
-            <Box mt={8} display={{ base: 'none', md: 'block' }}>
-              <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
-                  <Text fontWeight="medium" mb={1}>Marketing</Text>
-                  <Text fontSize="sm" color="gray.400">Campaign management & analytics</Text>
-                </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
-                  <Text fontWeight="medium" mb={1}>TechDev</Text>
-                  <Text fontSize="sm" color="gray.400">Development & technical tasks</Text>
-                </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('design')}>
-                  <Text fontWeight="medium" mb={1}>Design</Text>
-                  <Text fontSize="sm" color="gray.400">UI/UX & creative work</Text>
-                </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('sales')}>
-                  <Text fontWeight="medium" mb={1}>Sales</Text>
-                  <Text fontSize="sm" color="gray.400">Client relations & deals</Text>
-                </Box>
-              </SimpleGrid>
-            </Box>
-          </Collapse>
         </Box>
 
       {/* Detail Panel */}
       {isDetailOpen && (
           <Box w={{ base: '100%', md: isCenterOpen ? '350px' : '500px' }} bg="gray.800" p={6} position="relative">
-          <IconButton
-              icon={<EditIcon />}
-            aria-label="Collapse Detail Panel"
-            onClick={toggleDetail}
-            position="absolute"
-            top="10px"
-            left="-12px"
-            size="sm"
-            zIndex={1}
-              display={{ base: 'none', md: 'flex' }}
-            />
             <Heading size="md" mb={4}>Update Selected Task</Heading>
             <Input
               value={taskTitle}
@@ -1446,94 +1482,77 @@ export default function TaskDashboard() {
             </Box>
         </Box>
       )}
-        {!isDetailOpen && selectedTask && (
-        <IconButton
-            icon={<EditIcon />}
-          aria-label="Expand Detail Panel"
-          onClick={toggleDetail}
-          position="absolute"
-          top="10px"
-          right="10px"
-          size="sm"
-          zIndex={10}
-            display={{ base: 'none', md: 'flex' }}
-        />
-      )}
     </Flex>
 
-      {/* Mobile Sticky Footer Navigation */}
+      {/* Bottom Navigation - Visible on both mobile and desktop */}
       <Box
         position="fixed"
         bottom={0}
         left={0}
         right={0}
         zIndex={25}
-        display={{ base: 'block', md: 'none' }}
         bg="gray.800"
         borderTop="1px solid"
         borderColor="gray.700"
-        p={3}
+        p={{ base: 3, md: 2 }}
       >
-        <Flex justify="space-around" align="center">
-          <IconButton
-            icon={<CalendarIcon />}
-            aria-label="Toggle Sidebar"
-            onClick={toggleSidebar}
-            size="md"
-            colorScheme={isSidebarOpen ? "blue" : "gray"}
-            variant="solid"
-            borderRadius="full"
-          />
-          <IconButton
-            icon={<StarIcon />}
-            aria-label="Toggle Center Panel"
-            onClick={toggleCenter}
-            size="md"
-            colorScheme={isCenterOpen ? "blue" : "gray"}
-            variant="solid"
-            borderRadius="full"
-          />
-          {selectedTask && (
+        <Flex justify="center" align="center">
+          <Flex
+            justify="space-between"
+            align="center"
+            maxW="600px"
+            w="full"
+            px={4}
+            gap={{ base: 4, md: 2 }}
+          >
             <IconButton
-              icon={<EditIcon />}
-              aria-label="Toggle Detail Panel"
-              onClick={toggleDetail}
-              size="md"
-              colorScheme={isDetailOpen ? "blue" : "gray"}
+              icon={<CalendarIcon />}
+              aria-label="Toggle Sidebar"
+              onClick={toggleSidebar}
+              size={{ base: "md", md: "sm" }}
+              colorScheme={isSidebarOpen ? "blue" : "gray"}
               variant="solid"
               borderRadius="full"
+              _hover={{ bg: 'gray.700' }}
             />
-          )}
-          <IconButton
-            icon={<ChatIcon />}
-            aria-label="Toggle Footer Panel"
-            onClick={toggleFooter}
-            size="md"
-            colorScheme={isFooterOpen ? "blue" : "gray"}
-            variant="solid"
-            borderRadius="full"
-          />
+            <IconButton
+              icon={<StarIcon />}
+              aria-label="Toggle Projects Panel"
+              onClick={toggleCenter}
+              size={{ base: "md", md: "sm" }}
+              colorScheme={isCenterOpen ? "blue" : "gray"}
+              variant="solid"
+              borderRadius="full"
+              _hover={{ bg: 'gray.700' }}
+            />
+            {selectedTask && (
+              <IconButton
+                icon={<EditIcon />}
+                aria-label="Toggle Detail Panel"
+                onClick={toggleDetail}
+                size={{ base: "md", md: "sm" }}
+                colorScheme={isDetailOpen ? "blue" : "gray"}
+                variant="solid"
+                borderRadius="full"
+                _hover={{ bg: 'gray.700' }}
+              />
+            )}
+            <IconButton
+              icon={<ChatIcon />}
+              aria-label="Toggle Footer Panel"
+              onClick={toggleFooter}
+              size={{ base: "md", md: "sm" }}
+              colorScheme={isFooterOpen ? "blue" : "gray"}
+              variant="solid"
+              borderRadius="full"
+              _hover={{ bg: 'gray.700' }}
+            />
+          </Flex>
         </Flex>
       </Box>
 
       {/* Collapsible Footer Panel */}
       <Box position="fixed" bottom={0} left={0} right={0} zIndex={20}>
-        {/* Toggle Button */}
-        <Flex justify="center" mb={0}>
-          <IconButton
-            icon={isFooterOpen ? <ChatIcon /> : <ChatIcon />}
-            aria-label="Toggle Footer Panel"
-            onClick={toggleFooter}
-            size="md"
-            colorScheme="gray"
-            variant="solid"
-            borderRadius="full"
-            mb={-4}
-            zIndex={21}
-            display={{ base: 'none', md: 'flex' }}
-          />
-        </Flex>
-
         {/* Footer Content */}
         <Collapse in={isFooterOpen} animateOpacity>
           <Box
@@ -1543,7 +1562,7 @@ export default function TaskDashboard() {
             borderTop="1px solid"
             borderColor="gray.700"
             minH="300px"
-            bottom={{ base: '60px', md: '0' }}
+            bottom="80px"
           >
             <Flex justify="space-between" align="start" maxW="1200px" mx="auto" gap={8}>
               <Box flex={1}>
