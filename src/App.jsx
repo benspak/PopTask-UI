@@ -20,12 +20,12 @@ import {
   Avatar,
   Select
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, ViewIcon, InfoIcon, ChatIcon, EditIcon } from '@chakra-ui/icons';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const { isOpen: isSidebarOpen, onToggle: toggleSidebar } = useDisclosure({ defaultIsOpen: true });
-  const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: true });
+  const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: true });
 
@@ -391,6 +391,11 @@ export default function TaskDashboard() {
     setEditingProject(taskData[taskName].project);
     setEditingTags([...taskData[taskName].tags]);
 
+    // Open detail panel if it's not already open
+    if (!isDetailOpen) {
+      toggleDetail();
+    }
+
     // Toggle expanded state for the clicked task
     setTaskData(prev => ({
       ...prev,
@@ -411,6 +416,11 @@ export default function TaskDashboard() {
     setEditingDueDate(task.dueDate);
     setEditingProject(task.project);
     setEditingTags([...task.tags]);
+
+    // Open detail panel if it's not already open
+    if (!isDetailOpen) {
+      toggleDetail();
+    }
   };
 
   const handleDayClick = (day) => {
@@ -541,12 +551,12 @@ export default function TaskDashboard() {
 
   return (
     <Box position="relative" minH="100vh">
-      <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg="gray.900" color="white">
+      <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg="gray.900" color="white" pb={{ base: '80px', md: '0' }}>
         {/* Sidebar */}
         {isSidebarOpen && (
           <Box w={{ base: '100%', md: isCenterOpen ? '250px' : '400px' }} bg="gray.800" p={4} position="relative">
             <IconButton
-              icon={<ChevronLeftIcon />}
+              icon={<CalendarIcon />}
               aria-label="Collapse Sidebar"
               onClick={toggleSidebar}
               position="absolute"
@@ -554,6 +564,7 @@ export default function TaskDashboard() {
               right="-12px"
               size="sm"
               zIndex={1}
+              display={{ base: 'none', md: 'flex' }}
             />
             <Heading size="md" mb={4}>Workload</Heading>
             <VStack align="start" spacing={4}>
@@ -579,7 +590,6 @@ export default function TaskDashboard() {
                             <Text fontSize="xs" color="green.300" fontWeight="medium">(today)</Text>
                           )}
                         </HStack>
-                        {expandedDays[day] ? <ChevronUpIcon /> : <ChevronDownIcon />}
                       </Flex>
                       <Collapse in={expandedDays[day]} animateOpacity>
                         <VStack align="start" spacing={1} mt={1} ml={4} w="full">
@@ -626,6 +636,7 @@ export default function TaskDashboard() {
               <Box>
                 <Text fontSize="sm" mb={2} color="gray.400">Sponsors</Text>
                 <VStack align="start" spacing={2}>
+                  {/* First 2 sponsors - visible on all screen sizes */}
                   <Box>
                     <Text
                       fontSize="sm"
@@ -650,7 +661,9 @@ export default function TaskDashboard() {
                     </Text>
                     <Text fontSize="xs" color="gray.500">Project management & team collaboration</Text>
                   </Box>
-                  <Box>
+
+                  {/* Remaining 3 sponsors - hidden on mobile, visible on desktop */}
+                  <Box display={{ base: 'none', md: 'block' }}>
                     <Text
                       fontSize="sm"
                       color="blue.300"
@@ -662,7 +675,7 @@ export default function TaskDashboard() {
                     </Text>
                     <Text fontSize="xs" color="gray.500">Work management for teams</Text>
                   </Box>
-                  <Box>
+                  <Box display={{ base: 'none', md: 'block' }}>
                     <Text
                       fontSize="sm"
                       color="blue.300"
@@ -674,7 +687,7 @@ export default function TaskDashboard() {
                     </Text>
                     <Text fontSize="xs" color="gray.500">Visual project management boards</Text>
                   </Box>
-                  <Box>
+                  <Box display={{ base: 'none', md: 'block' }}>
                     <Text
                       fontSize="sm"
                       color="blue.300"
@@ -693,7 +706,7 @@ export default function TaskDashboard() {
         )}
         {!isSidebarOpen && (
           <IconButton
-            icon={<ChevronRightIcon />}
+            icon={<CalendarIcon />}
             aria-label="Expand Sidebar"
             onClick={toggleSidebar}
             position="absolute"
@@ -701,6 +714,7 @@ export default function TaskDashboard() {
             left="10px"
             size="sm"
             zIndex={10}
+            display={{ base: 'none', md: 'flex' }}
           />
         )}
 
@@ -708,7 +722,7 @@ export default function TaskDashboard() {
         <Box flex={1} p={6} bg="gray.850" position="relative">
           {/* Toggle Button for Center Panel */}
           <IconButton
-            icon={isCenterOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            icon={isCenterOpen ? <ViewIcon /> : <ViewIcon />}
             aria-label="Toggle Center Panel"
             onClick={toggleCenter}
             position="fixed"
@@ -717,6 +731,7 @@ export default function TaskDashboard() {
             transform="translateX(-50%)"
             size="sm"
             zIndex={30}
+            display={{ base: 'none', md: 'flex' }}
           />
 
           {/* Search Bar - Always Visible */}
@@ -807,7 +822,7 @@ export default function TaskDashboard() {
                                   <Tag size="sm" colorScheme={getDueDateCategory(taskData[task].dueDate) === 'Today' ? 'red' : getDueDateCategory(taskData[task].dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskData[task].dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
                                     {getDueDateCategory(taskData[task].dueDate)}
                                   </Tag>
-                                  {taskData[task].expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                                  {taskData[task].expanded ? <InfoIcon /> : <InfoIcon />}
                                 </HStack>
                               </Flex>
 
@@ -939,7 +954,7 @@ export default function TaskDashboard() {
         {isDetailOpen && (
           <Box w={{ base: '100%', md: isCenterOpen ? '350px' : '500px' }} bg="gray.800" p={6} position="relative">
             <IconButton
-              icon={<ChevronRightIcon />}
+              icon={<EditIcon />}
               aria-label="Collapse Detail Panel"
               onClick={toggleDetail}
               position="absolute"
@@ -947,6 +962,7 @@ export default function TaskDashboard() {
               left="-12px"
               size="sm"
               zIndex={1}
+              display={{ base: 'none', md: 'flex' }}
             />
             <Heading size="md" mb={4}>Edit Selected Task</Heading>
             <Input
@@ -1028,9 +1044,9 @@ export default function TaskDashboard() {
             </Box>
           </Box>
         )}
-        {!isDetailOpen && (
+        {!isDetailOpen && selectedTask && (
           <IconButton
-            icon={<ChevronLeftIcon />}
+            icon={<EditIcon />}
             aria-label="Expand Detail Panel"
             onClick={toggleDetail}
             position="absolute"
@@ -1038,16 +1054,72 @@ export default function TaskDashboard() {
             right="10px"
             size="sm"
             zIndex={10}
+            display={{ base: 'none', md: 'flex' }}
           />
         )}
       </Flex>
+
+      {/* Mobile Sticky Footer Navigation */}
+      <Box
+        position="fixed"
+        bottom={0}
+        left={0}
+        right={0}
+        zIndex={25}
+        display={{ base: 'block', md: 'none' }}
+        bg="gray.800"
+        borderTop="1px solid"
+        borderColor="gray.700"
+        p={3}
+      >
+        <Flex justify="space-around" align="center">
+          <IconButton
+            icon={<CalendarIcon />}
+            aria-label="Toggle Sidebar"
+            onClick={toggleSidebar}
+            size="md"
+            colorScheme={isSidebarOpen ? "blue" : "gray"}
+            variant="solid"
+            borderRadius="full"
+          />
+          <IconButton
+            icon={<ViewIcon />}
+            aria-label="Toggle Center Panel"
+            onClick={toggleCenter}
+            size="md"
+            colorScheme={isCenterOpen ? "blue" : "gray"}
+            variant="solid"
+            borderRadius="full"
+          />
+          {selectedTask && (
+            <IconButton
+              icon={<EditIcon />}
+              aria-label="Toggle Detail Panel"
+              onClick={toggleDetail}
+              size="md"
+              colorScheme={isDetailOpen ? "blue" : "gray"}
+              variant="solid"
+              borderRadius="full"
+            />
+          )}
+          <IconButton
+            icon={<ChatIcon />}
+            aria-label="Toggle Footer Panel"
+            onClick={toggleFooter}
+            size="md"
+            colorScheme={isFooterOpen ? "blue" : "gray"}
+            variant="solid"
+            borderRadius="full"
+          />
+        </Flex>
+      </Box>
 
       {/* Collapsible Footer Panel */}
       <Box position="fixed" bottom={0} left={0} right={0} zIndex={20}>
         {/* Toggle Button */}
         <Flex justify="center" mb={0}>
           <IconButton
-            icon={isFooterOpen ? <ChevronDownIcon /> : <ChevronUpIcon />}
+            icon={isFooterOpen ? <ChatIcon /> : <ChatIcon />}
             aria-label="Toggle Footer Panel"
             onClick={toggleFooter}
             size="md"
@@ -1056,12 +1128,21 @@ export default function TaskDashboard() {
             borderRadius="full"
             mb={-4}
             zIndex={21}
+            display={{ base: 'none', md: 'flex' }}
           />
         </Flex>
 
         {/* Footer Content */}
         <Collapse in={isFooterOpen} animateOpacity>
-          <Box w="full" bg="gray.800" p={6} borderTop="1px solid" borderColor="gray.700" minH="300px">
+          <Box
+            w="full"
+            bg="gray.800"
+            p={6}
+            borderTop="1px solid"
+            borderColor="gray.700"
+            minH="300px"
+            bottom={{ base: '60px', md: '0' }}
+          >
             <Flex justify="space-between" align="start" maxW="1200px" mx="auto" gap={8}>
               <Box flex={1}>
                 <Heading size="md" mb={4} color="white">Tasks Prompt</Heading>
