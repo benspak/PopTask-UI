@@ -285,7 +285,93 @@ export default function TaskDashboard() {
   // State for contextual task view
   const [currentView, setCurrentView] = React.useState('all'); // 'all', 'day', 'project', 'tag'
   const [currentFilter, setCurrentFilter] = React.useState('');
-  const [filteredTasks, setFilteredTasks] = React.useState([]);
+
+  // Memoize filtered tasks to prevent race conditions
+  const filteredTasks = React.useMemo(() => {
+    try {
+      if (currentView === 'all') {
+        return [];
+      } else if (currentView === 'day' && currentFilter && dayTasks[currentFilter]) {
+        const dayTasksArray = dayTasks[currentFilter];
+        if (!Array.isArray(dayTasksArray)) {
+          console.error('dayTasks[currentFilter] is not an array:', dayTasksArray);
+          return [];
+        }
+        // For day view, all tasks come from dayTasks, so source should be 'week'
+        return dayTasksArray.map(task => ({
+          ...task,
+          source: 'week'
+        })).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+      } else if (currentView === 'project' && currentFilter) {
+        const allTasks = [];
+
+        // Add tasks from taskData (Tasks for Today)
+        Object.keys(taskData).forEach(taskName => {
+          if (taskData[taskName].project === currentFilter) {
+            allTasks.push({
+              title: taskName,
+              description: taskData[taskName].description,
+              dueDate: taskData[taskName].dueDate,
+              project: taskData[taskName].project,
+              tags: taskData[taskName].tags,
+              completed: taskData[taskName].completed,
+              source: 'today'
+            });
+          }
+        });
+
+        // Add tasks from dayTasks (This Week)
+        Object.keys(dayTasks).forEach(day => {
+          dayTasks[day].forEach(task => {
+            if (task.project === currentFilter) {
+              allTasks.push({
+                ...task,
+                source: 'week'
+              });
+            }
+          });
+        });
+
+        return allTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+      } else if (currentView === 'tag' && currentFilter) {
+        const allTasks = [];
+
+        // Add tasks from taskData (Tasks for Today)
+        Object.keys(taskData).forEach(taskName => {
+          if (taskData[taskName].tags.includes(currentFilter)) {
+            allTasks.push({
+              title: taskName,
+              description: taskData[taskName].description,
+              dueDate: taskData[taskName].dueDate,
+              project: taskData[taskName].project,
+              tags: taskData[taskName].tags,
+              completed: taskData[taskName].completed,
+              source: 'today'
+            });
+          }
+        });
+
+        // Add tasks from dayTasks (This Week)
+        Object.keys(dayTasks).forEach(day => {
+          dayTasks[day].forEach(task => {
+            if (task.tags.includes(currentFilter)) {
+              allTasks.push({
+                ...task,
+                source: 'week'
+              });
+            }
+          });
+        });
+
+        return allTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error computing filtered tasks:', error);
+      console.log('Current state:', { currentView, currentFilter, dayTasks: dayTasks ? Object.keys(dayTasks) : 'undefined' });
+      return [];
+    }
+  }, [currentView, currentFilter, taskData, dayTasks]);
 
   const toggleDay = (day) => {
     setExpandedDays(prev => ({
@@ -335,10 +421,6 @@ export default function TaskDashboard() {
 
     setCurrentView('day');
     setCurrentFilter(day);
-
-    // Sort tasks by due date
-    const sortedTasks = dayTasks[day].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-    setFilteredTasks(sortedTasks);
   };
 
   const handleProjectClick = (project) => {
@@ -349,39 +431,6 @@ export default function TaskDashboard() {
 
     setCurrentView('project');
     setCurrentFilter(project);
-
-    // Filter tasks by project from both taskData and dayTasks
-    const allTasks = [];
-
-    // Add tasks from taskData (Tasks for Today)
-    Object.keys(taskData).forEach(taskName => {
-      if (taskData[taskName].project === project) {
-        allTasks.push({
-          title: taskName,
-          description: taskData[taskName].description,
-          dueDate: taskData[taskName].dueDate,
-          project: taskData[taskName].project,
-          tags: taskData[taskName].tags,
-          source: 'today'
-        });
-      }
-    });
-
-    // Add tasks from dayTasks (This Week)
-    Object.keys(dayTasks).forEach(day => {
-      dayTasks[day].forEach(task => {
-        if (task.project === project) {
-          allTasks.push({
-            ...task,
-            source: 'week'
-          });
-        }
-      });
-    });
-
-    // Sort tasks by due date
-    const sortedTasks = allTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-    setFilteredTasks(sortedTasks);
   };
 
   const handleTagClick = (tag) => {
@@ -392,70 +441,61 @@ export default function TaskDashboard() {
 
     setCurrentView('tag');
     setCurrentFilter(tag);
-
-    // Filter tasks by tag from both taskData and dayTasks
-    const allTasks = [];
-
-    // Add tasks from taskData (Tasks for Today)
-    Object.keys(taskData).forEach(taskName => {
-      if (taskData[taskName].tags.includes(tag)) {
-        allTasks.push({
-          title: taskName,
-          description: taskData[taskName].description,
-          dueDate: taskData[taskName].dueDate,
-          project: taskData[taskName].project,
-          tags: taskData[taskName].tags,
-          source: 'today'
-        });
-      }
-    });
-
-    // Add tasks from dayTasks (This Week)
-    Object.keys(dayTasks).forEach(day => {
-      dayTasks[day].forEach(task => {
-        if (task.tags.includes(tag)) {
-          allTasks.push({
-            ...task,
-            source: 'week'
-          });
-        }
-      });
-    });
-
-    // Sort tasks by due date
-    const sortedTasks = allTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-    setFilteredTasks(sortedTasks);
   };
 
   const resetToAllTasks = () => {
     setCurrentView('all');
     setCurrentFilter('');
-    setFilteredTasks([]);
   };
 
   const toggleTaskCompleted = (taskName, source = 'today') => {
-    if (source === 'today') {
-      setTaskData(prev => ({
-        ...prev,
-        [taskName]: {
-          ...prev[taskName],
-          completed: !prev[taskName].completed
-        }
-      }));
-    } else {
-      // For weekly tasks, we need to find the task in the dayTasks structure
-      setDayTasks(prev => {
-        const newDayTasks = { ...prev };
-        Object.keys(newDayTasks).forEach(day => {
-          newDayTasks[day] = newDayTasks[day].map(task => {
-            if (task.title === taskName) {
-              return { ...task, completed: !task.completed };
+    try {
+      console.log('toggleTaskCompleted called:', { taskName, source, currentView, currentFilter });
+
+      if (source === 'today') {
+        setTaskData(prev => {
+          // Validate that the task exists before accessing it
+          if (!prev[taskName]) {
+            console.error('Task not found in taskData:', taskName);
+            return prev;
+          }
+          return {
+            ...prev,
+            [taskName]: {
+              ...prev[taskName],
+              completed: !prev[taskName].completed
             }
-            return task;
-          });
+          };
         });
-        return newDayTasks;
-      });
+      } else {
+        // For weekly tasks, we need to find the task in the dayTasks structure
+        setDayTasks(prev => {
+          console.log('Updating dayTasks:', { prev: Object.keys(prev), taskName });
+          const newDayTasks = { ...prev };
+          let taskFound = false;
+
+          Object.keys(newDayTasks).forEach(day => {
+            newDayTasks[day] = newDayTasks[day].map(task => {
+              if (task.title === taskName) {
+                taskFound = true;
+                console.log('Found task to toggle:', { day, task: task.title, currentCompleted: task.completed });
+                return { ...task, completed: !task.completed };
+              }
+              return task;
+            });
+          });
+
+          if (!taskFound) {
+            console.error('Task not found in dayTasks:', taskName);
+          }
+
+          console.log('New dayTasks structure:', Object.keys(newDayTasks));
+          return newDayTasks;
+        });
+      }
+    } catch (error) {
+      console.error('Error in toggleTaskCompleted:', error);
+      console.log('Task details:', { taskName, source, currentView, currentFilter });
     }
   };
 
@@ -715,156 +755,183 @@ export default function TaskDashboard() {
           </Box>
 
           <Collapse in={isCenterOpen} animateOpacity>
-            <Flex justify="space-between" align="center" mb={4}>
-              <Heading size="lg">
-                {currentView === 'all' && 'My Tasks'}
-                {currentView === 'day' && `${currentFilter} Tasks`}
-                {currentView === 'project' && `${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Tasks`}
-                {currentView === 'tag' && `#${currentFilter} Tasks`}
-              </Heading>
-            </Flex>
+            {(() => {
+              try {
+                return (
+                  <>
+                    <Flex justify="space-between" align="center" mb={4}>
+                      <Heading size="lg">
+                        {currentView === 'all' && 'My Tasks'}
+                        {currentView === 'day' && `${currentFilter} Tasks`}
+                        {currentView === 'project' && `${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Tasks`}
+                        {currentView === 'tag' && `#${currentFilter} Tasks`}
+                      </Heading>
+                    </Flex>
 
-            <VStack align="stretch" spacing={3}>
-              {currentView === 'all' ? (
-                // Show all tasks from taskData
-                Object.keys(taskData).map((task, idx) => (
-                  <Box key={idx}>
-                    <Box
-                      p={3}
-                      bg={selectedTask === task ? 'gray.700' : 'gray.800'}
-                      borderRadius="md"
-                      cursor="pointer"
-                      onClick={() => handleTaskClick(task)}
-                      _hover={{ bg: 'gray.700' }}
-                      border={selectedTask === task ? '2px solid' : '1px solid'}
-                      borderColor={selectedTask === task ? 'blue.400' : 'transparent'}
-                    >
-                      <Flex justify="space-between" align="center" mb={2}>
-                        <Flex align="center" flex={1}>
-                          <Checkbox
-                            isChecked={taskData[task].completed}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleTaskCompleted(task, 'today');
-                            }}
-                            colorScheme="green"
-                            size="md"
-                            mr={3}
-                          />
-                          <Text
-                            color={selectedTask === task ? 'green.300' : taskData[task].completed ? 'gray.500' : 'white'}
-                            fontWeight={selectedTask === task ? 'bold' : 'normal'}
-                            textDecoration={taskData[task].completed ? "line-through" : "none"}
-                          >
-                            {task}
-                          </Text>
-                        </Flex>
-                        <HStack spacing={2}>
-                          <Tag size="sm" colorScheme={getDueDateCategory(taskData[task].dueDate) === 'Today' ? 'red' : getDueDateCategory(taskData[task].dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskData[task].dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
-                            {getDueDateCategory(taskData[task].dueDate)}
-                          </Tag>
-                          {taskData[task].expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                        </HStack>
-                      </Flex>
-
-                      {/* Task metadata */}
-                      <VStack align="start" spacing={1}>
-                        <HStack spacing={4} fontSize="xs" color="gray.400">
-                          <Text>Due: {taskData[task].dueDate}</Text>
-                          <Text>Project: {taskData[task].project}</Text>
-                        </HStack>
-                        <HStack spacing={1}>
-                          {taskData[task].tags.map((tag, tagIndex) => (
-                            <Tag
-                              key={tagIndex}
-                              size="sm"
-                              colorScheme="blue"
-                              variant="subtle"
+                    <VStack align="stretch" spacing={3}>
+                      {currentView === 'all' ? (
+                        // Show all tasks from taskData
+                        Object.keys(taskData).map((task, idx) => (
+                          <Box key={idx}>
+                            <Box
+                              p={3}
+                              bg={selectedTask === task ? 'gray.700' : 'gray.800'}
+                              borderRadius="md"
                               cursor="pointer"
-                              onClick={() => handleTagClick(tag)}
-                              _hover={{ bg: 'blue.600' }}
+                              onClick={() => handleTaskClick(task)}
+                              _hover={{ bg: 'gray.700' }}
+                              border={selectedTask === task ? '2px solid' : '1px solid'}
+                              borderColor={selectedTask === task ? 'blue.400' : 'transparent'}
                             >
-                              {tag}
-                            </Tag>
-                          ))}
-                        </HStack>
-                      </VStack>
-                    </Box>
-                    <Collapse in={taskData[task].expanded} animateOpacity>
-                      <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
-                        <Text fontSize="sm" color="gray.300" lineHeight="1.6">
-                          {taskData[task].description}
-                        </Text>
-                      </Box>
-                    </Collapse>
-                  </Box>
-                ))
-              ) : (
-                // Show filtered tasks
-                filteredTasks.map((task, idx) => (
-                  <Box key={idx}>
-                    <Box
-                      p={3}
-                      bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
-                      borderRadius="md"
-                      cursor="pointer"
-                      onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleWeeklyTaskClick(task)}
-                      _hover={{ bg: 'gray.700' }}
-                      border={selectedTask === task.title ? '2px solid' : '1px solid'}
-                      borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
-                    >
-                      <Flex justify="space-between" align="center" mb={2}>
-                        <Flex align="center" flex={1}>
-                          <Checkbox
-                            isChecked={task.completed}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleTaskCompleted(task.title, task.source);
-                            }}
-                            colorScheme="green"
-                            size="md"
-                            mr={3}
-                          />
-                          <Text
-                            color={selectedTask === task.title ? 'green.300' : task.completed ? 'gray.500' : 'white'}
-                            fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
-                            textDecoration={task.completed ? "line-through" : "none"}
-                          >
-                            {task.title}
-                          </Text>
-                        </Flex>
-                        <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
-                          {getDueDateCategory(task.dueDate)}
-                        </Tag>
-                      </Flex>
+                              <Flex justify="space-between" align="center" mb={2}>
+                                <Flex align="center" flex={1}>
+                                  <Checkbox
+                                    isChecked={taskData[task].completed}
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      toggleTaskCompleted(task, 'today');
+                                    }}
+                                    colorScheme="green"
+                                    size="md"
+                                    mr={3}
+                                  />
+                                  <Text
+                                    color={selectedTask === task ? 'green.300' : taskData[task].completed ? 'gray.500' : 'white'}
+                                    fontWeight={selectedTask === task ? 'bold' : 'normal'}
+                                    textDecoration={taskData[task].completed ? "line-through" : "none"}
+                                  >
+                                    {task}
+                                  </Text>
+                                </Flex>
+                                <HStack spacing={2}>
+                                  <Tag size="sm" colorScheme={getDueDateCategory(taskData[task].dueDate) === 'Today' ? 'red' : getDueDateCategory(taskData[task].dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskData[task].dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
+                                    {getDueDateCategory(taskData[task].dueDate)}
+                                  </Tag>
+                                  {taskData[task].expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                                </HStack>
+                              </Flex>
 
-                      {/* Task metadata */}
-                      <VStack align="start" spacing={1}>
-                        <HStack spacing={4} fontSize="xs" color="gray.400">
-                          <Text>Due: {task.dueDate}</Text>
-                          <Text>Project: {task.project}</Text>
-                        </HStack>
-                        <HStack spacing={1}>
-                          {task.tags.map((tag, tagIndex) => (
-                            <Tag
-                              key={tagIndex}
-                              size="sm"
-                              colorScheme="blue"
-                              variant="subtle"
-                              cursor="pointer"
-                              onClick={() => handleTagClick(tag)}
-                              _hover={{ bg: 'blue.600' }}
-                            >
-                              {tag}
-                            </Tag>
-                          ))}
-                        </HStack>
-                      </VStack>
-                    </Box>
+                              {/* Task metadata */}
+                              <VStack align="start" spacing={1}>
+                                <HStack spacing={4} fontSize="xs" color="gray.400">
+                                  <Text>Due: {taskData[task].dueDate}</Text>
+                                  <Text>Project: {taskData[task].project}</Text>
+                                </HStack>
+                                <HStack spacing={1}>
+                                  {taskData[task].tags.map((tag, tagIndex) => (
+                                    <Tag
+                                      key={tagIndex}
+                                      size="sm"
+                                      colorScheme="blue"
+                                      variant="subtle"
+                                      cursor="pointer"
+                                      onClick={() => handleTagClick(tag)}
+                                      _hover={{ bg: 'blue.600' }}
+                                    >
+                                      {tag}
+                                    </Tag>
+                                  ))}
+                                </HStack>
+                              </VStack>
+                            </Box>
+                            <Collapse in={taskData[task].expanded} animateOpacity>
+                              <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                                <Text fontSize="sm" color="gray.300" lineHeight="1.6">
+                                  {taskData[task].description}
+                                </Text>
+                              </Box>
+                            </Collapse>
+                          </Box>
+                        ))
+                      ) : (
+                        // Show filtered tasks
+                        (() => {
+                          try {
+                            return filteredTasks.map((task, idx) => (
+                              <Box key={idx}>
+                                <Box
+                                  p={3}
+                                  bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
+                                  borderRadius="md"
+                                  cursor="pointer"
+                                  onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleWeeklyTaskClick(task)}
+                                  _hover={{ bg: 'gray.700' }}
+                                  border={selectedTask === task.title ? '2px solid' : '1px solid'}
+                                  borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
+                                >
+                                  <Flex justify="space-between" align="center" mb={2}>
+                                    <Flex align="center" flex={1}>
+                                      <Checkbox
+                                        isChecked={task.completed}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          toggleTaskCompleted(task.title, task.source);
+                                        }}
+                                        colorScheme="green"
+                                        size="md"
+                                        mr={3}
+                                      />
+                                      <Text
+                                        color={selectedTask === task.title ? 'green.300' : task.completed ? 'gray.500' : 'white'}
+                                        fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
+                                        textDecoration={task.completed ? "line-through" : "none"}
+                                      >
+                                        {task.title}
+                                      </Text>
+                                    </Flex>
+                                    <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
+                                      {getDueDateCategory(task.dueDate)}
+                                    </Tag>
+                                  </Flex>
+
+                                  {/* Task metadata */}
+                                  <VStack align="start" spacing={1}>
+                                    <HStack spacing={4} fontSize="xs" color="gray.400">
+                                      <Text>Due: {task.dueDate}</Text>
+                                      <Text>Project: {task.project}</Text>
+                                    </HStack>
+                                    <HStack spacing={1}>
+                                      {task.tags.map((tag, tagIndex) => (
+                                        <Tag
+                                          key={tagIndex}
+                                          size="sm"
+                                          colorScheme="blue"
+                                          variant="subtle"
+                                          cursor="pointer"
+                                          onClick={() => handleTagClick(tag)}
+                                          _hover={{ bg: 'blue.600' }}
+                                        >
+                                          {tag}
+                                        </Tag>
+                                      ))}
+                                    </HStack>
+                                  </VStack>
+                                </Box>
+                              </Box>
+                            ));
+                          } catch (error) {
+                            console.error('Error rendering filtered tasks:', error);
+                            return (
+                              <Box p={4} bg="red.900" borderRadius="md">
+                                <Text color="red.200">Error loading tasks. Please refresh the page.</Text>
+                              </Box>
+                            );
+                          }
+                        })()
+                      )}
+                    </VStack>
+                  </>
+                );
+              } catch (error) {
+                console.error('Error in main content render:', error);
+                return (
+                  <Box p={4} bg="red.900" borderRadius="md">
+                    <Text color="red.200">Error loading content. Please refresh the page.</Text>
+                    <Text color="red.300" fontSize="sm" mt={2}>Error: {error.message}</Text>
                   </Box>
-                ))
-              )}
-            </VStack>
+                );
+              }
+            })()}
           </Collapse>
         </Box>
 
