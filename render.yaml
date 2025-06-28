@@ -1,9 +1,3 @@
-databases:
-  - name: task-dashboard-mongodb
-    databaseName: taskmanager
-    user: taskuser
-    plan: starter
-
 services:
   # Backend API Service
   - type: web
@@ -32,7 +26,7 @@ services:
   - type: web
     name: task-dashboard-frontend
     env: static
-    plan: free
+    plan: starter
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
