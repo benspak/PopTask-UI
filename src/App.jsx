@@ -87,14 +87,20 @@ export default function TaskDashboard() {
 
   // Load backend data on component mount
   React.useEffect(() => {
-    loadTasks();
-    loadProjects();
-  }, [loadTasks, loadProjects]);
+    // Only load data if we're not in shared view mode
+    if (!sharedContent) {
+      loadTasks();
+      loadProjects();
+    }
+  }, [loadTasks, loadProjects, sharedContent]);
 
   // Keep all tasks in sync with backend
   React.useEffect(() => {
-    setAllBackendTasks(backendTasks);
-  }, [backendTasks]);
+    // Only sync tasks if we're not in shared view mode
+    if (!sharedContent) {
+      setAllBackendTasks(backendTasks);
+    }
+  }, [backendTasks, sharedContent]);
 
   // Transform backend tasks to match local state format
   const transformBackendTasksToLocalFormat = React.useCallback(() => {
@@ -442,12 +448,13 @@ export default function TaskDashboard() {
 
   // Automatically reload task files when selectedTaskId changes
   React.useEffect(() => {
-    if (selectedTaskId) {
+    // Only reload files if we're not in shared view mode and have a selected task
+    if (selectedTaskId && !sharedContent) {
       loadTaskFiles(selectedTaskId);
     }
     // Only clear files when explicitly going to add mode or when no task is selected
     // Don't clear files when selectedTaskId becomes null due to other state changes
-  }, [selectedTaskId]);
+  }, [selectedTaskId, sharedContent]);
 
   // Utility function to convert date to Mountain Standard Time
   const toMST = (date) => {
@@ -665,8 +672,11 @@ export default function TaskDashboard() {
 
   // Debug logging for selectedTaskId changes
   React.useEffect(() => {
-    console.log('selectedTaskId changed:', selectedTaskId);
-  }, [selectedTaskId]);
+    // Only log changes if we're not in shared view mode
+    if (!sharedContent) {
+      console.log('selectedTaskId changed:', selectedTaskId);
+    }
+  }, [selectedTaskId, sharedContent]);
 
   // Handle ESC key to close pop-over panels
   React.useEffect(() => {
