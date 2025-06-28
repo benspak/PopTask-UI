@@ -473,7 +473,7 @@ export default function TaskDashboard() {
   };
 
   const handleTaskClick = (taskName) => {
-    setSelectedTask(taskName);
+      setSelectedTask(taskName);
     setSelectedTaskId(null); // Reset task ID
     setIsAddMode(false);
     setIsEditProjectMode(false);
@@ -531,13 +531,13 @@ export default function TaskDashboard() {
   };
 
   const handleWeeklyTaskClick = (task) => {
-    setSelectedTask(task.title);
-    setSelectedTaskId(task._id);
+      setSelectedTask(task.title);
+      setSelectedTaskId(task._id);
     setIsAddMode(false);
     setIsEditProjectMode(false);
     setIsAddProjectMode(false);
 
-    setTaskTitle(task.title);
+      setTaskTitle(task.title);
     setTaskDescription(task.description || '');
     setEditingDueDate(task.dueDate || '');
     setEditingProject(task.project || 'general');
@@ -555,13 +555,13 @@ export default function TaskDashboard() {
   };
 
   const handleFilteredTaskClick = (task) => {
-    setSelectedTask(task.title);
+      setSelectedTask(task.title);
     setSelectedTaskId(task._id);
     setIsAddMode(false);
     setIsEditProjectMode(false);
     setIsAddProjectMode(false);
 
-    setTaskTitle(task.title);
+      setTaskTitle(task.title);
     setTaskDescription(task.description || '');
     setEditingDueDate(task.dueDate || '');
     setEditingProject(task.project || 'general');
@@ -571,7 +571,7 @@ export default function TaskDashboard() {
     // Load task files
     if (task._id) {
       loadTaskFiles(task._id);
-    } else {
+      } else {
       setUploadedFiles([]);
     }
 
@@ -675,16 +675,16 @@ export default function TaskDashboard() {
       // Store the current task ID before updating
       const currentTaskId = selectedTaskId;
 
-      // Use backend API to update task
+        // Use backend API to update task
       const updatedTask = await updateTask(currentTaskId, updatedTaskData);
 
-      // Update selectedTask if the title was changed
-      if (taskTitle !== selectedTask) {
-        setSelectedTask(taskTitle);
-      }
+        // Update selectedTask if the title was changed
+        if (taskTitle !== selectedTask) {
+          setSelectedTask(taskTitle);
+        }
 
-      // Reload tasks to ensure UI is in sync with backend
-      await loadTasks();
+        // Reload tasks to ensure UI is in sync with backend
+        await loadTasks();
 
       // Reload task files using the updated task data
       if (updatedTask && updatedTask.fileAttachments) {
@@ -694,13 +694,13 @@ export default function TaskDashboard() {
         await loadTaskFiles(currentTaskId);
       }
 
-      toast({
-        title: 'Success',
-        description: 'Task updated successfully',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+        toast({
+          title: 'Success',
+          description: 'Task updated successfully',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
 
       toggleDetail();
     } catch (error) {
@@ -1580,7 +1580,7 @@ export default function TaskDashboard() {
                   </Box>
                 </Alert>
               ) : (
-                <SimpleGrid columns={2} spacing={3}>
+              <SimpleGrid columns={2} spacing={3}>
                   {backendProjects.map((project) => (
                     <Box
                       key={project._id}
@@ -1608,7 +1608,7 @@ export default function TaskDashboard() {
                           handleProjectFilter(project.name);
                         }}
                       />
-                    </Box>
+                </Box>
                   ))}
                   <Box
                     p={4}
@@ -1622,8 +1622,8 @@ export default function TaskDashboard() {
                   >
                     <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'blue.800' : 'blue.200'} textAlign="center">+ Add Project</Text>
                     <Text fontSize="sm" color={colorMode === 'light' ? 'blue.600' : 'blue.300'} textAlign="center">Create a new project</Text>
-                  </Box>
-                </SimpleGrid>
+                </Box>
+              </SimpleGrid>
               )}
             </Box>
           </Collapse>
@@ -1647,7 +1647,7 @@ export default function TaskDashboard() {
                   </Box>
                 </Alert>
               ) : (
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
                   {backendProjects.map((project) => (
                     <Box
                       key={project._id}
@@ -1660,7 +1660,7 @@ export default function TaskDashboard() {
                     >
                       <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
                       <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>{project.description || 'No description'}</Text>
-                    </Box>
+                </Box>
                   ))}
                   <Box
                     p={4}
@@ -1674,8 +1674,8 @@ export default function TaskDashboard() {
                   >
                     <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'blue.800' : 'blue.200'} textAlign="center">+ Add Project</Text>
                     <Text fontSize="sm" color={colorMode === 'light' ? 'blue.600' : 'blue.300'} textAlign="center">Create a new project</Text>
-                  </Box>
-                </SimpleGrid>
+                </Box>
+              </SimpleGrid>
               )}
             </Box>
           </Collapse>
@@ -1940,17 +1940,17 @@ export default function TaskDashboard() {
             {isAddProjectMode ? (
               // Project creation form
               <>
-                <Input
+            <Input
                   placeholder="Project name"
                   value={projectTitle}
-                  fontSize="lg"
-                  fontWeight="bold"
+              fontSize="lg"
+              fontWeight="bold"
                   bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                  border={0}
+              border={0}
                   p={2}
-                  mb={2}
+              mb={2}
                   borderRadius="md"
-                  color={colorMode === 'light' ? 'gray.800' : 'white'}
+              color={colorMode === 'light' ? 'gray.800' : 'white'}
                   _focus={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.600', border: '1px solid', borderColor: 'blue.400' }}
                   _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.600' }}
                   onChange={(e) => setProjectTitle(e.target.value)}
@@ -2012,40 +2012,40 @@ export default function TaskDashboard() {
                   color={colorMode === 'light' ? 'gray.800' : 'white'}
                   _focus={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.600', border: '1px solid', borderColor: 'blue.400' }}
                   _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.600' }}
-                  onChange={(e) => setTaskTitle(e.target.value)}
-                />
-                <Textarea
-                  placeholder="Task description"
-                  mb={4}
-                  value={taskDescription}
-                  bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                  color={colorMode === 'light' ? 'gray.800' : 'white'}
-                  border={0}
-                  _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
-                  onChange={(e) => setTaskDescription(e.target.value)}
-                />
+              onChange={(e) => setTaskTitle(e.target.value)}
+            />
+            <Textarea
+              placeholder="Task description"
+              mb={4}
+              value={taskDescription}
+              bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+              color={colorMode === 'light' ? 'gray.800' : 'white'}
+              border={0}
+              _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
+              onChange={(e) => setTaskDescription(e.target.value)}
+            />
 
-                <Box mb={4}>
-                  <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Due Date</Text>
-                  <Input
-                    type="date"
-                    bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                    border={0}
-                    color={colorMode === 'light' ? 'gray.800' : 'white'}
-                    value={editingDueDate}
-                    onChange={(e) => setEditingDueDate(e.target.value)}
-                  />
-                </Box>
+            <Box mb={4}>
+              <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Due Date</Text>
+              <Input
+                type="date"
+                bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                border={0}
+                color={colorMode === 'light' ? 'gray.800' : 'white'}
+                value={editingDueDate}
+                onChange={(e) => setEditingDueDate(e.target.value)}
+              />
+            </Box>
 
-                <Box mb={4}>
-                    <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Project</Text>
-                    <Select
-                      bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                      border={0}
-                      color={colorMode === 'light' ? 'gray.800' : 'white'}
-                      placeholder="Select project"
-                      value={editingProject}
-                      onChange={(e) => setEditingProject(e.target.value)}
+          <Box mb={4}>
+              <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Project</Text>
+              <Select
+                bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                border={0}
+                color={colorMode === 'light' ? 'gray.800' : 'white'}
+                placeholder="Select project"
+                value={editingProject}
+                onChange={(e) => setEditingProject(e.target.value)}
                       isDisabled={projectsLoading}
                     >
                       {backendProjects.map((project) => (
@@ -2053,11 +2053,11 @@ export default function TaskDashboard() {
                           {project.name.charAt(0).toUpperCase() + project.name.slice(1)}
                         </option>
                       ))}
-                    </Select>
-                </Box>
+              </Select>
+          </Box>
 
-                <Box mb={4}>
-                  <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Tags</Text>
+          <Box mb={4}>
+            <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Tags</Text>
                   <VStack spacing={2} align="stretch">
                     {[0, 1, 2].map((index) => (
                       <HStack key={index} spacing={2}>
@@ -2067,76 +2067,76 @@ export default function TaskDashboard() {
                           bg={colorMode === 'light' ? 'gray.200' : 'gray.600'}
                           flex={1}
                         >
-                          <Input
+                    <Input
                             value={editingTags[index] || ''}
-                            onChange={(e) => {
-                              const newTags = [...editingTags];
-                              newTags[index] = e.target.value;
-                              setEditingTags(newTags);
-                            }}
-                            bg="transparent"
-                            border={0}
-                            color={colorMode === 'light' ? 'gray.800' : 'white'}
-                            fontSize="sm"
-                            p={2}
-                            minW="80px"
+                      onChange={(e) => {
+                        const newTags = [...editingTags];
+                        newTags[index] = e.target.value;
+                        setEditingTags(newTags);
+                      }}
+                      bg="transparent"
+                      border={0}
+                      color={colorMode === 'light' ? 'gray.800' : 'white'}
+                      fontSize="sm"
+                      p={2}
+                      minW="80px"
                             placeholder={`Tag ${index + 1}`}
-                            _focus={{ bg: 'transparent', border: '1px solid', borderColor: colorMode === 'light' ? 'gray.600' : 'white' }}
-                          />
-                        </Tag>
-                      </HStack>
+                      _focus={{ bg: 'transparent', border: '1px solid', borderColor: colorMode === 'light' ? 'gray.600' : 'white' }}
+                    />
+                  </Tag>
+            </HStack>
                     ))}
                   </VStack>
-                </Box>
+          </Box>
 
-                <Box mb={4}>
-                  <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Completed</Text>
-                  <Select
-                    bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                    border={0}
-                    color={colorMode === 'light' ? 'gray.800' : 'white'}
-                    placeholder="Select completion status"
-                    value={editingCompleted.toString()}
-                    onChange={(e) => {
-                      const newCompleted = e.target.value === 'true';
-                      setEditingCompleted(newCompleted);
+          <Box mb={4}>
+            <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Completed</Text>
+            <Select
+              bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+              border={0}
+              color={colorMode === 'light' ? 'gray.800' : 'white'}
+              placeholder="Select completion status"
+              value={editingCompleted.toString()}
+              onChange={(e) => {
+                const newCompleted = e.target.value === 'true';
+                setEditingCompleted(newCompleted);
 
-                      // Update the actual task completion status
-                      if (selectedTask) {
-                        if (currentView === 'all' && taskData[selectedTask]) {
-                          // Update taskData for "My Tasks" view
-                          setLocalTaskData(prev => ({
-                            ...prev,
-                            [selectedTask]: {
-                              ...prev[selectedTask],
-                              completed: newCompleted
-                            }
-                          }));
-                        } else {
-                          // Update dayTasks for filtered views
-                          setDayTasks(prev => {
-                            const newDayTasks = { ...prev };
-                            Object.keys(newDayTasks).forEach(day => {
-                              newDayTasks[day] = newDayTasks[day].map(task => {
-                                if (task.title === selectedTask) {
-                                  return { ...task, completed: newCompleted };
-                                }
-                                return task;
-                              });
-                            });
-                            return newDayTasks;
-                          });
-                        }
+                // Update the actual task completion status
+                if (selectedTask) {
+                  if (currentView === 'all' && taskData[selectedTask]) {
+                    // Update taskData for "My Tasks" view
+                    setLocalTaskData(prev => ({
+                      ...prev,
+                      [selectedTask]: {
+                        ...prev[selectedTask],
+                        completed: newCompleted
                       }
-                    }}
-                  >
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
-                  </Select>
-                </Box>
+                    }));
+                  } else {
+                    // Update dayTasks for filtered views
+                    setDayTasks(prev => {
+                      const newDayTasks = { ...prev };
+                      Object.keys(newDayTasks).forEach(day => {
+                        newDayTasks[day] = newDayTasks[day].map(task => {
+                          if (task.title === selectedTask) {
+                            return { ...task, completed: newCompleted };
+                          }
+                          return task;
+                        });
+                      });
+                      return newDayTasks;
+                    });
+                  }
+                }
+              }}
+            >
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </Select>
+          </Box>
 
-                <Box>
-                  <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'white'}>Task Assets</Text>
+          <Box>
+            <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'white'}>Task Assets</Text>
 
                   {/* Uploaded Files Display */}
                   {uploadedFiles.length > 0 && (
@@ -2293,55 +2293,55 @@ export default function TaskDashboard() {
                   )}
 
                   {/* Warning for local tasks */}
-                  {!isAddMode && !selectedTaskId && (
-                    <Alert status="warning" mb={3} borderRadius="md">
-                      <Box>
-                        <AlertTitle>Local Task</AlertTitle>
-                        <AlertDescription>
+            {!isAddMode && !selectedTaskId && (
+              <Alert status="warning" mb={3} borderRadius="md">
+                <Box>
+                  <AlertTitle>Local Task</AlertTitle>
+                  <AlertDescription>
                           This task is not from the backend and cannot be updated, deleted, or have files uploaded.
-                        </AlertDescription>
-                      </Box>
-                    </Alert>
-                  )}
+                  </AlertDescription>
+                </Box>
+              </Alert>
+            )}
 
                   {/* Action Buttons */}
-                  {isAddMode ? (
-                    <Button colorScheme="green" w="full" onClick={onCreateTask} mb={2}>Create</Button>
-                  ) : (
-                    <Button colorScheme="green" w="full" onClick={onUpdateTask} mb={2} isDisabled={!selectedTaskId}>Update</Button>
-                  )}
-                  {!isAddMode && (
-                    <Button colorScheme="red" w="full" onClick={() => setIsDeleteDialogOpen(true)} isDisabled={!selectedTaskId || isDeleting}>Delete</Button>
-                  )}
-                </Box>
+            {isAddMode ? (
+              <Button colorScheme="green" w="full" onClick={onCreateTask} mb={2}>Create</Button>
+            ) : (
+              <Button colorScheme="green" w="full" onClick={onUpdateTask} mb={2} isDisabled={!selectedTaskId}>Update</Button>
+            )}
+            {!isAddMode && (
+              <Button colorScheme="red" w="full" onClick={() => setIsDeleteDialogOpen(true)} isDisabled={!selectedTaskId || isDeleting}>Delete</Button>
+            )}
+          </Box>
               </>
             )}
 
-            {/* Delete Confirmation Dialog */}
-            <AlertDialog
-              isOpen={isDeleteDialogOpen}
-              leastDestructiveRef={cancelRef}
-              onClose={() => setIsDeleteDialogOpen(false)}
-            >
-              <AlertDialogOverlay>
-                <AlertDialogContent>
-                  <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                    Delete Task
-                  </AlertDialogHeader>
-                  <AlertDialogBody>
-                    Are you sure you want to delete this task? This action cannot be undone.
-                  </AlertDialogBody>
-                  <AlertDialogFooter>
-                    <Button ref={cancelRef} onClick={() => setIsDeleteDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button colorScheme="red" onClick={onDeleteTask} ml={3} isLoading={isDeleting}>
-                      Delete
-                    </Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialogOverlay>
-            </AlertDialog>
+          {/* Delete Confirmation Dialog */}
+          <AlertDialog
+            isOpen={isDeleteDialogOpen}
+            leastDestructiveRef={cancelRef}
+            onClose={() => setIsDeleteDialogOpen(false)}
+          >
+            <AlertDialogOverlay>
+              <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                  Delete Task
+                </AlertDialogHeader>
+                <AlertDialogBody>
+                  Are you sure you want to delete this task? This action cannot be undone.
+                </AlertDialogBody>
+                <AlertDialogFooter>
+                  <Button ref={cancelRef} onClick={() => setIsDeleteDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button colorScheme="red" onClick={onDeleteTask} ml={3} isLoading={isDeleting}>
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
 
             {/* Project Delete Confirmation Dialog */}
             <AlertDialog
@@ -2368,8 +2368,8 @@ export default function TaskDashboard() {
                 </AlertDialogContent>
               </AlertDialogOverlay>
             </AlertDialog>
-          </Box>
-        )}
+        </Box>
+      )}
     </Flex>
 
       {/* Bottom Navigation - Visible on both mobile and desktop */}
