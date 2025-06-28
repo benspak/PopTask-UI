@@ -99,7 +99,8 @@ export default function TaskDashboard() {
         project: task.project,
         tags: task.tags,
         completed: task.completed,
-        _id: task._id // Keep the backend ID for operations
+        _id: task._id, // Keep the backend ID for operations
+        fileAttachments: task.fileAttachments || [] // Include file attachments
       };
     });
     return transformed;
@@ -358,6 +359,7 @@ export default function TaskDashboard() {
           completed: task.completed,
           expanded: task.expanded,
           _id: task._id,
+          fileAttachments: task.fileAttachments || [], // Include file attachments
           source: 'today'
         });
       }
@@ -370,6 +372,7 @@ export default function TaskDashboard() {
           seenIds.add(task._id);
           allTasks.push({
             ...task,
+            fileAttachments: task.fileAttachments || [], // Include file attachments
             source: 'week'
           });
         }
@@ -413,6 +416,7 @@ export default function TaskDashboard() {
               completed: task.completed,
               expanded: task.expanded,
               _id: task._id,
+              fileAttachments: task.fileAttachments || [], // Include file attachments
               source: 'today'
             });
           }
@@ -425,6 +429,7 @@ export default function TaskDashboard() {
               seenIds.add(task._id);
               allTasks.push({
                 ...task,
+                fileAttachments: task.fileAttachments || [], // Include file attachments
                 source: 'week'
               });
             }
@@ -450,6 +455,7 @@ export default function TaskDashboard() {
               completed: task.completed,
               expanded: task.expanded,
               _id: task._id,
+              fileAttachments: task.fileAttachments || [], // Include file attachments
               source: 'today'
             });
           }
@@ -462,6 +468,7 @@ export default function TaskDashboard() {
               seenIds.add(task._id);
               allTasks.push({
                 ...task,
+                fileAttachments: task.fileAttachments || [], // Include file attachments
                 source: 'week'
               });
             }
@@ -850,9 +857,16 @@ export default function TaskDashboard() {
     }
   };
 
+  // Add state for task deletion
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const cancelRef = React.useRef();
+
+  // Add state for file deletion confirmation
+  const [isDeleteFileDialogOpen, setIsDeleteFileDialogOpen] = React.useState(false);
+  const [fileToDelete, setFileToDelete] = React.useState(null);
+  const [isDeletingFile, setIsDeletingFile] = React.useState(false);
+  const fileDeleteCancelRef = React.useRef();
   const projectCancelRef = React.useRef();
 
   const onDeleteTask = async () => {
@@ -1256,11 +1270,18 @@ export default function TaskDashboard() {
   };
 
   const handleFileDelete = async (filename) => {
-    if (!selectedTaskId) return;
+    // Set the file to delete and open confirmation dialog
+    setFileToDelete(filename);
+    setIsDeleteFileDialogOpen(true);
+  };
 
+  const confirmFileDelete = async () => {
+    if (!selectedTaskId || !fileToDelete) return;
+
+    setIsDeletingFile(true);
     try {
-      await apiService.deleteFile(selectedTaskId, filename);
-      setUploadedFilesWithDebug(prev => prev.filter(file => file.filename !== filename));
+      await apiService.deleteFile(selectedTaskId, fileToDelete);
+      setUploadedFilesWithDebug(prev => prev.filter(file => file.filename !== fileToDelete));
       toast({
         title: 'Success',
         description: 'File deleted successfully',
@@ -1276,6 +1297,10 @@ export default function TaskDashboard() {
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsDeletingFile(false);
+      setFileToDelete(null);
+      setIsDeleteFileDialogOpen(false);
     }
   };
 
@@ -1319,6 +1344,50 @@ export default function TaskDashboard() {
       console.error('Error loading task files:', error);
       setUploadedFilesWithDebug([]);
     }
+  };
+
+  // Helper function to render file attachment indicator
+  const renderFileAttachmentIndicator = (fileAttachments) => {
+    if (!fileAttachments || fileAttachments.length === 0) return null;
+
+    // Check if there are any image files
+    const imageFiles = fileAttachments.filter(file => file.mimetype && file.mimetype.startsWith('image/'));
+
+    if (imageFiles.length > 0) {
+      // Show thumbnail of the first image
+      const firstImage = imageFiles[0];
+      return (
+        <Image
+          src={apiService.getFileUrl(firstImage.filename)}
+          alt={firstImage.originalName}
+          boxSize="20px"
+          objectFit="cover"
+          borderRadius="sm"
+          ml={2}
+          fallback={
+            <AttachmentIcon color="blue.400" ml={2} boxSize={3} />
+          }
+        />
+      );
+    } else {
+      // Show attachment icon for non-image files
+      return <AttachmentIcon color="blue.400" ml={2} boxSize={3} />;
+    }
+  };
+
+  // Helper function to prepare tags for display with attachment indicator
+  const prepareTagsForDisplay = (tags, fileAttachments, taskTitle = null) => {
+    console.log('prepareTagsForDisplay called with:', { tags, fileAttachments, taskTitle, selectedTask, uploadedFiles });
+
+    // Filter out empty tags
+    const validTags = tags.filter(tag => tag && tag.trim() !== '');
+
+    // Take up to 3 user tags
+    const userTags = validTags.slice(0, 3);
+
+    // Return just the user tags (no attachment emoji since there's already a visual indicator)
+    console.log('Returning user tags:', userTags);
+    return userTags;
   };
 
   return (
@@ -1472,7 +1541,7 @@ export default function TaskDashboard() {
                                     {task.title}
                                   </Text>
                                   {task.fileAttachments && task.fileAttachments.length > 0 && (
-                                    <AttachmentIcon color="blue.400" ml={2} boxSize={3} />
+                                    renderFileAttachmentIndicator(task.fileAttachments)
                                   )}
                                 </Flex>
                                 <Text
@@ -1806,7 +1875,7 @@ export default function TaskDashboard() {
                                       {task.title}
                                     </Text>
                                     {taskInfo.fileAttachments && taskInfo.fileAttachments.length > 0 && (
-                                      <AttachmentIcon color="blue.400" ml={2} />
+                                      renderFileAttachmentIndicator(taskInfo.fileAttachments)
                                     )}
                                   </Flex>
                                   <HStack spacing={2}>
@@ -1823,7 +1892,7 @@ export default function TaskDashboard() {
                                     <Text>Project: {taskInfo.project}</Text>
                                   </HStack>
                                   <HStack spacing={1}>
-                                    {taskInfo.tags.filter(tag => tag && tag.trim() !== '').map((tag, tagIndex) => (
+                                    {prepareTagsForDisplay(taskInfo.tags, taskInfo.fileAttachments, taskInfo.title).map((tag, tagIndex) => (
                                       <Tag
                                         key={tagIndex}
                                         size="sm"
@@ -1839,7 +1908,7 @@ export default function TaskDashboard() {
                                   </HStack>
                                 </VStack>
                               </Box>
-                              <Collapse in={task.source === 'today' && taskData[task.title] ? taskInfo.expanded : expandedFilteredTasks[task.title]} animateOpacity>
+                              <Collapse in={task.source === 'today' && Boolean(taskData[task.title]) ? taskInfo.expanded : expandedFilteredTasks[task.title]} animateOpacity>
                                 <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
                                   <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
                                     {taskInfo.description.length > 150
@@ -1891,7 +1960,7 @@ export default function TaskDashboard() {
                                         {task.title}
                                       </Text>
                                       {task.fileAttachments && task.fileAttachments.length > 0 && (
-                                        <AttachmentIcon color="blue.400" ml={2} />
+                                        renderFileAttachmentIndicator(task.fileAttachments)
                                       )}
                                     </Flex>
                                     <HStack spacing={2}>
@@ -1908,7 +1977,7 @@ export default function TaskDashboard() {
                                       <Text>Project: {task.project}</Text>
                                     </HStack>
                                     <HStack spacing={1}>
-                                      {task.tags.filter(tag => tag && tag.trim() !== '').map((tag, tagIndex) => (
+                                      {prepareTagsForDisplay(task.tags, task.fileAttachments, task.title).map((tag, tagIndex) => (
                                         <Tag
                                           key={tagIndex}
                                           size="sm"
@@ -1924,7 +1993,7 @@ export default function TaskDashboard() {
                                     </HStack>
                                   </VStack>
                                 </Box>
-                                <Collapse in={task.source === 'today' && taskData[task.title] ? taskData[task.title].expanded : expandedFilteredTasks[task.title]} animateOpacity>
+                                <Collapse in={task.source === 'today' && Boolean(taskData[task.title]) ? taskData[task.title].expanded : expandedFilteredTasks[task.title]} animateOpacity>
                                   <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
                                     <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
                                       {task.description.length > 150
@@ -2216,16 +2285,6 @@ export default function TaskDashboard() {
                                       _hover={{ bg: 'blackAlpha.700' }}
                                       onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
                                     >
-                                      👁️
-                                    </Button>
-                                    <Button
-                                      size="xs"
-                                      variant="solid"
-                                      bg="blackAlpha.600"
-                                      color="white"
-                                      _hover={{ bg: 'blackAlpha.700' }}
-                                      onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
-                                    >
                                       📥
                                     </Button>
                                     <Button
@@ -2386,6 +2445,32 @@ export default function TaskDashboard() {
                       Cancel
                     </Button>
                     <Button colorScheme="red" onClick={onDeleteProject} ml={3} isLoading={isDeletingProject}>
+                      Delete
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialogOverlay>
+            </AlertDialog>
+
+            {/* File Delete Confirmation Dialog */}
+            <AlertDialog
+              isOpen={isDeleteFileDialogOpen}
+              leastDestructiveRef={fileDeleteCancelRef}
+              onClose={() => setIsDeleteFileDialogOpen(false)}
+            >
+              <AlertDialogOverlay>
+                <AlertDialogContent>
+                  <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                    Delete File
+                  </AlertDialogHeader>
+                  <AlertDialogBody>
+                    Are you sure you want to delete this file? This action cannot be undone.
+                  </AlertDialogBody>
+                  <AlertDialogFooter>
+                    <Button ref={fileDeleteCancelRef} onClick={() => setIsDeleteFileDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button colorScheme="red" onClick={confirmFileDelete} ml={3} isLoading={isDeletingFile}>
                       Delete
                     </Button>
                   </AlertDialogFooter>
