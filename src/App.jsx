@@ -85,6 +85,9 @@ export default function TaskDashboard() {
   // State for all tasks (unfiltered) - needed for updates
   const [allBackendTasks, setAllBackendTasks] = React.useState([]);
 
+  // Sharing state - moved before useEffect hooks that use it
+  const [sharedContent, setSharedContent] = React.useState(null);
+
   // Load backend data on component mount
   React.useEffect(() => {
     // Only load data if we're not in shared view mode
@@ -153,7 +156,6 @@ export default function TaskDashboard() {
   const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
   const [shareDialogType, setShareDialogType] = React.useState(null);
   const [shareDialogItem, setShareDialogItem] = React.useState(null);
-  const [sharedContent, setSharedContent] = React.useState(null);
 
   // URL-based routing for shared content
   React.useEffect(() => {

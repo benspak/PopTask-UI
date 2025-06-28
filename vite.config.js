@@ -13,8 +13,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
-        // Exclude API endpoints from precaching
-        globIgnores: ['**/api/**'],
+        // Exclude API endpoints and service worker files from precaching
+        globIgnores: [
+          '**/api/**',
+          'sw.js',
+          'workbox-*.js',
+          '**/node_modules/**'
+        ],
         // Runtime caching for API requests
         runtimeCaching: [
           {
@@ -22,6 +27,17 @@ export default defineConfig({
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
+              networkTimeoutSeconds: 3,
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https?:\/\/localhost:5173\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'app-cache',
               networkTimeoutSeconds: 3,
               cacheableResponse: {
                 statuses: [0, 200]
@@ -36,7 +52,9 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackAllowlist: [/^(?!\/__).*/],
         // Clean up old caches
-        cleanupOutdatedCaches: true
+        cleanupOutdatedCaches: true,
+        // Disable precaching in development to avoid issues
+        disableDevLogs: true
       },
       manifest: {
         name: 'Task Dashboard',

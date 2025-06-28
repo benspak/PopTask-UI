@@ -36,7 +36,6 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
   const [permission, setPermission] = useState('readonly');
   const [loading, setLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
-  const [shareToken, setShareToken] = useState('');
   const [copied, setCopied] = useState(false);
 
   const handleCreateShare = async () => {
@@ -62,7 +61,6 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
       }
 
       setShareUrl(response.data.shareUrl);
-      setShareToken(response.data.shareToken);
 
       toast({
         title: 'Share link created',
@@ -101,7 +99,6 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
       }
 
       setShareUrl('');
-      setShareToken('');
 
       toast({
         title: 'Sharing disabled',
@@ -112,7 +109,7 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
       });
 
       if (onShareCreated) {
-        onShareCreated({ shareUrl: '', shareToken: '' });
+        onShareCreated({ shareUrl: '' });
       }
     } catch (error) {
       toast({
@@ -156,7 +153,6 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
 
   const handleClose = () => {
     setShareUrl('');
-    setShareToken('');
     setPermission('readonly');
     setCopied(false);
     onClose();
@@ -254,25 +250,6 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
                 </InputGroup>
                 <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mt={1}>
                   Share this link with others to give them access
-                </Text>
-              </Box>
-            )}
-
-            {/* Share Token (for reference) */}
-            {shareToken && (
-              <Box>
-                <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
-                  Share Token
-                </Text>
-                <Input
-                  value={shareToken}
-                  isReadOnly
-                  bg={colorMode === 'light' ? 'gray.100' : 'gray.600'}
-                  fontSize="xs"
-                  fontFamily="mono"
-                />
-                <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mt={1}>
-                  This token is used internally to identify the shared content
                 </Text>
               </Box>
             )}

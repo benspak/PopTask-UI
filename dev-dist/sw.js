@@ -79,7 +79,7 @@ define(['./workbox-ed3775ef'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "/index.html",
-    "revision": "0.pn7gktbccs8"
+    "revision": "0.n1ikf7mbp6g"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
@@ -92,5 +92,13 @@ define(['./workbox-ed3775ef'], (function (workbox) { 'use strict';
       statuses: [0, 200]
     })]
   }), 'GET');
+  workbox.registerRoute(/^https?:\/\/localhost:5173\/.*/i, new workbox.NetworkFirst({
+    "cacheName": "app-cache",
+    "networkTimeoutSeconds": 3,
+    plugins: [new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
+    })]
+  }), 'GET');
+  self.__WB_DISABLE_DEV_LOGS = true;
 
 }));
