@@ -12,6 +12,26 @@ const theme = extendTheme({
   },
 });
 
+// Development helper: Clear old service workers and cache
+if (import.meta.env.DEV) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+
+    // Clear all caches
+    if ('caches' in window) {
+      caches.keys().then((cacheNames) => {
+        cacheNames.forEach((cacheName) => {
+          caches.delete(cacheName);
+        });
+      });
+    }
+  }
+}
+
 // Register PWA service worker
 const updateSW = registerSW({
   onNeedRefresh() {
@@ -24,19 +44,6 @@ const updateSW = registerSW({
     // App ready to work offline
   },
 });
-
-// Register service worker for PWA functionality
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        // Service worker registered successfully
-      })
-      .catch((error) => {
-        // Service worker registration failed
-      });
-  });
-}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

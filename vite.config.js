@@ -7,8 +7,36 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+        // Exclude API endpoints from precaching
+        globIgnores: ['**/api/**'],
+        // Runtime caching for API requests
+        runtimeCaching: [
+          {
+            urlPattern: /^https?:\/\/localhost:3001\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 3,
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ],
+        // Skip waiting to ensure immediate activation
+        skipWaiting: true,
+        clientsClaim: true,
+        // Handle fetch errors gracefully
+        navigateFallback: '/index.html',
+        navigateFallbackAllowlist: [/^(?!\/__).*/],
+        // Clean up old caches
+        cleanupOutdatedCaches: true
       },
       manifest: {
         name: 'Task Dashboard',

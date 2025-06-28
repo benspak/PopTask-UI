@@ -540,13 +540,44 @@ class ApiService {
   // Check if we can reach the server
   async checkServerConnection() {
     try {
+      // First check if we're online at all
+      if (!navigator.onLine) {
+        console.log('Browser reports offline');
+        return false;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
       const response = await fetch(`${this.baseURL}/health`, {
         method: 'GET',
-        signal: AbortSignal.timeout(3000), // 3 second timeout
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
-      return response.ok;
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.log('Health check returned non-OK status:', response.status);
+        return false;
+      }
+
+      return true;
     } catch (error) {
       console.log('Server connection check failed:', error.message);
+
+      // Handle specific error types
+      if (error.name === 'AbortError') {
+        console.log('Health check timed out');
+      } else if (error.message.includes('Failed to fetch')) {
+        console.log('Network error - server unreachable');
+      } else if (error.message.includes('ERR_NETWORK')) {
+        console.log('Network error - connection failed');
+      }
+
       return false;
     }
   }
@@ -568,7 +599,7 @@ class ApiService {
 
       if (!serverReachable) {
         console.log('Server not reachable, throwing OFFLINE_MODE error');
-        throw new Error('SERVER_OFFLINE');
+        throw new Error('OFFLINE_MODE');
       }
 
       const response = await fetch(url, config);
@@ -599,19 +630,36 @@ class ApiService {
 
       return data;
     } catch (error) {
-      if (error.message === 'SERVER_OFFLINE') {
+      // Handle offline mode specifically
+      if (error.message === 'OFFLINE_MODE') {
         throw new Error('OFFLINE_MODE');
       }
 
-      // Provide user-friendly error messages
-      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        throw new Error('Unable to connect to server. Please check your internet connection.');
+      // Handle network errors that indicate offline mode
+      if (error.message.includes('Failed to fetch') ||
+          error.message.includes('NetworkError') ||
+          error.message.includes('ERR_NETWORK') ||
+          error.message.includes('ERR_INTERNET_DISCONNECTED') ||
+          error.message.includes('ERR_NETWORK_CHANGED')) {
+        console.log('Network error detected, switching to offline mode');
+        throw new Error('OFFLINE_MODE');
       }
 
-      if (error.message.includes('getaddrinfo ENOTFOUND')) {
-        throw new Error('Server is currently unavailable. Please try again later.');
+      // Handle timeout errors
+      if (error.name === 'AbortError' || error.message.includes('timeout')) {
+        console.log('Request timeout, switching to offline mode');
+        throw new Error('OFFLINE_MODE');
       }
 
+      // Handle server errors that might indicate offline mode
+      if (error.message.includes('getaddrinfo ENOTFOUND') ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('ENOTFOUND')) {
+        console.log('Server connection error, switching to offline mode');
+        throw new Error('OFFLINE_MODE');
+      }
+
+      // Re-throw other errors
       throw error;
     }
   }

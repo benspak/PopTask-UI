@@ -324,9 +324,6 @@ export default function TaskDashboard() {
   // State for search
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  // State for project filter
-  const [selectedProjectFilter, setSelectedProjectFilter] = React.useState('');
-
   // State for expanded days
   const [expandedDays, setExpandedDays] = React.useState({});
 
@@ -764,19 +761,6 @@ export default function TaskDashboard() {
     setCurrentView('all');
     setCurrentFilter('');
     setSearchTerm('');
-    setSelectedProjectFilter('');
-  };
-
-  // Handle project filter change
-  const handleProjectFilterChange = (projectName) => {
-    setSelectedProjectFilter(projectName);
-    if (projectName) {
-      setCurrentView('project');
-      setCurrentFilter(projectName);
-    } else {
-      setCurrentView('all');
-      setCurrentFilter('');
-    }
   };
 
   // Update task with edited content
@@ -1609,22 +1593,6 @@ export default function TaskDashboard() {
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
             />
-            <Select
-              placeholder="All Projects"
-              bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-              border={0}
-              w={{ base: "150px", md: "200px" }}
-              color={colorMode === 'light' ? 'gray.800' : 'white'}
-              value={selectedProjectFilter}
-              onChange={(e) => handleProjectFilterChange(e.target.value)}
-              isDisabled={projectsLoading}
-            >
-              {projects.map((project) => (
-                <option key={project._id} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
-            </Select>
           </Flex>
           <Flex align="center" position="relative">
             <Menu>
@@ -2491,151 +2459,151 @@ export default function TaskDashboard() {
           <Box>
             <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'white'}>Task Assets</Text>
 
-                  {/* Uploaded Files Display */}
-                  {uploadedFiles.length > 0 && (
-                    <Box mb={3}>
-                      <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
-                        Uploaded Files ({uploadedFiles.length})
-                      </Text>
-                      <VStack spacing={2} align="stretch">
-                        {uploadedFiles.map((file, index) => (
-                          <Box
-                            key={index}
-                            p={2}
-                            bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                            borderRadius="md"
-                            border="1px solid"
-                            borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
-                          >
-                            {file.mimetype.startsWith('image/') ? (
-                              // Image thumbnail display
-                              <VStack spacing={2} align="stretch">
-                                <Box position="relative">
-                                  <Image
-                                    src={apiService.getFileUrl(file.filename)}
-                                    alt={file.originalName}
-                                    borderRadius="md"
-                                    maxH="120px"
-                                    w="full"
-                                    objectFit="cover"
-                                    fallback={
-                                      <Box
-                                        bg={colorMode === 'light' ? 'gray.200' : 'gray.600'}
-                                        h="120px"
-                                        display="flex"
-                                        alignItems="center"
-                                        justifyContent="center"
-                                        borderRadius="md"
-                                      >
-                                        <Text fontSize="lg">🖼️</Text>
-                                      </Box>
-                                    }
-                                  />
-                                  <HStack
-                                    position="absolute"
-                                    top={1}
-                                    right={1}
-                                    spacing={1}
-                                  >
-                                    <Button
-                                      size="xs"
-                                      variant="solid"
-                                      bg="blackAlpha.600"
-                                      color="white"
-                                      _hover={{ bg: 'blackAlpha.700' }}
-                                      onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
-                                    >
-                                      📥
-                                    </Button>
-                                    <Button
-                                      size="xs"
-                                      variant="solid"
-                                      bg="red.600"
-                                      color="white"
-                                      _hover={{ bg: 'red.700' }}
-                                      onClick={() => handleFileDelete(file.filename)}
-                                    >
-                                      🗑️
-                                    </Button>
-                                  </HStack>
+            {/* File Upload Section */}
+            {(isAddMode || selectedTaskId) && (
+              <Box mb={3}>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  multiple
+                  accept=".txt,.doc,.docx,.csv,.pdf,.png,.jpg,.jpeg"
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  isLoading={isUploading}
+                  mb={2}
+                  w="full"
+                >
+                  📎 Upload Files
+                </Button>
+                <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
+                  Supported: .txt, .doc, .docx, .csv, .pdf, .png, .jpg, .jpeg (max 10MB each)
+                </Text>
+              </Box>
+            )}
+
+            {/* Uploaded Files Display */}
+            {uploadedFiles.length > 0 && (
+              <Box mb={3}>
+                <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
+                  Uploaded Files ({uploadedFiles.length})
+                </Text>
+                <VStack spacing={2} align="stretch">
+                  {uploadedFiles.map((file, index) => (
+                    <Box
+                      key={index}
+                      p={2}
+                      bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                      borderRadius="md"
+                      border="1px solid"
+                      borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                    >
+                      {file.mimetype.startsWith('image/') ? (
+                        // Image thumbnail display
+                        <VStack spacing={2} align="stretch">
+                          <Box position="relative">
+                            <Image
+                              src={apiService.getFileUrl(file.filename)}
+                              alt={file.originalName}
+                              borderRadius="md"
+                              maxH="120px"
+                              w="full"
+                              objectFit="cover"
+                              fallback={
+                                <Box
+                                  bg={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                                  h="120px"
+                                  display="flex"
+                                  alignItems="center"
+                                  justifyContent="center"
+                                  borderRadius="md"
+                                >
+                                  <Text fontSize="lg">🖼️</Text>
                                 </Box>
-                                <VStack align="start" spacing={0}>
-                                  <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
-                                    {file.originalName}
-                                  </Text>
-                                  <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
-                                    {formatFileSize(file.size)}
-                                  </Text>
-                                </VStack>
-                              </VStack>
-                            ) : (
-                              // Non-image file display (existing layout)
-                              <HStack justify="space-between" align="center">
-                                <HStack spacing={2} flex={1}>
-                                  <Text fontSize="lg">{getFileIcon(file.mimetype)}</Text>
-                                  <VStack align="start" spacing={0} flex={1}>
-                                    <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
-                                      {file.originalName}
-                                    </Text>
-                                    <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
-                                      {formatFileSize(file.size)}
-                                    </Text>
-                                  </VStack>
-                                </HStack>
-                                <HStack spacing={1}>
-                                  <Button
-                                    size="xs"
-                                    variant="ghost"
-                                    onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
-                                  >
-                                    📥
-                                  </Button>
-                                  <Button
-                                    size="xs"
-                                    variant="ghost"
-                                    colorScheme="red"
-                                    onClick={() => handleFileDelete(file.filename)}
-                                  >
-                                    🗑️
-                                  </Button>
-                                </HStack>
-                              </HStack>
-                            )}
+                              }
+                            />
+                            <HStack
+                              position="absolute"
+                              top={1}
+                              right={1}
+                              spacing={1}
+                            >
+                              <Button
+                                size="xs"
+                                variant="solid"
+                                bg="blackAlpha.600"
+                                color="white"
+                                _hover={{ bg: 'blackAlpha.700' }}
+                                onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
+                              >
+                                📥
+                              </Button>
+                              <Button
+                                size="xs"
+                                variant="solid"
+                                bg="red.600"
+                                color="white"
+                                _hover={{ bg: 'red.700' }}
+                                onClick={() => handleFileDelete(file.filename)}
+                              >
+                                🗑️
+                              </Button>
+                            </HStack>
                           </Box>
-                        ))}
-                      </VStack>
+                          <VStack align="start" spacing={0}>
+                            <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                              {file.originalName}
+                            </Text>
+                            <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                              {formatFileSize(file.size)}
+                            </Text>
+                          </VStack>
+                        </VStack>
+                      ) : (
+                        // Non-image file display (existing layout)
+                        <HStack justify="space-between" align="center">
+                          <HStack spacing={2} flex={1}>
+                            <Text fontSize="lg">{getFileIcon(file.mimetype)}</Text>
+                            <VStack align="start" spacing={0} flex={1}>
+                              <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                                {file.originalName}
+                              </Text>
+                              <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                                {formatFileSize(file.size)}
+                              </Text>
+                            </VStack>
+                          </HStack>
+                          <HStack spacing={1}>
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
+                            >
+                              📥
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              colorScheme="red"
+                              onClick={() => handleFileDelete(file.filename)}
+                            >
+                              🗑️
+                            </Button>
+                          </HStack>
+                        </HStack>
+                      )}
                     </Box>
-                  )}
+                  ))}
+                </VStack>
+              </Box>
+            )}
 
-                  {/* File Upload Section */}
-                  {selectedTaskId && (
-                    <Box mb={3}>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        multiple
-                        accept=".txt,.doc,.docx,.csv,.pdf,.png,.jpg,.jpeg"
-                        style={{ display: 'none' }}
-                      />
-                      <Button
-                        size="sm"
-                        colorScheme="blue"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        isLoading={isUploading}
-                        mb={2}
-                        w="full"
-                      >
-                        📎 Upload Files
-                      </Button>
-                      <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
-                        Supported: .txt, .doc, .docx, .csv, .pdf, .png, .jpg, .jpeg (max 10MB each)
-                      </Text>
-                    </Box>
-                  )}
-
-                  {/* Warning for local tasks */}
+            {/* Warning for local tasks */}
             {!isAddMode && !selectedTaskId && (
               <Alert status="warning" mb={3} borderRadius="md">
                 <Box>
@@ -2647,7 +2615,7 @@ export default function TaskDashboard() {
               </Alert>
             )}
 
-                  {/* Action Buttons */}
+            {/* Action Buttons */}
             {isAddMode ? (
               <Button colorScheme="green" w="full" onClick={onCreateTask} mb={2} isLoading={isCreatingTask} loadingText="Creating...">Create</Button>
             ) : (
