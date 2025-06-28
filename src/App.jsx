@@ -23,9 +23,14 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  Select
+  Select,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  useColorMode
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon, SunIcon, MoonIcon, SettingsIcon } from '@chakra-ui/icons';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -33,6 +38,7 @@ export default function TaskDashboard() {
   const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: !isMobile });
+  const { colorMode, toggleColorMode } = useColorMode();
 
   // PWA State
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
@@ -861,7 +867,7 @@ export default function TaskDashboard() {
   return (
     <Box position="relative" minH="100vh">
       {/* Search Bar - Always Visible at Top */}
-      <Box position="sticky" top={0} zIndex={50} bg="gray.900" borderBottom="1px solid" borderColor="gray.700">
+      <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
         <Flex justify="space-between" align="center" p={4}>
           <Flex align="center" gap={3}>
             <IconButton
@@ -876,17 +882,53 @@ export default function TaskDashboard() {
             />
             <Input
               placeholder="Filter tasks"
-              bg="gray.700"
+              bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
               border={0}
               w={{ base: "200px", md: "300px" }}
-              _placeholder={{ color: 'gray.400' }}
-              color="white"
+              _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
+              color={colorMode === 'light' ? 'gray.800' : 'white'}
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
             />
           </Flex>
           <Flex align="center" position="relative">
-            <Avatar size="sm" name="User" bg="blue.500" />
+            <Menu>
+              <MenuButton
+                as={Avatar}
+                size="sm"
+                name="User"
+                bg="blue.500"
+                cursor="pointer"
+                _hover={{ opacity: 0.8 }}
+              />
+              <MenuList bg={colorMode === 'light' ? 'white' : 'gray.800'} borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}>
+                <MenuItem
+                  icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+                  onClick={toggleColorMode}
+                  bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                  color={colorMode === 'light' ? 'gray.800' : 'white'}
+                >
+                  {colorMode === 'light' ? 'Dark Mode' : 'Light Mode'}
+                </MenuItem>
+                <MenuItem
+                  icon={<InfoIcon />}
+                  bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                  color={colorMode === 'light' ? 'gray.800' : 'white'}
+                >
+                  User Profile
+                </MenuItem>
+                <MenuItem
+                  icon={<SettingsIcon />}
+                  bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                  color={colorMode === 'light' ? 'gray.800' : 'white'}
+                >
+                  Settings
+                </MenuItem>
+              </MenuList>
+            </Menu>
             {/* Online/Offline Status Dot */}
             <Box
               position="absolute"
@@ -897,17 +939,17 @@ export default function TaskDashboard() {
               borderRadius="full"
               bg={isOnline ? "green.400" : "red.400"}
               border="2px solid"
-              borderColor="gray.800"
+              borderColor={colorMode === 'light' ? 'white' : 'gray.800'}
               boxShadow="0 0 0 2px rgba(0,0,0,0.1)"
             />
           </Flex>
         </Flex>
       </Box>
 
-      <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg="gray.900" color="white" pb="80px">
+      <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg={colorMode === 'light' ? 'gray.50' : 'gray.900'} color={colorMode === 'light' ? 'gray.800' : 'white'} pb="80px">
       {/* Sidebar */}
       {isSidebarOpen && (
-          <Box w={{ base: '100%', md: isCenterOpen ? '250px' : '400px' }} bg="gray.800" p={4} position="relative">
+          <Box w={{ base: '100%', md: isCenterOpen ? '250px' : '400px' }} bg={colorMode === 'light' ? 'white' : 'gray.800'} p={4} position="relative">
             <Heading size="md" mb={4}>Workload</Heading>
             <VStack align="start" spacing={4}>
                 <Box w="full">
@@ -918,16 +960,16 @@ export default function TaskDashboard() {
                         <Flex
                           cursor="pointer"
                           p={2}
-                          bg="gray.700"
+                          bg={colorMode === 'light' ? 'gray.600' : 'gray.700'}
                           borderRadius="md"
                           w="full"
                           justify="space-between"
                           align="center"
                           onClick={() => handleDayClick(day)}
-                          _hover={{ bg: 'gray.600' }}
+                          _hover={{ bg: colorMode === 'light' ? 'gray.500' : 'gray.600' }}
                         >
                           <HStack spacing={2}>
-                            <Text>{day}</Text>
+                            <Text color={colorMode === 'light' ? 'white' : 'inherit'}>{day}</Text>
                             {day === getCurrentDay() && (
                               <Text fontSize="xs" color="green.300" fontWeight="medium">(today)</Text>
                             )}
@@ -1051,7 +1093,7 @@ export default function TaskDashboard() {
       )}
 
       {/* Main Content */}
-        <Box flex={1} pt={2} px={6} bg="gray.850" position="relative">
+        <Box flex={1} pt={2} px={6} bg={colorMode === 'light' ? 'gray.50' : 'gray.850'} position="relative">
           {/* PWA Status Indicators */}
           <Flex position="fixed" top="10px" right="10px" zIndex={40} gap={2}>
             {/* Install Prompt */}
@@ -1073,21 +1115,21 @@ export default function TaskDashboard() {
             <Box mb={2} display={{ base: 'block', md: 'none' }}>
               <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
               <SimpleGrid columns={2} spacing={3}>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
-                  <Text fontWeight="medium" mb={1}>Marketing</Text>
-                  <Text fontSize="sm" color="gray.400">Campaign management & analytics</Text>
+                <Box p={4} bg={colorMode === 'light' ? 'gray.200' : 'gray.800'} borderRadius="lg" cursor="pointer" _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
+                  <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>Marketing</Text>
+                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>Campaign management & analytics</Text>
                 </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
-                  <Text fontWeight="medium" mb={1}>TechDev</Text>
-                  <Text fontSize="sm" color="gray.400">Development & technical tasks</Text>
+                <Box p={4} bg={colorMode === 'light' ? 'gray.200' : 'gray.800'} borderRadius="lg" cursor="pointer" _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
+                  <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>TechDev</Text>
+                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>Development & technical tasks</Text>
                 </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('design')}>
-                  <Text fontWeight="medium" mb={1}>Design</Text>
-                  <Text fontSize="sm" color="gray.400">UI/UX & creative work</Text>
+                <Box p={4} bg={colorMode === 'light' ? 'gray.200' : 'gray.800'} borderRadius="lg" cursor="pointer" _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }} onClick={() => handleProjectClick('design')}>
+                  <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>Design</Text>
+                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>UI/UX & creative work</Text>
                 </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('sales')}>
-                  <Text fontWeight="medium" mb={1}>Sales</Text>
-                  <Text fontSize="sm" color="gray.400">Client relations & deals</Text>
+                <Box p={4} bg={colorMode === 'light' ? 'gray.200' : 'gray.800'} borderRadius="lg" cursor="pointer" _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }} onClick={() => handleProjectClick('sales')}>
+                  <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>Sales</Text>
+                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>Client relations & deals</Text>
                 </Box>
               </SimpleGrid>
             </Box>
@@ -1098,21 +1140,21 @@ export default function TaskDashboard() {
             <Box mb={2} display={{ base: 'none', md: 'block' }}>
               <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
-                  <Text fontWeight="medium" mb={1}>Marketing</Text>
-                  <Text fontSize="sm" color="gray.400">Campaign management & analytics</Text>
+                <Box p={4} bg={colorMode === 'light' ? 'gray.200' : 'gray.800'} borderRadius="lg" cursor="pointer" _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }} onClick={() => handleProjectClick('marketing')}>
+                  <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>Marketing</Text>
+                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>Campaign management & analytics</Text>
                 </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
-                  <Text fontWeight="medium" mb={1}>TechDev</Text>
-                  <Text fontSize="sm" color="gray.400">Development & technical tasks</Text>
+                <Box p={4} bg={colorMode === 'light' ? 'gray.200' : 'gray.800'} borderRadius="lg" cursor="pointer" _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }} onClick={() => handleProjectClick('techdev')}>
+                  <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>TechDev</Text>
+                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>Development & technical tasks</Text>
                 </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('design')}>
-                  <Text fontWeight="medium" mb={1}>Design</Text>
-                  <Text fontSize="sm" color="gray.400">UI/UX & creative work</Text>
+                <Box p={4} bg={colorMode === 'light' ? 'gray.200' : 'gray.800'} borderRadius="lg" cursor="pointer" _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }} onClick={() => handleProjectClick('design')}>
+                  <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>Design</Text>
+                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>UI/UX & creative work</Text>
                 </Box>
-                <Box p={4} bg="gray.800" borderRadius="lg" cursor="pointer" _hover={{ bg: 'gray.700' }} onClick={() => handleProjectClick('sales')}>
-                  <Text fontWeight="medium" mb={1}>Sales</Text>
-                  <Text fontSize="sm" color="gray.400">Client relations & deals</Text>
+                <Box p={4} bg={colorMode === 'light' ? 'gray.200' : 'gray.800'} borderRadius="lg" cursor="pointer" _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }} onClick={() => handleProjectClick('sales')}>
+                  <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>Sales</Text>
+                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>Client relations & deals</Text>
                 </Box>
               </SimpleGrid>
             </Box>
@@ -1229,8 +1271,8 @@ export default function TaskDashboard() {
                                 </VStack>
                               </Box>
                               <Collapse in={task.source === 'today' && taskData[task.title] ? taskInfo.expanded : expandedFilteredTasks[task.title]} animateOpacity>
-                                <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
-                                  <Text fontSize="sm" color="gray.300" lineHeight="1.6">
+                                <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
                                     {taskInfo.description.length > 150
                                       ? taskInfo.description.slice(0, 150) + '...'
                                       : taskInfo.description}
@@ -1313,8 +1355,8 @@ export default function TaskDashboard() {
                                     </VStack>
                                   </Box>
                                   <Collapse in={task.source === 'today' && taskData[task.title] ? taskData[task.title].expanded : expandedFilteredTasks[task.title]} animateOpacity>
-                                    <Box p={3} bg="gray.750" borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
-                                      <Text fontSize="sm" color="gray.300" lineHeight="1.6">
+                                    <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                                      <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
                                         {task.description.length > 150
                                           ? task.description.slice(0, 150) + '...'
                                           : task.description}
@@ -1355,8 +1397,8 @@ export default function TaskDashboard() {
 
       {/* Detail Panel */}
       {isDetailOpen && (
-          <Box w={{ base: '100%', md: isCenterOpen ? '350px' : '500px' }} bg="gray.800" p={6} position="relative">
-            <Heading size="md" mb={4}>Update Selected Task</Heading>
+          <Box w={{ base: '100%', md: isCenterOpen ? '350px' : '500px' }} bg={colorMode === 'light' ? 'white' : 'gray.800'} p={6} position="relative">
+            <Heading size="md" mb={4} color={colorMode === 'light' ? 'gray.800' : 'white'}>Update Selected Task</Heading>
             <Input
               value={taskTitle}
               fontSize="lg"
@@ -1365,34 +1407,40 @@ export default function TaskDashboard() {
               border={0}
               p={0}
               mb={2}
-              _focus={{ bg: 'gray.700', border: '1px solid', borderColor: 'blue.400' }}
-              _hover={{ bg: 'gray.700' }}
+              color={colorMode === 'light' ? 'gray.800' : 'white'}
+              _focus={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700', border: '1px solid', borderColor: 'blue.400' }}
+              _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
               onChange={(e) => setTaskTitle(e.target.value)}
             />
             <Textarea
               placeholder="Task description"
               mb={4}
               value={taskDescription}
+              bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+              color={colorMode === 'light' ? 'gray.800' : 'white'}
+              border={0}
+              _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
               onChange={(e) => setTaskDescription(e.target.value)}
             />
 
             <Box mb={4}>
-              <Text fontSize="sm" mb={1} color="gray.400">Due Date</Text>
+              <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Due Date</Text>
               <Input
                 type="date"
-                bg="gray.700"
+                bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
                 border={0}
+                color={colorMode === 'light' ? 'gray.800' : 'white'}
                 value={editingDueDate}
                 onChange={(e) => setEditingDueDate(e.target.value)}
               />
             </Box>
 
           <Box mb={4}>
-              <Text fontSize="sm" mb={1} color="gray.400">Project</Text>
+              <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Project</Text>
               <Select
-                bg="gray.700"
+                bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
                 border={0}
-                color="white"
+                color={colorMode === 'light' ? 'gray.800' : 'white'}
                 placeholder="Select project"
                 value={editingProject}
                 onChange={(e) => setEditingProject(e.target.value)}
@@ -1405,10 +1453,10 @@ export default function TaskDashboard() {
           </Box>
 
           <Box mb={4}>
-            <Text fontSize="sm" mb={1} color="gray.400">Tags</Text>
+            <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Tags</Text>
             <HStack>
                 {editingTags.map((tag, index) => (
-                  <Tag key={index} colorScheme="green" p={0} bg="gray.600">
+                  <Tag key={index} colorScheme="green" p={0} bg={colorMode === 'light' ? 'gray.200' : 'gray.600'}>
                     <Input
                       value={tag}
                       onChange={(e) => {
@@ -1418,11 +1466,11 @@ export default function TaskDashboard() {
                       }}
                       bg="transparent"
                       border={0}
-                      color="white"
+                      color={colorMode === 'light' ? 'gray.800' : 'white'}
                       fontSize="sm"
                       p={2}
                       minW="80px"
-                      _focus={{ bg: 'transparent', border: '1px solid', borderColor: 'white' }}
+                      _focus={{ bg: 'transparent', border: '1px solid', borderColor: colorMode === 'light' ? 'gray.600' : 'white' }}
                     />
                   </Tag>
                 ))}
@@ -1430,11 +1478,11 @@ export default function TaskDashboard() {
           </Box>
 
           <Box mb={4}>
-            <Text fontSize="sm" mb={1} color="gray.400">Completed</Text>
+            <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Completed</Text>
             <Select
-              bg="gray.700"
+              bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
               border={0}
-              color="white"
+              color={colorMode === 'light' ? 'gray.800' : 'white'}
               placeholder="Select completion status"
               value={editingCompleted.toString()}
               onChange={(e) => {
@@ -1476,8 +1524,8 @@ export default function TaskDashboard() {
           </Box>
 
           <Box>
-            <Text fontSize="sm" mb={2} color="gray.400">Task Assets</Text>
-            <Image bg="gray.700" boxSize="60px" borderRadius="md" mb={3} />
+            <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'white'}>Task Assets</Text>
+            <Image bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} boxSize="60px" borderRadius="md" mb={3} />
               <Button colorScheme="green" w="full" onClick={onUpdateTask}>Update</Button>
             </Box>
         </Box>

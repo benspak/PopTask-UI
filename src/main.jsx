@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ChakraProvider } from '@chakra-ui/react';
+import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.jsx';
 
@@ -19,6 +19,7 @@ const updateSW = registerSW({
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <ColorModeScript initialColorMode="dark" />
     <ChakraProvider>
       <App />
     </ChakraProvider>
