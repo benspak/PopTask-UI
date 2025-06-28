@@ -1773,6 +1773,26 @@ export default function TaskDashboard() {
     }
   };
 
+  // Handle task editing cancellation
+  const handleCancel = () => {
+    // Reset task editing state
+    setSelectedTask(null);
+    setSelectedTaskId(null);
+    setIsAddMode(false);
+    setTaskTitle('');
+    setTaskDescription('');
+    setEditingDueDate('');
+    setEditingProject('general');
+    setEditingTags(ensureThreeTags([]));
+    setEditingCompleted(false);
+    setUploadedFiles([]);
+
+    // Close detail panel
+    if (isDetailOpen) {
+      toggleDetail();
+    }
+  };
+
   return (
     <Box position="relative" minH="100vh" overflowX="hidden" maxW="100vw">
       {/* Show shared content if URL indicates shared view */}
