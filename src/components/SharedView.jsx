@@ -53,9 +53,16 @@ const SharedView = ({ type, token }) => {
         response = await apiService.getSharedProject(token);
       }
 
-      setData(response.data);
-      setEditData(response.data[type]);
+      console.log('Shared data response:', response);
+
+      if (response && response.data) {
+        setData(response.data);
+        setEditData(response.data[type]);
+      } else {
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
+      console.error('Error loading shared data:', error);
       setError(error.message || 'Failed to load shared content');
     } finally {
       setLoading(false);
@@ -73,8 +80,13 @@ const SharedView = ({ type, token }) => {
         response = await apiService.updateSharedProject(token, editData);
       }
 
-      setData(response.data);
-      setEditData(response.data[type]);
+      // Handle the response structure properly
+      if (response && response.data) {
+        // For shared content, the response might be the item directly or wrapped
+        const updatedItem = response.data[type] || response.data;
+        setData({ [type]: updatedItem, sharePermission: data.sharePermission, shareStats: data.shareStats });
+        setEditData(updatedItem);
+      }
       setIsEditing(false);
 
       toast({
@@ -85,6 +97,7 @@ const SharedView = ({ type, token }) => {
         isClosable: true,
       });
     } catch (error) {
+      console.error('Error updating shared content:', error);
       toast({
         title: 'Update failed',
         description: error.message || 'Failed to update shared content',
@@ -131,15 +144,7 @@ const SharedView = ({ type, token }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (loading) {
-    return (
-      <Box textAlign="center" py={10}>
-        <Spinner size="xl" />
-        <Text mt={4}>Loading shared content...</Text>
-      </Box>
-    );
-  }
-
+  // Error boundary - catch any unexpected errors
   if (error) {
     return (
       <Box p={6}>
@@ -148,6 +153,15 @@ const SharedView = ({ type, token }) => {
           <AlertTitle>Error!</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      </Box>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Box textAlign="center" py={10}>
+        <Spinner size="xl" />
+        <Text mt={4}>Loading shared content...</Text>
       </Box>
     );
   }
@@ -168,105 +182,152 @@ const SharedView = ({ type, token }) => {
   const permission = data.sharePermission;
   const shareStats = data.shareStats;
 
-  return (
-    <Box p={6} maxW="800px" mx="auto">
-      {/* Header */}
-      <VStack spacing={4} align="stretch" mb={6}>
-        <HStack justify="space-between">
-          <VStack align="start" spacing={1}>
-            <Text fontSize="2xl" fontWeight="bold" color={colorMode === 'light' ? 'gray.800' : 'white'}>
-              Shared {type === 'task' ? 'Task' : 'Project'}
-            </Text>
-            <HStack spacing={2}>
-              <Badge colorScheme={permission === 'editable' ? 'green' : 'blue'}>
-                {permission === 'editable' ? 'Editable' : 'Read-only'}
-              </Badge>
-              {shareStats && (
-                <Badge colorScheme="purple" variant="subtle">
-                  {shareStats.viewCount || 0} views
+  // Add safety check for missing item
+  if (!item) {
+    return (
+      <Box p={6}>
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>Data Error</AlertTitle>
+          <AlertDescription>The shared content data is missing or corrupted.</AlertDescription>
+        </Alert>
+      </Box>
+    );
+  }
+
+  try {
+    return (
+      <Box p={6} maxW="800px" mx="auto">
+        {/* Header */}
+        <VStack spacing={4} align="stretch" mb={6}>
+          <HStack justify="space-between">
+            <VStack align="start" spacing={1}>
+              <Text fontSize="2xl" fontWeight="bold" color={colorMode === 'light' ? 'gray.800' : 'white'}>
+                Shared {type === 'task' ? 'Task' : 'Project'}
+              </Text>
+              <HStack spacing={2}>
+                <Badge colorScheme={permission === 'editable' ? 'green' : 'blue'}>
+                  {permission === 'editable' ? 'Editable' : 'Read-only'}
                 </Badge>
+                {shareStats && (
+                  <Badge colorScheme="purple" variant="subtle">
+                    {shareStats.viewCount || 0} views
+                  </Badge>
+                )}
+              </HStack>
+            </VStack>
+            <HStack>
+              <Tooltip label="Copy share link">
+                <IconButton
+                  icon={<CopyIcon />}
+                  onClick={copyShareUrl}
+                  aria-label="Copy share link"
+                  size="sm"
+                />
+              </Tooltip>
+              {permission === 'editable' && (
+                <Button
+                  leftIcon={isEditing ? <ViewIcon /> : <EditIcon />}
+                  onClick={() => setIsEditing(!isEditing)}
+                  size="sm"
+                  colorScheme="blue"
+                  variant="outline"
+                >
+                  {isEditing ? 'View' : 'Edit'}
+                </Button>
               )}
             </HStack>
-          </VStack>
-          <HStack>
-            <Tooltip label="Copy share link">
-              <IconButton
-                icon={<CopyIcon />}
-                onClick={copyShareUrl}
-                aria-label="Copy share link"
-                size="sm"
-              />
-            </Tooltip>
-            {permission === 'editable' && (
-              <Button
-                leftIcon={isEditing ? <ViewIcon /> : <EditIcon />}
-                onClick={() => setIsEditing(!isEditing)}
-                size="sm"
-                colorScheme="blue"
-                variant="outline"
-              >
-                {isEditing ? 'View' : 'Edit'}
-              </Button>
-            )}
           </HStack>
-        </HStack>
 
-        {/* Share Statistics */}
-        {shareStats && (
-          <Box p={3} bg={colorMode === 'light' ? 'gray.50' : 'gray.700'} borderRadius="md">
-            <Text fontSize="sm" fontWeight="medium" mb={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
-              Share Information
-            </Text>
-            <HStack spacing={4} fontSize="xs" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
-              {shareStats.shareCreatedAt && (
-                <Text>Created: {new Date(shareStats.shareCreatedAt).toLocaleDateString()}</Text>
-              )}
-              {shareStats.lastViewedAt && (
-                <Text>Last viewed: {new Date(shareStats.lastViewedAt).toLocaleDateString()}</Text>
-              )}
-              {shareStats.shareExpiresAt && (
-                <Text>Expires: {new Date(shareStats.shareExpiresAt).toLocaleDateString()}</Text>
-              )}
-            </HStack>
-          </Box>
+          {/* Share Statistics */}
+          {shareStats && (
+            <Box p={3} bg={colorMode === 'light' ? 'gray.50' : 'gray.700'} borderRadius="md">
+              <Text fontSize="sm" fontWeight="medium" mb={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
+                Share Information
+              </Text>
+              <HStack spacing={4} fontSize="xs" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
+                {shareStats.shareCreatedAt && (
+                  <Text>Created: {new Date(shareStats.shareCreatedAt).toLocaleDateString()}</Text>
+                )}
+                {shareStats.lastViewedAt && (
+                  <Text>Last viewed: {new Date(shareStats.lastViewedAt).toLocaleDateString()}</Text>
+                )}
+                {shareStats.shareExpiresAt && (
+                  <Text>Expires: {new Date(shareStats.shareExpiresAt).toLocaleDateString()}</Text>
+                )}
+              </HStack>
+            </Box>
+          )}
+
+          <Divider />
+        </VStack>
+
+        {/* Content */}
+        {type === 'task' ? (
+          <SharedTaskView
+            task={item}
+            isEditing={isEditing}
+            editData={editData}
+            setEditData={setEditData}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            saving={saving}
+            permission={permission}
+            formatFileSize={formatFileSize}
+          />
+        ) : (
+          <SharedProjectView
+            project={item}
+            isEditing={isEditing}
+            editData={editData}
+            setEditData={setEditData}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            saving={saving}
+            permission={permission}
+          />
         )}
-
-        <Divider />
-      </VStack>
-
-      {/* Content */}
-      {type === 'task' ? (
-        <SharedTaskView
-          task={item}
-          isEditing={isEditing}
-          editData={editData}
-          setEditData={setEditData}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          saving={saving}
-          permission={permission}
-          formatFileSize={formatFileSize}
-        />
-      ) : (
-        <SharedProjectView
-          project={item}
-          isEditing={isEditing}
-          editData={editData}
-          setEditData={setEditData}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          saving={saving}
-          permission={permission}
-        />
-      )}
-    </Box>
-  );
+      </Box>
+    );
+  } catch (renderError) {
+    console.error('Error rendering SharedView:', renderError);
+    return (
+      <Box p={6}>
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>Render Error</AlertTitle>
+          <AlertDescription>An unexpected error occurred while displaying the shared content.</AlertDescription>
+        </Alert>
+      </Box>
+    );
+  }
 };
 
 const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCancel, saving, permission, formatFileSize }) => {
   const { colorMode } = useColorMode();
 
-  if (!task) return null;
+  // Add safety checks
+  if (!task) {
+    return (
+      <Box p={4}>
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>Task Error</AlertTitle>
+          <AlertDescription>Task data is missing or corrupted.</AlertDescription>
+        </Alert>
+      </Box>
+    );
+  }
+
+  // Ensure editData has safe defaults
+  const safeEditData = {
+    title: editData?.title || task.title || '',
+    description: editData?.description || task.description || '',
+    project: editData?.project || task.project || '',
+    dueDate: editData?.dueDate || task.dueDate || '',
+    tags: editData?.tags || task.tags || [],
+    completed: editData?.completed !== undefined ? editData.completed : task.completed || false
+  };
 
   return (
     <VStack spacing={6} align="stretch">
@@ -277,14 +338,14 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
         </Text>
         {isEditing ? (
           <Input
-            value={editData.title || ''}
-            onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+            value={safeEditData.title}
+            onChange={(e) => setEditData({ ...safeEditData, title: e.target.value })}
             placeholder="Task title"
             size="lg"
           />
         ) : (
           <Text fontSize="lg" fontWeight="medium">
-            {task.title}
+            {task.title || 'Untitled Task'}
           </Text>
         )}
       </Box>
@@ -296,8 +357,8 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
         </Text>
         {isEditing ? (
           <Textarea
-            value={editData.description || ''}
-            onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+            value={safeEditData.description}
+            onChange={(e) => setEditData({ ...safeEditData, description: e.target.value })}
             placeholder="Task description"
             rows={4}
           />
@@ -315,13 +376,13 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
         </Text>
         {isEditing ? (
           <Input
-            value={editData.project || ''}
-            onChange={(e) => setEditData({ ...editData, project: e.target.value })}
+            value={safeEditData.project}
+            onChange={(e) => setEditData({ ...safeEditData, project: e.target.value })}
             placeholder="Project name"
           />
         ) : (
           <Badge colorScheme="blue" variant="subtle">
-            {task.project}
+            {task.project || 'General'}
           </Badge>
         )}
       </Box>
@@ -334,8 +395,8 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
         {isEditing ? (
           <Input
             type="date"
-            value={editData.dueDate || ''}
-            onChange={(e) => setEditData({ ...editData, dueDate: e.target.value })}
+            value={safeEditData.dueDate}
+            onChange={(e) => setEditData({ ...safeEditData, dueDate: e.target.value })}
           />
         ) : (
           <Text color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
@@ -354,11 +415,11 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
             {[0, 1, 2].map((index) => (
               <Input
                 key={index}
-                value={editData.tags?.[index] || ''}
+                value={safeEditData.tags[index] || ''}
                 onChange={(e) => {
-                  const newTags = [...(editData.tags || [])];
+                  const newTags = [...safeEditData.tags];
                   newTags[index] = e.target.value;
-                  setEditData({ ...editData, tags: newTags });
+                  setEditData({ ...safeEditData, tags: newTags });
                 }}
                 placeholder={`Tag ${index + 1}`}
                 size="sm"
@@ -390,8 +451,8 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
         </Text>
         {isEditing ? (
           <Checkbox
-            isChecked={editData.completed || false}
-            onChange={(e) => setEditData({ ...editData, completed: e.target.checked })}
+            isChecked={safeEditData.completed}
+            onChange={(e) => setEditData({ ...safeEditData, completed: e.target.checked })}
           >
             Completed
           </Checkbox>
