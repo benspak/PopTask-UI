@@ -1,30 +1,81 @@
 {
-  "name": "task-dashboard",
+  "name": "task-dashboard-frontend",
+  "private": true,
   "version": "1.0.0",
-  "description": "A modern task management dashboard PWA for organizing your daily workflow",
-  "keywords": ["pwa", "task-management", "productivity", "dashboard", "react", "chakra-ui"],
-  "author": "Task Dashboard Team",
-  "license": "MIT",
+  "type": "module",
+  "description": "Modern PWA task management application built with React, Chakra UI, and Vite",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "generate-icons": "node scripts/generate-icons.js"
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headless": "playwright test --headless",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext js,jsx --fix",
+    "format": "prettier --write .",
+    "generate-icons": "node scripts/generate-icons.js",
+    "docker:build": "docker build -t task-dashboard-frontend .",
+    "docker:run": "docker run -d --name task-dashboard-frontend -p 80:80 task-dashboard-frontend",
+    "docker:stop": "docker stop task-dashboard-frontend && docker rm task-dashboard-frontend",
+    "analyze": "vite-bundle-analyzer",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules/.vite",
+    "preview:build": "npm run build && npm run preview"
   },
   "dependencies": {
-    "@chakra-ui/icons": "^2.2.4",
-    "@chakra-ui/react": "^2.8.1",
-    "@emotion/react": "^11",
-    "@emotion/styled": "^11",
-    "framer-motion": "^10",
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@chakra-ui/react": "^2.8.0",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "framer-motion": "^10.16.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4",
-    "vite": "^5",
-    "vite-plugin-pwa": "^0.19.0",
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "vite": "^4.4.5",
+    "vite-plugin-pwa": "^0.16.4",
     "workbox-window": "^7.0.0",
-    "canvas": "^2.11.2"
-  }
+    "vitest": "^0.34.1",
+    "@vitest/ui": "^0.34.1",
+    "jsdom": "^22.1.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/jest-dom": "^6.1.3",
+    "@playwright/test": "^1.37.1",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "prettier": "^3.0.0",
+    "vite-bundle-analyzer": "^0.7.0",
+    "typescript": "^5.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/task-dashboard-frontend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/task-dashboard-frontend/issues"
+  },
+  "homepage": "https://github.com/yourusername/task-dashboard-frontend#readme",
+  "keywords": [
+    "task-management",
+    "pwa",
+    "react",
+    "chakra-ui",
+    "vite",
+    "progressive-web-app",
+    "file-upload",
+    "responsive-design"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }

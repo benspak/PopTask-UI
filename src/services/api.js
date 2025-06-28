@@ -1,4 +1,14 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+// Environment-based API configuration
+const getApiBaseUrl = () => {
+  // In production, use relative URLs or environment variable
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_API_URL || '/api';
+  }
+  // In development, use localhost
+  return 'http://localhost:3001/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 class ApiService {
   constructor() {
@@ -135,6 +145,46 @@ class ApiService {
       ...task,
       // Add any frontend-specific transformations here
     };
+  }
+
+  // File upload methods
+  async uploadFile(taskId, file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `${this.baseURL}/uploads/task/${taskId}`;
+    const config = {
+      method: 'POST',
+      body: formData,
+      // Don't set Content-Type header for FormData
+    };
+
+    try {
+      const response = await fetch(url, config);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('File upload failed:', error);
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Backend server is not running. Please start the backend server.');
+      }
+      throw error;
+    }
+  }
+
+  async deleteFile(taskId, filename) {
+    return this.request(`/uploads/task/${taskId}/file/${filename}`, {
+      method: 'DELETE',
+    });
+  }
+
+  getFileUrl(filename) {
+    return `${this.baseURL}/uploads/files/${filename}`;
   }
 }
 

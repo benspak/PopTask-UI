@@ -37,7 +37,7 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon, SunIcon, MoonIcon, SettingsIcon, AddIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon, SunIcon, MoonIcon, SettingsIcon, AddIcon, AttachmentIcon, CloseIcon } from '@chakra-ui/icons';
 import { useTasks } from './hooks/useTasks';
 import { useProjects } from './hooks/useProjects';
 import apiService from './services/api';
@@ -214,8 +214,18 @@ export default function TaskDashboard() {
   // State for editing panel
   const [editingDueDate, setEditingDueDate] = React.useState('');
   const [editingProject, setEditingProject] = React.useState('');
-  const [editingTags, setEditingTags] = React.useState(['category', 'Q3']);
+  const [editingTags, setEditingTags] = React.useState(['', '', '']);
   const [editingCompleted, setEditingCompleted] = React.useState(false);
+
+  // Helper function to ensure tags always have 3 elements
+  const ensureThreeTags = (tags) => {
+    const tagArray = Array.isArray(tags) ? tags : [];
+    const result = [...tagArray];
+    while (result.length < 3) {
+      result.push('');
+    }
+    return result.slice(0, 3); // Ensure exactly 3 elements
+  };
 
   // State for selected task
   const [selectedTask, setSelectedTask] = React.useState(null);
@@ -239,6 +249,20 @@ export default function TaskDashboard() {
   // Add state for project deletion
   const [isDeleteProjectDialogOpen, setIsDeleteProjectDialogOpen] = React.useState(false);
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
+
+  // Add state for file uploads
+  const [uploadedFiles, setUploadedFiles] = React.useState([]);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = React.useRef();
+
+  // Automatically reload task files when selectedTaskId changes
+  React.useEffect(() => {
+    if (selectedTaskId) {
+      loadTaskFiles(selectedTaskId);
+    } else {
+      setUploadedFiles([]);
+    }
+  }, [selectedTaskId]);
 
   // Utility function to convert date to Mountain Standard Time
   const toMST = (date) => {
@@ -449,140 +473,109 @@ export default function TaskDashboard() {
   };
 
   const handleTaskClick = (taskName) => {
-    try {
-      // Check if task exists in taskData
-      if (!taskData[taskName]) {
-        return;
+    setSelectedTask(taskName);
+    setSelectedTaskId(null); // Reset task ID
+    setIsAddMode(false);
+    setIsEditProjectMode(false);
+    setIsAddProjectMode(false);
+
+    // First, try to find the task in backend tasks
+    let foundTaskData = backendTasks.find(task => task.title === taskName);
+
+    // If not found in backend tasks, search in other sources
+    if (!foundTaskData) {
+      if (currentView === 'all' && taskData && taskData[taskName]) {
+        foundTaskData = taskData[taskName];
+      } else if (dayTasks) {
+        // Search in dayTasks
+        Object.values(dayTasks).forEach(dayTaskList => {
+          if (Array.isArray(dayTaskList)) {
+            const foundTask = dayTaskList.find(task => task.title === taskName);
+            if (foundTask) {
+              foundTaskData = foundTask;
+            }
+          }
+        });
       }
-
-      // Set to edit mode (not add mode)
-      setIsAddMode(false);
-      setIsAddProjectMode(false);
-      setIsEditProjectMode(false);
-
-      // Update selected task
-      setSelectedTask(taskName);
-      setSelectedTaskId(taskData[taskName]._id);
-      setTaskTitle(taskName);
-      setTaskDescription(taskData[taskName].description);
-
-      // Populate editing panel fields
-      setEditingDueDate(taskData[taskName].dueDate);
-      setEditingProject(taskData[taskName].project);
-      setEditingTags([...taskData[taskName].tags]);
-      setEditingCompleted(taskData[taskName].completed);
-
-      // Open detail panel if it's not already open
-      if (!isDetailOpen) {
-        toggleDetail();
-      }
-
-      // Toggle expanded state for the clicked task
-      setLocalTaskData(prev => ({
-        ...prev,
-        [taskName]: {
-          ...prev[taskName],
-          expanded: !prev[taskName].expanded
-        }
-      }));
-    } catch (error) {
     }
+
+    if (foundTaskData) {
+      setTaskTitle(foundTaskData.title);
+      setTaskDescription(foundTaskData.description || '');
+      setEditingDueDate(foundTaskData.dueDate || '');
+      setEditingProject(foundTaskData.project || 'general');
+      setEditingTags(ensureThreeTags(foundTaskData.tags || []));
+      setEditingCompleted(foundTaskData.completed || false);
+
+      // Check if this task has a backend ID
+      if (foundTaskData._id) {
+        setSelectedTaskId(foundTaskData._id);
+        loadTaskFiles(foundTaskData._id);
+      } else {
+        setSelectedTaskId(null);
+        setUploadedFiles([]);
+      }
+    } else {
+      // If task not found, set default values
+      setTaskTitle(taskName);
+      setTaskDescription('');
+      setEditingDueDate('');
+      setEditingProject('general');
+      setEditingTags(ensureThreeTags([]));
+      setEditingCompleted(false);
+      setSelectedTaskId(null);
+      setUploadedFiles([]);
+    }
+
+    if (!isDetailOpen) toggleDetail();
   };
 
   const handleWeeklyTaskClick = (task) => {
-    try {
-      // Set to edit mode (not add mode)
-      setIsAddMode(false);
-      setIsAddProjectMode(false);
-      setIsEditProjectMode(false);
+    setSelectedTask(task.title);
+    setSelectedTaskId(task._id);
+    setIsAddMode(false);
+    setIsEditProjectMode(false);
+    setIsAddProjectMode(false);
 
-      // Update selected task
-      setSelectedTask(task.title);
-      setSelectedTaskId(task._id);
-      setTaskTitle(task.title);
-      setTaskDescription(task.description);
+    setTaskTitle(task.title);
+    setTaskDescription(task.description || '');
+    setEditingDueDate(task.dueDate || '');
+    setEditingProject(task.project || 'general');
+    setEditingTags(ensureThreeTags(task.tags || []));
+    setEditingCompleted(task.completed || false);
 
-      // Populate editing panel fields
-      setEditingDueDate(task.dueDate);
-      setEditingProject(task.project);
-      setEditingTags([...task.tags]);
-      setEditingCompleted(task.completed);
-
-      // Open detail panel if it's not already open
-      if (!isDetailOpen) {
-        toggleDetail();
-      }
-    } catch (error) {
+    // Load task files
+    if (task._id) {
+      loadTaskFiles(task._id);
+    } else {
+      setUploadedFiles([]);
     }
+
+    if (!isDetailOpen) toggleDetail();
   };
 
   const handleFilteredTaskClick = (task) => {
-    try {
-      // Set to edit mode (not add mode)
-      setIsAddMode(false);
-      setIsAddProjectMode(false);
-      setIsEditProjectMode(false);
+    setSelectedTask(task.title);
+    setSelectedTaskId(task._id);
+    setIsAddMode(false);
+    setIsEditProjectMode(false);
+    setIsAddProjectMode(false);
 
-      // Find the corresponding backend task to get the ID
-      let backendTask = null;
-      if (task.source === 'today') {
-        // For tasks from taskData, get the ID from localTaskData
-        const localTask = taskData[task.title];
-        if (localTask && localTask._id) {
-          backendTask = allBackendTasks.find(t => t._id === localTask._id);
-        }
-      } else if (task.source === 'week') {
-        // For tasks from dayTasks, use the _id directly since it's from backend data
-        if (task._id) {
-          backendTask = allBackendTasks.find(t => t._id === task._id);
-        }
-        // Fallback to title matching if _id is not available
-        if (!backendTask) {
-          backendTask = allBackendTasks.find(t => t.title === task.title);
-        }
-      }
+    setTaskTitle(task.title);
+    setTaskDescription(task.description || '');
+    setEditingDueDate(task.dueDate || '');
+    setEditingProject(task.project || 'general');
+    setEditingTags(ensureThreeTags(task.tags || []));
+    setEditingCompleted(task.completed || false);
 
-      // Update selected task
-      setSelectedTask(task.title);
-      setSelectedTaskId(backendTask ? backendTask._id : null);
-      setTaskTitle(task.title);
-      setTaskDescription(task.description);
-
-      // Populate editing panel fields
-      setEditingDueDate(task.dueDate);
-      setEditingProject(task.project);
-      setEditingTags([...task.tags]);
-      setEditingCompleted(task.completed);
-
-      // Open detail panel if it's not already open
-      if (!isDetailOpen) {
-        toggleDetail();
-      }
-
-      // Show warning if task is not in backend
-      if (!backendTask) {
-        console.warn('Task not found in backend:', task.title);
-      }
-
-      // Toggle expanded state based on task source
-      if (task.source === 'today' && taskData[task.title]) {
-        // For tasks from taskData, update taskData expanded state
-        setLocalTaskData(prev => ({
-          ...prev,
-          [task.title]: {
-            ...prev[task.title],
-            expanded: !prev[task.title].expanded
-          }
-        }));
-      } else {
-        // For tasks from dayTasks or filtered views, update expandedFilteredTasks
-        setExpandedFilteredTasks(prev => ({
-          ...prev,
-          [task.title]: !prev[task.title]
-        }));
-      }
-    } catch (error) {
+    // Load task files
+    if (task._id) {
+      loadTaskFiles(task._id);
+    } else {
+      setUploadedFiles([]);
     }
+
+    if (!isDetailOpen) toggleDetail();
   };
 
   const handleDayClick = (day) => {
@@ -679,52 +672,39 @@ export default function TaskDashboard() {
         completed: editingCompleted
       };
 
-      // Find the task in ALL backend tasks by ID (most reliable)
-      let task = allBackendTasks.find(t => t._id === selectedTaskId);
+      // Store the current task ID before updating
+      const currentTaskId = selectedTaskId;
 
-      // If not found by ID, fallback to title matching in all tasks
-      if (!task) {
-        task = allBackendTasks.find(t => t.title === selectedTask);
+      // Use backend API to update task
+      const updatedTask = await updateTask(currentTaskId, updatedTaskData);
+
+      // Update selectedTask if the title was changed
+      if (taskTitle !== selectedTask) {
+        setSelectedTask(taskTitle);
       }
 
-      // If still not found, try finding by the new title
-      if (!task && taskTitle !== selectedTask) {
-        task = allBackendTasks.find(t => t.title === taskTitle);
-      }
+      // Reload tasks to ensure UI is in sync with backend
+      await loadTasks();
 
-      if (task) {
-        // Use backend API to update task
-        await updateTask(task._id, updatedTaskData);
-
-        // Update selectedTask if the title was changed
-        if (taskTitle !== selectedTask) {
-          setSelectedTask(taskTitle);
-        }
-
-        // Reload tasks to ensure UI is in sync with backend
-        await loadTasks();
-
-        toast({
-          title: 'Success',
-          description: 'Task updated successfully',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
+      // Reload task files using the updated task data
+      if (updatedTask && updatedTask.fileAttachments) {
+        setUploadedFiles(updatedTask.fileAttachments);
       } else {
-        console.error('Task not found in backend:', selectedTask);
-        console.error('Available task IDs:', allBackendTasks.map(t => ({ id: t._id, title: t.title })));
-        toast({
-          title: 'Error',
-          description: 'Task not found in backend',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        // Fallback: reload files using the task ID
+        await loadTaskFiles(currentTaskId);
       }
+
+      toast({
+        title: 'Success',
+        description: 'Task updated successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
 
       toggleDetail();
     } catch (error) {
+      console.error('Error updating task:', error);
       toast({
         title: 'Error',
         description: 'Failed to update task',
@@ -978,17 +958,18 @@ export default function TaskDashboard() {
 
   // Add Task handler
   const handleAddTask = () => {
-    setIsAddMode(true);
-    setIsAddProjectMode(false);
-    setIsEditProjectMode(false);
     setSelectedTask(null);
     setSelectedTaskId(null);
+    setIsAddMode(true);
+    setIsEditProjectMode(false);
     setTaskTitle('');
     setTaskDescription('');
     setEditingDueDate('');
-    setEditingProject('');
-    setEditingTags(['']);
+    setEditingProject('general');
+    setEditingTags(ensureThreeTags([]));
     setEditingCompleted(false);
+    setUploadedFiles([]); // Clear uploaded files for new task
+
     if (!isDetailOpen) toggleDetail();
   };
 
@@ -1013,13 +994,16 @@ export default function TaskDashboard() {
       });
       setIsAddMode(false);
       toggleDetail();
-      // Optionally reset fields
+      // Reset fields
+      setSelectedTask(null);
+      setSelectedTaskId(null);
       setTaskTitle('');
       setTaskDescription('');
       setEditingDueDate('');
-      setEditingProject('');
-      setEditingTags(['']);
+      setEditingProject('general');
+      setEditingTags(ensureThreeTags([]));
       setEditingCompleted(false);
+      setUploadedFiles([]); // Clear uploaded files
     } catch (error) {
       toast({
         title: 'Error',
@@ -1166,6 +1150,151 @@ export default function TaskDashboard() {
     setProjectTitle('');
     setProjectDescription('');
     if (!isDetailOpen) toggleDetail();
+  };
+
+  // File upload handlers
+  const handleFileUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+
+    if (!selectedTaskId) {
+      toast({
+        title: 'Error',
+        description: 'Please save the task first before uploading files',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    const uploadPromises = files.map(async (file) => {
+      try {
+        const result = await apiService.uploadFile(selectedTaskId, file);
+        return { success: true, data: result.data };
+      } catch (error) {
+        // Handle duplicate file errors
+        if (error.message.includes('already exists')) {
+          return {
+            success: false,
+            error: error.message,
+            fileName: file.name,
+            duplicateFile: error.duplicateFile
+          };
+        }
+
+        return {
+          success: false,
+          error: `Failed to upload ${file.name}: ${error.message}`,
+          fileName: file.name
+        };
+      }
+    });
+
+    try {
+      const results = await Promise.all(uploadPromises);
+      const successfulUploads = results.filter(result => result.success).map(result => result.data);
+      const failedUploads = results.filter(result => !result.success);
+
+      if (successfulUploads.length > 0) {
+        // Reload task files to get the updated list from the server
+        await loadTaskFiles(selectedTaskId);
+
+        toast({
+          title: 'Success',
+          description: `Successfully uploaded ${successfulUploads.length} file(s)`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      // Show warnings for duplicate files
+      failedUploads.forEach(failed => {
+        if (failed.error.includes('already exists')) {
+          toast({
+            title: 'Duplicate File',
+            description: `${failed.fileName}: ${failed.error}`,
+            status: 'warning',
+            duration: 5000,
+            isClosable: true,
+          });
+        } else {
+          toast({
+            title: 'Upload Failed',
+            description: failed.error,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      });
+    } catch (error) {
+      console.error('File upload error:', error);
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleFileDelete = async (filename) => {
+    if (!selectedTaskId) return;
+
+    try {
+      await apiService.deleteFile(selectedTaskId, filename);
+      setUploadedFiles(prev => prev.filter(file => file.filename !== filename));
+      toast({
+        title: 'Success',
+        description: 'File deleted successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete file',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const getFileIcon = (mimetype) => {
+    if (mimetype.startsWith('image/')) return '🖼️';
+    if (mimetype === 'application/pdf') return '📄';
+    if (mimetype.includes('word')) return '📝';
+    if (mimetype === 'text/csv') return '📊';
+    if (mimetype === 'text/plain') return '📄';
+    return '📎';
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const loadTaskFiles = async (taskId) => {
+    if (!taskId) {
+      setUploadedFiles([]);
+      return;
+    }
+
+    try {
+      const task = await apiService.getTask(taskId);
+      setUploadedFiles(task.fileAttachments || []);
+    } catch (error) {
+      console.error('Error loading task files:', error);
+      setUploadedFiles([]);
+    }
   };
 
   return (
@@ -1318,6 +1447,9 @@ export default function TaskDashboard() {
                                   >
                                     {task.title}
                                   </Text>
+                                  {task.fileAttachments && task.fileAttachments.length > 0 && (
+                                    <AttachmentIcon color="blue.400" ml={2} boxSize={3} />
+                                  )}
                                 </Flex>
                                 <Text
                                   fontSize="xs"
@@ -1649,6 +1781,9 @@ export default function TaskDashboard() {
                                     >
                                       {task.title}
                                     </Text>
+                                    {taskInfo.fileAttachments && taskInfo.fileAttachments.length > 0 && (
+                                      <AttachmentIcon color="blue.400" ml={2} />
+                                    )}
                                   </Flex>
                                   <HStack spacing={2}>
                                     <Tag size="sm" colorScheme={getDueDateCategory(taskInfo.dueDate) === 'Today' ? 'red' : getDueDateCategory(taskInfo.dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskInfo.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
@@ -1664,7 +1799,7 @@ export default function TaskDashboard() {
                                     <Text>Project: {taskInfo.project}</Text>
                                   </HStack>
                                   <HStack spacing={1}>
-                                    {taskInfo.tags.map((tag, tagIndex) => (
+                                    {taskInfo.tags.filter(tag => tag && tag.trim() !== '').map((tag, tagIndex) => (
                                       <Tag
                                         key={tagIndex}
                                         size="sm"
@@ -1731,6 +1866,9 @@ export default function TaskDashboard() {
                                       >
                                         {task.title}
                                       </Text>
+                                      {task.fileAttachments && task.fileAttachments.length > 0 && (
+                                        <AttachmentIcon color="blue.400" ml={2} />
+                                      )}
                                     </Flex>
                                     <HStack spacing={2}>
                                       <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
@@ -1746,7 +1884,7 @@ export default function TaskDashboard() {
                                       <Text>Project: {task.project}</Text>
                                     </HStack>
                                     <HStack spacing={1}>
-                                      {task.tags.map((tag, tagIndex) => (
+                                      {task.tags.filter(tag => tag && tag.trim() !== '').map((tag, tagIndex) => (
                                         <Tag
                                           key={tagIndex}
                                           size="sm"
@@ -1863,7 +2001,7 @@ export default function TaskDashboard() {
               // Task creation/editing form
               <>
                 <Input
-                  value={taskTitle}
+                  value={taskTitle || selectedTask || ''}
                   fontSize="lg"
                   fontWeight="bold"
                   bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
@@ -1920,11 +2058,17 @@ export default function TaskDashboard() {
 
                 <Box mb={4}>
                   <Text fontSize="sm" mb={1} color={colorMode === 'light' ? 'gray.600' : 'white'}>Tags</Text>
-                  <HStack>
-                      {editingTags.map((tag, index) => (
-                        <Tag key={index} colorScheme="green" p={0} bg={colorMode === 'light' ? 'gray.200' : 'gray.600'}>
+                  <VStack spacing={2} align="stretch">
+                    {[0, 1, 2].map((index) => (
+                      <HStack key={index} spacing={2}>
+                        <Tag
+                          colorScheme="green"
+                          p={0}
+                          bg={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                          flex={1}
+                        >
                           <Input
-                            value={tag}
+                            value={editingTags[index] || ''}
                             onChange={(e) => {
                               const newTags = [...editingTags];
                               newTags[index] = e.target.value;
@@ -1936,11 +2080,13 @@ export default function TaskDashboard() {
                             fontSize="sm"
                             p={2}
                             minW="80px"
+                            placeholder={`Tag ${index + 1}`}
                             _focus={{ bg: 'transparent', border: '1px solid', borderColor: colorMode === 'light' ? 'gray.600' : 'white' }}
                           />
                         </Tag>
-                      ))}
-                  </HStack>
+                      </HStack>
+                    ))}
+                  </VStack>
                 </Box>
 
                 <Box mb={4}>
@@ -1991,17 +2137,174 @@ export default function TaskDashboard() {
 
                 <Box>
                   <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'white'}>Task Assets</Text>
-                  <Image bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} boxSize="60px" borderRadius="md" mb={3} />
+
+                  {/* Uploaded Files Display */}
+                  {uploadedFiles.length > 0 && (
+                    <Box mb={3}>
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
+                        Uploaded Files ({uploadedFiles.length})
+                      </Text>
+                      <VStack spacing={2} align="stretch">
+                        {uploadedFiles.map((file, index) => (
+                          <Box
+                            key={index}
+                            p={2}
+                            bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                            borderRadius="md"
+                            border="1px solid"
+                            borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                          >
+                            {file.mimetype.startsWith('image/') ? (
+                              // Image thumbnail display
+                              <VStack spacing={2} align="stretch">
+                                <Box position="relative">
+                                  <Image
+                                    src={apiService.getFileUrl(file.filename)}
+                                    alt={file.originalName}
+                                    borderRadius="md"
+                                    maxH="120px"
+                                    w="full"
+                                    objectFit="cover"
+                                    fallback={
+                                      <Box
+                                        bg={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                                        h="120px"
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                        borderRadius="md"
+                                      >
+                                        <Text fontSize="lg">🖼️</Text>
+                                      </Box>
+                                    }
+                                  />
+                                  <HStack
+                                    position="absolute"
+                                    top={1}
+                                    right={1}
+                                    spacing={1}
+                                  >
+                                    <Button
+                                      size="xs"
+                                      variant="solid"
+                                      bg="blackAlpha.600"
+                                      color="white"
+                                      _hover={{ bg: 'blackAlpha.700' }}
+                                      onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
+                                    >
+                                      👁️
+                                    </Button>
+                                    <Button
+                                      size="xs"
+                                      variant="solid"
+                                      bg="blackAlpha.600"
+                                      color="white"
+                                      _hover={{ bg: 'blackAlpha.700' }}
+                                      onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
+                                    >
+                                      📥
+                                    </Button>
+                                    <Button
+                                      size="xs"
+                                      variant="solid"
+                                      bg="red.600"
+                                      color="white"
+                                      _hover={{ bg: 'red.700' }}
+                                      onClick={() => handleFileDelete(file.filename)}
+                                    >
+                                      🗑️
+                                    </Button>
+                                  </HStack>
+                                </Box>
+                                <VStack align="start" spacing={0}>
+                                  <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                                    {file.originalName}
+                                  </Text>
+                                  <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                                    {formatFileSize(file.size)}
+                                  </Text>
+                                </VStack>
+                              </VStack>
+                            ) : (
+                              // Non-image file display (existing layout)
+                              <HStack justify="space-between" align="center">
+                                <HStack spacing={2} flex={1}>
+                                  <Text fontSize="lg">{getFileIcon(file.mimetype)}</Text>
+                                  <VStack align="start" spacing={0} flex={1}>
+                                    <Text fontSize="sm" fontWeight="medium" noOfLines={1}>
+                                      {file.originalName}
+                                    </Text>
+                                    <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                                      {formatFileSize(file.size)}
+                                    </Text>
+                                  </VStack>
+                                </HStack>
+                                <HStack spacing={1}>
+                                  <Button
+                                    size="xs"
+                                    variant="ghost"
+                                    onClick={() => window.open(apiService.getFileUrl(file.filename), '_blank')}
+                                  >
+                                    📥
+                                  </Button>
+                                  <Button
+                                    size="xs"
+                                    variant="ghost"
+                                    colorScheme="red"
+                                    onClick={() => handleFileDelete(file.filename)}
+                                  >
+                                    🗑️
+                                  </Button>
+                                </HStack>
+                              </HStack>
+                            )}
+                          </Box>
+                        ))}
+                      </VStack>
+                    </Box>
+                  )}
+
+                  {/* File Upload Section */}
+                  {selectedTaskId && (
+                    <Box mb={3}>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        multiple
+                        accept=".txt,.doc,.docx,.csv,.pdf,.png,.jpg,.jpeg"
+                        style={{ display: 'none' }}
+                      />
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        isLoading={isUploading}
+                        mb={2}
+                        w="full"
+                      >
+                        📎 Upload Files
+                      </Button>
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
+                        Supported: .txt, .doc, .docx, .csv, .pdf, .png, .jpg, .jpeg (max 10MB each)
+                      </Text>
+                    </Box>
+                  )}
+
+                  {/* Warning for local tasks */}
                   {!isAddMode && !selectedTaskId && (
                     <Alert status="warning" mb={3} borderRadius="md">
                       <Box>
                         <AlertTitle>Local Task</AlertTitle>
                         <AlertDescription>
-                          This task is not from the backend and cannot be updated or deleted.
+                          This task is not from the backend and cannot be updated, deleted, or have files uploaded.
                         </AlertDescription>
                       </Box>
                     </Alert>
                   )}
+
+                  {/* Action Buttons */}
                   {isAddMode ? (
                     <Button colorScheme="green" w="full" onClick={onCreateTask} mb={2}>Create</Button>
                   ) : (
