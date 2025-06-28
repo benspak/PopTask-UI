@@ -496,7 +496,7 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
       {/* Edit Actions */}
       {isEditing && (
         <HStack spacing={3} justify="flex-end">
-          <Button onClick={handleCancel} variant="outline">
+          <Button onClick={onCancel} variant="outline">
             Cancel
           </Button>
           <Button onClick={onSave} colorScheme="blue" isLoading={saving}>
