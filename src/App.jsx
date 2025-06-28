@@ -2,45 +2,48 @@ import React from 'react';
 import {
   Box,
   Flex,
-  VStack,
-  HStack,
-  Text,
   Heading,
+  Text,
+  Button,
   Input,
   Textarea,
-  Checkbox,
-  Button,
-  useBreakpointValue,
-  SimpleGrid,
-  Tag,
-  Image,
+  Select,
+  VStack,
+  HStack,
   IconButton,
-  Collapse,
-  useDisclosure,
-  Avatar,
+  useColorMode,
   useToast,
+  Collapse,
+  Spinner,
   Alert,
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  Select,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  useColorMode,
-  Spinner,
+  Badge,
+  Divider,
+  Image,
+  Link,
   AlertDialog,
   AlertDialogBody,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  useDisclosure,
+  useBreakpointValue,
+  Checkbox,
+  Tag,
+  SimpleGrid,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Avatar,
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon, SunIcon, MoonIcon, SettingsIcon, AddIcon, AttachmentIcon, CloseIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, ChevronUpIcon, AddIcon, EditIcon, ChatIcon, DownloadIcon, DeleteIcon, WarningIcon, CalendarIcon, StarIcon, CheckCircleIcon, SunIcon, MoonIcon, InfoIcon, SettingsIcon, AttachmentIcon } from '@chakra-ui/icons';
 import { useTasks } from './hooks/useTasks';
 import { useProjects } from './hooks/useProjects';
-import apiService from './services/api';
+import apiService, { OfflineNotifications } from './services/api';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -55,21 +58,25 @@ export default function TaskDashboard() {
     tasks: backendTasks,
     loading: tasksLoading,
     error: tasksError,
+    isOffline: tasksOffline,
     loadTasks,
     createTask,
     updateTask,
     deleteTask,
-    toggleTaskCompletion
+    toggleTaskCompletion,
+    syncOfflineData
   } = useTasks();
 
   const {
-    projects: backendProjects,
+    projects,
     loading: projectsLoading,
     error: projectsError,
+    isOffline: projectsOffline,
     loadProjects,
     createProject,
     updateProject,
     deleteProject,
+    syncOfflineData: syncProjectsOfflineData,
   } = useProjects();
 
   // State for all tasks (unfiltered) - needed for updates
@@ -116,6 +123,16 @@ export default function TaskDashboard() {
 
   // Use local task data for UI (preserves expanded state and other UI-specific data)
   const taskData = localTaskData;
+
+  // Combined sync function for both tasks and projects
+  const syncAllOfflineData = async () => {
+    try {
+      await syncOfflineData(); // Sync tasks
+      await syncProjectsOfflineData(); // Sync projects
+    } catch (error) {
+      console.error('Failed to sync offline data:', error);
+    }
+  };
 
   // PWA State
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
@@ -164,16 +181,132 @@ export default function TaskDashboard() {
       }
     };
 
+    // Offline notification handler
+    const handleOfflineNotification = (type, data) => {
+      switch (type) {
+        case 'offline_task_created':
+          toast({
+            title: '📝 Task Saved Offline',
+            description: `"${data.title}" has been saved locally and will sync when you're back online.`,
+            status: 'info',
+            duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'offline_task_updated':
+          toast({
+            title: '✏️ Task Updated Offline',
+            description: `"${data.title}" has been updated locally and will sync when you're back online.`,
+            status: 'info',
+            duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'offline_task_deleted':
+          toast({
+            title: '🗑️ Task Deleted Offline',
+            description: `"${data.title}" has been deleted locally and will sync when you're back online.`,
+            status: 'info',
+            duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'offline_project_created':
+          toast({
+            title: '📁 Project Saved Offline',
+            description: `"${data.name}" has been saved locally and will sync when you're back online.`,
+            status: 'info',
+            duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'offline_project_updated':
+          toast({
+            title: '✏️ Project Updated Offline',
+            description: `"${data.name}" has been updated locally and will sync when you're back online.`,
+            status: 'info',
+            duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'offline_project_deleted':
+          toast({
+            title: '🗑️ Project Deleted Offline',
+            description: `"${data.name}" has been deleted locally and will sync when you're back online.`,
+            status: 'info',
+            duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'sync_completed':
+          if (data.tasksCount > 0 || data.projectsCount > 0) {
+            toast({
+              title: '🔄 Sync Completed',
+              description: `Successfully synced ${data.tasksCount} tasks and ${data.projectsCount} projects.`,
+              status: 'success',
+              duration: 5000,
+              isClosable: true,
+              position: 'top-right',
+            });
+          }
+          break;
+        case 'sync_error':
+          toast({
+            title: '⚠️ Sync Error',
+            description: data.error,
+            status: 'warning',
+            duration: 6000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'manual_sync_start':
+          toast({
+            title: '🔄 Syncing...',
+            description: 'Syncing offline changes with the server.',
+            status: 'info',
+            duration: 3000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'going_offline':
+          toast({
+            title: '📱 Going Offline',
+            description: 'You are now offline. Tasks and projects will be saved locally.',
+            status: 'warning',
+            duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        default:
+          break;
+      }
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
     window.addEventListener('online', handleOnlineStatusChange);
     window.addEventListener('offline', handleOnlineStatusChange);
+
+    // Add offline notification listener
+    OfflineNotifications.addListener(handleOfflineNotification);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('online', handleOnlineStatusChange);
       window.removeEventListener('offline', handleOnlineStatusChange);
+
+      // Remove offline notification listener
+      OfflineNotifications.removeListener(handleOfflineNotification);
     };
   }, [toast]);
 
@@ -256,20 +389,9 @@ export default function TaskDashboard() {
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef();
 
-  // Debug wrapper for setUploadedFiles
-  const setUploadedFilesWithDebug = React.useCallback((value) => {
-    console.log('setUploadedFiles called with:', value);
-    if (Array.isArray(value) && value.length === 0) {
-      console.trace('Files being cleared - stack trace:');
-    }
-    setUploadedFiles(value);
-  }, []);
-
   // Automatically reload task files when selectedTaskId changes
   React.useEffect(() => {
-    console.log('useEffect triggered - selectedTaskId changed to:', selectedTaskId);
     if (selectedTaskId) {
-      console.log('Loading files for task ID:', selectedTaskId);
       loadTaskFiles(selectedTaskId);
     }
     // Only clear files when explicitly going to add mode or when no task is selected
@@ -531,7 +653,7 @@ export default function TaskDashboard() {
         loadTaskFiles(foundTaskData._id);
       } else {
         setSelectedTaskId(null);
-        setUploadedFilesWithDebug([]);
+        setUploadedFiles([]);
       }
     } else {
       // If task not found, set default values
@@ -542,7 +664,7 @@ export default function TaskDashboard() {
       setEditingTags(ensureThreeTags([]));
       setEditingCompleted(false);
       setSelectedTaskId(null);
-      setUploadedFilesWithDebug([]);
+      setUploadedFiles([]);
     }
 
     if (!isDetailOpen) toggleDetail();
@@ -566,7 +688,7 @@ export default function TaskDashboard() {
     if (task._id) {
       loadTaskFiles(task._id);
     } else {
-      setUploadedFilesWithDebug([]);
+      setUploadedFiles([]);
     }
 
     if (!isDetailOpen) toggleDetail();
@@ -590,8 +712,8 @@ export default function TaskDashboard() {
     if (task._id) {
       loadTaskFiles(task._id);
       } else {
-      setUploadedFilesWithDebug([]);
-    }
+      setUploadedFiles([]);
+      }
 
     if (!isDetailOpen) toggleDetail();
   };
@@ -616,7 +738,7 @@ export default function TaskDashboard() {
     // Clear task-related state
     setSelectedTask(null);
     setSelectedTaskId(null);
-    setUploadedFilesWithDebug([]); // Clear uploaded files when switching to project mode
+    setUploadedFiles([]); // Clear uploaded files when switching to project mode
 
     // Filter tasks by this project
     setCurrentView('project');
@@ -702,12 +824,12 @@ export default function TaskDashboard() {
           setSelectedTask(taskTitle);
         }
 
-        // Reload tasks to ensure UI is in sync with backend
-        await loadTasks();
+      // Handle offline mode - the hook should handle updating the task list
+      // No need to reload tasks manually as the hook updates the state
 
       // Reload task files using the updated task data
       if (updatedTask && updatedTask.fileAttachments) {
-        setUploadedFilesWithDebug(updatedTask.fileAttachments);
+        setUploadedFiles(updatedTask.fileAttachments);
       } else {
         // Fallback: reload files using the task ID
         await loadTaskFiles(currentTaskId);
@@ -715,7 +837,7 @@ export default function TaskDashboard() {
 
         toast({
           title: 'Success',
-          description: 'Task updated successfully',
+        description: updatedTask.isOffline ? 'Task updated offline - will sync when connection is restored' : 'Task updated successfully',
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -723,7 +845,6 @@ export default function TaskDashboard() {
 
       toggleDetail();
     } catch (error) {
-      console.error('Error updating task:', error);
       toast({
         title: 'Error',
         description: 'Failed to update task',
@@ -860,6 +981,7 @@ export default function TaskDashboard() {
   // Add state for task deletion
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isCreatingTask, setIsCreatingTask] = React.useState(false);
   const cancelRef = React.useRef();
 
   // Add state for file deletion confirmation
@@ -870,27 +992,54 @@ export default function TaskDashboard() {
   const projectCancelRef = React.useRef();
 
   const onDeleteTask = async () => {
-    if (!selectedTaskId) return;
+    if (!selectedTaskId) {
+      toast({
+        title: 'Error',
+        description: 'No task ID found for deletion',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsDeleting(true);
     try {
-      await deleteTask(selectedTaskId);
+      const response = await deleteTask(selectedTaskId);
       toast({
         title: 'Task deleted',
-        description: 'The task was deleted successfully.',
+        description: response.isOffline ? 'Task deleted offline - will sync when connection is restored' : 'The task was deleted successfully.',
         status: 'success',
         duration: 3000,
         isClosable: true,
       });
+
+      // Close confirmation dialog
       setIsDeleteDialogOpen(false);
       setIsDeleting(false);
+
+      // Close detail panel
       toggleDetail();
+
+      // Clear all form fields and state
       setSelectedTask(null);
       setSelectedTaskId(null);
-      setUploadedFilesWithDebug([]); // Clear uploaded files when task is deleted
+      setTaskTitle('');
+      setTaskDescription('');
+      setEditingDueDate('');
+      setEditingProject('general');
+      setEditingTags(ensureThreeTags([]));
+      setEditingCompleted(false);
+      setUploadedFiles([]); // Clear uploaded files when task is deleted
+
+      // Reset modes
+      setIsAddMode(false);
+      setIsEditProjectMode(false);
+      setIsAddProjectMode(false);
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to delete task',
+        description: `Failed to delete task: ${error.message}`,
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -995,14 +1144,18 @@ export default function TaskDashboard() {
     setEditingProject('general');
     setEditingTags(ensureThreeTags([]));
     setEditingCompleted(false);
-    setUploadedFilesWithDebug([]); // Clear uploaded files for new task
+    setUploadedFiles([]); // Clear uploaded files for new task
 
     if (!isDetailOpen) toggleDetail();
   };
 
   // Add Task submit handler
   const onCreateTask = async () => {
+    // Prevent multiple rapid clicks
+    if (isCreatingTask) return;
+
     try {
+      setIsCreatingTask(true);
       const newTask = {
         title: taskTitle,
         description: taskDescription,
@@ -1011,10 +1164,10 @@ export default function TaskDashboard() {
         tags: editingTags.filter(Boolean),
         completed: editingCompleted
       };
-      await createTask(newTask);
+      const createdTask = await createTask(newTask);
       toast({
         title: 'Task created',
-        description: 'The new task was created successfully.',
+        description: createdTask.isOffline ? 'Task created offline - will sync when connection is restored' : 'The new task was created successfully.',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -1030,8 +1183,18 @@ export default function TaskDashboard() {
       setEditingProject('general');
       setEditingTags(ensureThreeTags([]));
       setEditingCompleted(false);
-      setUploadedFilesWithDebug([]); // Clear uploaded files
+      setUploadedFiles([]); // Clear uploaded files
     } catch (error) {
+      // Handle duplicate task errors specifically
+      if (error.message.includes('already exists')) {
+        toast({
+          title: 'Duplicate Task',
+          description: error.message,
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
       toast({
         title: 'Error',
         description: 'Failed to create task',
@@ -1040,17 +1203,30 @@ export default function TaskDashboard() {
         isClosable: true,
       });
     }
+    } finally {
+      setIsCreatingTask(false);
+    }
   };
 
   // Add Project submit handler
   const onCreateProject = async () => {
     try {
+      if (!projectTitle || projectTitle.trim() === '') {
+        toast({
+          title: 'Error',
+          description: 'Project title is required',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       const newProject = {
-        name: projectTitle,
-        description: projectDescription
+        name: projectTitle.trim(),
+        description: projectDescription.trim()
       };
       await createProject(newProject);
-      await loadProjects();
       toast({
         title: 'Project created',
         description: 'The new project was created successfully.',
@@ -1066,7 +1242,7 @@ export default function TaskDashboard() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to create project',
+        description: error.message || 'Failed to create project',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -1087,14 +1263,24 @@ export default function TaskDashboard() {
       return;
     }
 
+    if (!editingProjectTitle || editingProjectTitle.trim() === '') {
+      toast({
+        title: 'Error',
+        description: 'Project title is required',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       const updatedProjectData = {
-        name: editingProjectTitle,
-        description: editingProjectDescription
+        name: editingProjectTitle.trim(),
+        description: editingProjectDescription.trim()
       };
 
       await updateProject(selectedProjectId, updatedProjectData);
-      await loadProjects();
       toast({
         title: 'Success',
         description: 'Project updated successfully',
@@ -1112,7 +1298,7 @@ export default function TaskDashboard() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to update project',
+        description: error.message || 'Failed to update project',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -1136,7 +1322,6 @@ export default function TaskDashboard() {
     try {
       setIsDeletingProject(true);
       await deleteProject(selectedProjectId);
-      await loadProjects();
 
       toast({
         title: 'Success',
@@ -1146,19 +1331,38 @@ export default function TaskDashboard() {
         isClosable: true,
       });
 
-      setIsEditProjectMode(false);
+      // Close confirmation dialog
       setIsDeleteProjectDialogOpen(false);
+      setIsDeletingProject(false);
+
+      // Close detail panel
       toggleDetail();
 
-      // Reset fields
+      // Clear all form fields and state
       setSelectedProject(null);
       setSelectedProjectId(null);
       setEditingProjectTitle('');
       setEditingProjectDescription('');
+
+      // Reset modes
+      setIsAddMode(false);
+      setIsEditProjectMode(false);
+      setIsAddProjectMode(false);
+
+      // Clear task-related state
+      setSelectedTask(null);
+      setSelectedTaskId(null);
+      setTaskTitle('');
+      setTaskDescription('');
+      setEditingDueDate('');
+      setEditingProject('general');
+      setEditingTags(ensureThreeTags([]));
+      setEditingCompleted(false);
+      setUploadedFiles([]);
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to delete project',
+        description: error.message || 'Failed to delete project',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -1174,7 +1378,7 @@ export default function TaskDashboard() {
     setIsEditProjectMode(false);
     setSelectedTask(null);
     setSelectedTaskId(null);
-    setUploadedFilesWithDebug([]); // Clear uploaded files when switching to project add mode
+    setUploadedFiles([]); // Clear uploaded files when switching to project add mode
     setProjectTitle('');
     setProjectDescription('');
     if (!isDetailOpen) toggleDetail();
@@ -1259,7 +1463,7 @@ export default function TaskDashboard() {
         }
       });
     } catch (error) {
-      console.error('File upload error:', error);
+      // File upload error handled by toast notifications
     } finally {
       setIsUploading(false);
       // Reset file input
@@ -1281,7 +1485,7 @@ export default function TaskDashboard() {
     setIsDeletingFile(true);
     try {
       await apiService.deleteFile(selectedTaskId, fileToDelete);
-      setUploadedFilesWithDebug(prev => prev.filter(file => file.filename !== fileToDelete));
+      setUploadedFiles(prev => prev.filter(file => file.filename !== fileToDelete));
       toast({
         title: 'Success',
         description: 'File deleted successfully',
@@ -1322,27 +1526,19 @@ export default function TaskDashboard() {
   };
 
   const loadTaskFiles = async (taskId) => {
-    console.log('loadTaskFiles called with taskId:', taskId);
     if (!taskId) {
-      console.log('No taskId provided, clearing files');
-      setUploadedFilesWithDebug([]);
+      setUploadedFiles([]);
       return;
     }
 
     try {
-      console.log('Fetching task data for ID:', taskId);
       const response = await apiService.getTask(taskId);
-      console.log('Task response received:', response);
 
       // Handle the API response structure: {success: true, data: {...}}
       const task = response.data || response;
-      console.log('Task data:', task);
-      console.log('File attachments:', task.fileAttachments);
-      setUploadedFilesWithDebug(task.fileAttachments || []);
-      console.log('Files set successfully');
+      setUploadedFiles(task.fileAttachments || []);
     } catch (error) {
-      console.error('Error loading task files:', error);
-      setUploadedFilesWithDebug([]);
+      setUploadedFiles([]);
     }
   };
 
@@ -1377,8 +1573,6 @@ export default function TaskDashboard() {
 
   // Helper function to prepare tags for display with attachment indicator
   const prepareTagsForDisplay = (tags, fileAttachments, taskTitle = null) => {
-    console.log('prepareTagsForDisplay called with:', { tags, fileAttachments, taskTitle, selectedTask, uploadedFiles });
-
     // Filter out empty tags
     const validTags = tags.filter(tag => tag && tag.trim() !== '');
 
@@ -1386,7 +1580,6 @@ export default function TaskDashboard() {
     const userTags = validTags.slice(0, 3);
 
     // Return just the user tags (no attachment emoji since there's already a visual indicator)
-    console.log('Returning user tags:', userTags);
     return userTags;
   };
 
@@ -1426,7 +1619,7 @@ export default function TaskDashboard() {
               onChange={(e) => handleProjectFilterChange(e.target.value)}
               isDisabled={projectsLoading}
             >
-              {backendProjects.map((project) => (
+              {projects.map((project) => (
                 <option key={project._id} value={project.name}>
                   {project.name}
                 </option>
@@ -1486,6 +1679,26 @@ export default function TaskDashboard() {
           </Flex>
         </Flex>
       </Box>
+
+      {/* Offline Status and Sync */}
+      {tasksOffline && (
+        <Box bg="orange.500" color="white" p={3} textAlign="center">
+          <Flex justify="center" align="center" gap={3}>
+            <WarningIcon />
+            <Text fontSize="sm" fontWeight="medium">
+              Working offline - changes will sync when connection is restored
+            </Text>
+            <Button
+              size="xs"
+              colorScheme="whiteAlpha"
+              onClick={syncAllOfflineData}
+              isLoading={tasksLoading}
+            >
+              Sync Now
+            </Button>
+          </Flex>
+        </Box>
+      )}
 
       <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg={colorMode === 'light' ? 'gray.50' : 'gray.900'} color={colorMode === 'light' ? 'gray.800' : 'white'} pb="80px">
       {/* Sidebar */}
@@ -1674,7 +1887,7 @@ export default function TaskDashboard() {
                 </Alert>
               ) : (
               <SimpleGrid columns={2} spacing={3}>
-                  {backendProjects.map((project) => (
+                  {projects.map((project) => (
                     <Box
                       key={project._id}
                       p={4}
@@ -1687,6 +1900,18 @@ export default function TaskDashboard() {
                     >
                       <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
                       <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>{project.description || 'No description'}</Text>
+                      {project.isOffline && (
+                        <Badge
+                          position="absolute"
+                          top={2}
+                          left={2}
+                          colorScheme="orange"
+                          size="sm"
+                          fontSize="xs"
+                        >
+                          Offline
+                        </Badge>
+                      )}
                       <IconButton
                         icon={<StarIcon />}
                         aria-label="Filter by project"
@@ -1741,7 +1966,7 @@ export default function TaskDashboard() {
                 </Alert>
               ) : (
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
-                  {backendProjects.map((project) => (
+                  {projects.map((project) => (
                     <Box
                       key={project._id}
                       p={4}
@@ -1750,9 +1975,22 @@ export default function TaskDashboard() {
                       cursor="pointer"
                       _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }}
                       onClick={() => handleProjectClick(project)}
+                      position="relative"
                     >
                       <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
                       <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>{project.description || 'No description'}</Text>
+                      {project.isOffline && (
+                        <Badge
+                          position="absolute"
+                          top={2}
+                          left={2}
+                          colorScheme="orange"
+                          size="sm"
+                          fontSize="xs"
+                        >
+                          Offline
+                        </Badge>
+                      )}
                 </Box>
                   ))}
                   <Box
@@ -1800,9 +2038,9 @@ export default function TaskDashboard() {
             <Alert status="error" mb={4}>
               <AlertIcon />
               <Box>
-                <AlertTitle>Backend Error!</AlertTitle>
+                <AlertTitle>Connection Error</AlertTitle>
                 <AlertDescription>
-                  {tasksError}. Please check if the backend server is running.
+                  Unable to connect to the server. Please check your internet connection and try again.
                 </AlertDescription>
               </Box>
             </Alert>
@@ -1876,6 +2114,17 @@ export default function TaskDashboard() {
                                     </Text>
                                     {taskInfo.fileAttachments && taskInfo.fileAttachments.length > 0 && (
                                       renderFileAttachmentIndicator(taskInfo.fileAttachments)
+                                    )}
+                                    {taskInfo.isOffline && (
+                                      <Badge
+                                        size="sm"
+                                        colorScheme="orange"
+                                        variant="subtle"
+                                        ml={2}
+                                        title="This task is stored offline"
+                                      >
+                                        📱
+                                      </Badge>
                                     )}
                                   </Flex>
                                   <HStack spacing={2}>
@@ -1961,6 +2210,17 @@ export default function TaskDashboard() {
                                       </Text>
                                       {task.fileAttachments && task.fileAttachments.length > 0 && (
                                         renderFileAttachmentIndicator(task.fileAttachments)
+                                      )}
+                                      {task.isOffline && (
+                                        <Badge
+                                          size="sm"
+                                          colorScheme="orange"
+                                          variant="subtle"
+                                          ml={2}
+                                          title="This task is stored offline"
+                                        >
+                                          📱
+                                        </Badge>
                                       )}
                                     </Flex>
                                     <HStack spacing={2}>
@@ -2141,7 +2401,7 @@ export default function TaskDashboard() {
                 onChange={(e) => setEditingProject(e.target.value)}
                       isDisabled={projectsLoading}
                     >
-                      {backendProjects.map((project) => (
+                      {projects.map((project) => (
                         <option key={project._id} value={project.name}>
                           {project.name.charAt(0).toUpperCase() + project.name.slice(1)}
                         </option>
@@ -2389,7 +2649,7 @@ export default function TaskDashboard() {
 
                   {/* Action Buttons */}
             {isAddMode ? (
-              <Button colorScheme="green" w="full" onClick={onCreateTask} mb={2}>Create</Button>
+              <Button colorScheme="green" w="full" onClick={onCreateTask} mb={2} isLoading={isCreatingTask} loadingText="Creating...">Create</Button>
             ) : (
               <Button colorScheme="green" w="full" onClick={onUpdateTask} mb={2} isDisabled={!selectedTaskId}>Update</Button>
             )}
@@ -2471,12 +2731,12 @@ export default function TaskDashboard() {
                       Cancel
                     </Button>
                     <Button colorScheme="red" onClick={confirmFileDelete} ml={3} isLoading={isDeletingFile}>
-                      Delete
-                    </Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialogOverlay>
-            </AlertDialog>
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
         </Box>
       )}
     </Flex>
