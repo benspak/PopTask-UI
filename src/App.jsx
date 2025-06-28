@@ -41,7 +41,7 @@ import {
   Avatar,
   Tooltip,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, ChevronUpIcon, AddIcon, EditIcon, ChatIcon, DownloadIcon, DeleteIcon, WarningIcon, CalendarIcon, StarIcon, CheckCircleIcon, SunIcon, MoonIcon, InfoIcon, SettingsIcon, AttachmentIcon, CloseIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, ChevronUpIcon, AddIcon, EditIcon, ChatIcon, DownloadIcon, DeleteIcon, WarningIcon, CalendarIcon, StarIcon, CheckCircleIcon, SunIcon, MoonIcon, InfoIcon, SettingsIcon, AttachmentIcon, CloseIcon, HamburgerIcon } from '@chakra-ui/icons';
 import { useTasks } from './hooks/useTasks';
 import { useProjects } from './hooks/useProjects';
 import apiService, { OfflineNotifications } from './services/api';
@@ -1981,7 +1981,7 @@ export default function TaskDashboard() {
               left={{ base: 0, md: 'auto' }}
               right={{ base: 0, md: 'auto' }}
               bottom={{ base: 0, md: 'auto' }}
-              zIndex={{ base: 60, md: 'auto' }}
+              zIndex={{ base: 70, md: 'auto' }}
               bg={colorMode === 'light' ? 'white' : 'gray.800'}
               p={4}
               overflowY={{ base: 'auto', md: 'visible' }}
@@ -2024,7 +2024,7 @@ export default function TaskDashboard() {
                       borderRadius="lg"
                       cursor="pointer"
                       _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }}
-                      onClick={() => handleProjectClick(project)}
+                      onClick={() => handleProjectFilter(project.name)}
                       position="relative"
                     >
                       <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
@@ -2042,14 +2042,29 @@ export default function TaskDashboard() {
                         </Badge>
                       )}
                       <IconButton
-                        icon={<StarIcon />}
-                        aria-label="Filter by project"
+                        icon={<HamburgerIcon />}
+                        aria-label="Edit project"
                         size="xs"
                         position="absolute"
                         top={2}
                         right={2}
                         colorScheme="blue"
                         variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleProjectClick(project);
+                        }}
+                      />
+                      <IconButton
+                        icon={<StarIcon />}
+                        aria-label="Filter by project"
+                        size="xs"
+                        position="absolute"
+                        top={2}
+                        right={8}
+                        colorScheme="blue"
+                        variant="ghost"
+                        display={{ base: 'none', md: 'inline-flex' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleProjectFilter(project.name);
@@ -2103,7 +2118,7 @@ export default function TaskDashboard() {
                       borderRadius="lg"
                       cursor="pointer"
                       _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }}
-                      onClick={() => handleProjectClick(project)}
+                      onClick={() => handleProjectFilter(project.name)}
                       position="relative"
                     >
                       <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
@@ -2423,7 +2438,7 @@ export default function TaskDashboard() {
           left={{ base: 0, md: 'auto' }}
           right={{ base: 0, md: 'auto' }}
           bottom={{ base: 0, md: 'auto' }}
-          zIndex={{ base: 60, md: 'auto' }}
+          zIndex={{ base: 70, md: 'auto' }}
           overflowY={{ base: 'auto', md: 'visible' }}
           boxShadow={{ base: 'lg', md: 'none' }}
         >
@@ -2984,8 +2999,8 @@ export default function TaskDashboard() {
           left={0}
           right={0}
           bottom={0}
-          bg="blackAlpha.600"
-          zIndex={90}
+          bg="blackAlpha.300"
+          zIndex={50}
           display={{ base: 'block', md: 'none' }}
           onClick={(e) => {
             // Only close panels if not just the prompt popover
