@@ -2,7 +2,7 @@ databases:
   - name: task-dashboard-mongodb
     databaseName: taskmanager
     user: taskuser
-    plan: free
+    plan: hobby
 
 services:
   # Backend API Service
