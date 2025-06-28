@@ -1,0 +1,36 @@
+# Development files
+node_modules/
+.env
+.env.local
+.env.development
+.env.test
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# Docker files (not needed for Render)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Git files
+.git/
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Test files
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
