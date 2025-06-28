@@ -166,6 +166,7 @@ const SharedView = ({ type, token }) => {
 
   const item = data[type];
   const permission = data.sharePermission;
+  const shareStats = data.shareStats;
 
   return (
     <Box p={6} maxW="800px" mx="auto">
@@ -176,9 +177,16 @@ const SharedView = ({ type, token }) => {
             <Text fontSize="2xl" fontWeight="bold" color={colorMode === 'light' ? 'gray.800' : 'white'}>
               Shared {type === 'task' ? 'Task' : 'Project'}
             </Text>
-            <Badge colorScheme={permission === 'editable' ? 'green' : 'blue'}>
-              {permission === 'editable' ? 'Editable' : 'Read-only'}
-            </Badge>
+            <HStack spacing={2}>
+              <Badge colorScheme={permission === 'editable' ? 'green' : 'blue'}>
+                {permission === 'editable' ? 'Editable' : 'Read-only'}
+              </Badge>
+              {shareStats && (
+                <Badge colorScheme="purple" variant="subtle">
+                  {shareStats.viewCount || 0} views
+                </Badge>
+              )}
+            </HStack>
           </VStack>
           <HStack>
             <Tooltip label="Copy share link">
@@ -202,6 +210,27 @@ const SharedView = ({ type, token }) => {
             )}
           </HStack>
         </HStack>
+
+        {/* Share Statistics */}
+        {shareStats && (
+          <Box p={3} bg={colorMode === 'light' ? 'gray.50' : 'gray.700'} borderRadius="md">
+            <Text fontSize="sm" fontWeight="medium" mb={2} color={colorMode === 'light' ? 'gray.700' : 'gray.300'}>
+              Share Information
+            </Text>
+            <HStack spacing={4} fontSize="xs" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
+              {shareStats.shareCreatedAt && (
+                <Text>Created: {new Date(shareStats.shareCreatedAt).toLocaleDateString()}</Text>
+              )}
+              {shareStats.lastViewedAt && (
+                <Text>Last viewed: {new Date(shareStats.lastViewedAt).toLocaleDateString()}</Text>
+              )}
+              {shareStats.shareExpiresAt && (
+                <Text>Expires: {new Date(shareStats.shareExpiresAt).toLocaleDateString()}</Text>
+              )}
+            </HStack>
+          </Box>
+        )}
+
         <Divider />
       </VStack>
 

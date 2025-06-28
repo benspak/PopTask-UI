@@ -190,6 +190,55 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
               </Alert>
             )}
 
+            {/* Share Statistics */}
+            {isCurrentlyShared && item.shareViewCount !== undefined && (
+              <Box p={4} bg={colorMode === 'light' ? 'blue.50' : 'blue.900'} borderRadius="md">
+                <Text fontSize="sm" fontWeight="medium" mb={2} color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
+                  Share Statistics
+                </Text>
+                <VStack align="start" spacing={1}>
+                  <HStack justify="space-between" w="full">
+                    <Text fontSize="xs" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
+                      Views:
+                    </Text>
+                    <Text fontSize="xs" fontWeight="medium" color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
+                      {item.shareViewCount || 0}
+                    </Text>
+                  </HStack>
+                  {item.shareCreatedAt && (
+                    <HStack justify="space-between" w="full">
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
+                        Created:
+                      </Text>
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
+                        {new Date(item.shareCreatedAt).toLocaleDateString()}
+                      </Text>
+                    </HStack>
+                  )}
+                  {item.lastViewedAt && (
+                    <HStack justify="space-between" w="full">
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
+                        Last viewed:
+                      </Text>
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
+                        {new Date(item.lastViewedAt).toLocaleDateString()}
+                      </Text>
+                    </HStack>
+                  )}
+                  {item.shareExpiresAt && (
+                    <HStack justify="space-between" w="full">
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
+                        Expires:
+                      </Text>
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
+                        {new Date(item.shareExpiresAt).toLocaleDateString()}
+                      </Text>
+                    </HStack>
+                  )}
+                </VStack>
+              </Box>
+            )}
+
             {/* Permission Selection */}
             <Box>
               <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
