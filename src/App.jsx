@@ -215,6 +215,9 @@ export default function TaskDashboard() {
   const [selectedTask, setSelectedTask] = React.useState(null);
   const [selectedTaskId, setSelectedTaskId] = React.useState(null);
 
+  // Add state to track add mode
+  const [isAddMode, setIsAddMode] = React.useState(false);
+
   // Utility function to convert date to Mountain Standard Time
   const toMST = (date) => {
     const mstDate = new Date(date.toLocaleString("en-US", {timeZone: "America/Denver"}));
@@ -896,6 +899,59 @@ export default function TaskDashboard() {
     }
   };
 
+  // Add Task handler
+  const handleAddTask = () => {
+    setIsAddMode(true);
+    setSelectedTask(null);
+    setSelectedTaskId(null);
+    setTaskTitle('');
+    setTaskDescription('');
+    setEditingDueDate('');
+    setEditingProject('');
+    setEditingTags(['']);
+    setEditingCompleted(false);
+    if (!isDetailOpen) toggleDetail();
+  };
+
+  // Add Task submit handler
+  const onCreateTask = async () => {
+    try {
+      const newTask = {
+        title: taskTitle,
+        description: taskDescription,
+        dueDate: editingDueDate,
+        project: editingProject,
+        tags: editingTags.filter(Boolean),
+        completed: editingCompleted
+      };
+      await createTask(newTask);
+      toast({
+        title: 'Task created',
+        description: 'The new task was created successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsAddMode(false);
+      toggleDetail();
+      // Optionally reset fields
+      setTaskTitle('');
+      setTaskDescription('');
+      setEditingDueDate('');
+      setEditingProject('');
+      setEditingTags(['']);
+      setEditingCompleted(false);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create task',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Box position="relative" minH="100vh" overflowX="hidden" maxW="100vw">
       {/* Search Bar - Always Visible at Top */}
@@ -1200,6 +1256,7 @@ export default function TaskDashboard() {
               {currentView === 'project' && `${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Tasks`}
               {currentView === 'tag' && `#${currentFilter} Tasks`}
             </Heading>
+            <Button colorScheme="blue" onClick={handleAddTask}>Add Task</Button>
             <Text fontSize="sm" color="gray.400">
               {(() => {
                 if (currentView === 'all') {
@@ -1439,7 +1496,9 @@ export default function TaskDashboard() {
       {/* Detail Panel */}
       {isDetailOpen && (
           <Box w={{ base: '100%', md: isCenterOpen ? '350px' : '500px' }} bg={colorMode === 'light' ? 'white' : 'gray.800'} p={6} position="relative">
-            <Heading size="md" mb={4} color={colorMode === 'light' ? 'gray.800' : 'white'}>Update Selected Task</Heading>
+            <Heading size="md" mb={4} color={colorMode === 'light' ? 'gray.800' : 'white'}>
+              {isAddMode ? 'Add New Task' : 'Update Selected Task'}
+            </Heading>
             <Input
               value={taskTitle}
               fontSize="lg"
@@ -1567,7 +1626,7 @@ export default function TaskDashboard() {
           <Box>
             <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'white'}>Task Assets</Text>
             <Image bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} boxSize="60px" borderRadius="md" mb={3} />
-            {!selectedTaskId && (
+            {!isAddMode && !selectedTaskId && (
               <Alert status="warning" mb={3} borderRadius="md">
                 <Box>
                   <AlertTitle>Local Task</AlertTitle>
@@ -1577,23 +1636,14 @@ export default function TaskDashboard() {
                 </Box>
               </Alert>
             )}
-            <Button
-              colorScheme="green"
-              w="full"
-              onClick={onUpdateTask}
-              mb={2}
-              isDisabled={!selectedTaskId}
-            >
-              Update
-            </Button>
-            <Button
-              colorScheme="red"
-              w="full"
-              onClick={() => setIsDeleteDialogOpen(true)}
-              isDisabled={!selectedTaskId || isDeleting}
-            >
-              Delete
-            </Button>
+            {isAddMode ? (
+              <Button colorScheme="green" w="full" onClick={onCreateTask} mb={2}>Create</Button>
+            ) : (
+              <Button colorScheme="green" w="full" onClick={onUpdateTask} mb={2} isDisabled={!selectedTaskId}>Update</Button>
+            )}
+            {!isAddMode && (
+              <Button colorScheme="red" w="full" onClick={() => setIsDeleteDialogOpen(true)} isDisabled={!selectedTaskId || isDeleting}>Delete</Button>
+            )}
           </Box>
 
           {/* Delete Confirmation Dialog */}
