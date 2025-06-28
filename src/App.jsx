@@ -28,9 +28,19 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  useColorMode
+  useColorMode,
+  Spinner,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon, SunIcon, MoonIcon, SettingsIcon } from '@chakra-ui/icons';
+import { useTasks } from './hooks/useTasks';
+import { useProjects } from './hooks/useProjects';
+import apiService from './services/api';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -39,6 +49,72 @@ export default function TaskDashboard() {
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: !isMobile });
   const { colorMode, toggleColorMode } = useColorMode();
+
+  // Backend integration hooks
+  const {
+    tasks: backendTasks,
+    loading: tasksLoading,
+    error: tasksError,
+    loadTasks,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleTaskCompletion
+  } = useTasks();
+
+  const {
+    projects: backendProjects,
+    loading: projectsLoading,
+    error: projectsError,
+    loadProjects
+  } = useProjects();
+
+  // State for all tasks (unfiltered) - needed for updates
+  const [allBackendTasks, setAllBackendTasks] = React.useState([]);
+
+  // Load backend data on component mount
+  React.useEffect(() => {
+    loadTasks();
+    loadProjects();
+  }, [loadTasks, loadProjects]);
+
+  // Keep all tasks in sync with backend
+  React.useEffect(() => {
+    setAllBackendTasks(backendTasks);
+  }, [backendTasks]);
+
+  // Transform backend tasks to match local state format
+  const transformBackendTasksToLocalFormat = React.useCallback(() => {
+    if (!backendTasks || backendTasks.length === 0) return {};
+
+    const transformed = {};
+    backendTasks.forEach(task => {
+      transformed[task.title] = {
+        description: task.description,
+        expanded: false,
+        dueDate: task.dueDate,
+        project: task.project,
+        tags: task.tags,
+        completed: task.completed,
+        _id: task._id // Keep the backend ID for operations
+      };
+    });
+    return transformed;
+  }, [backendTasks]);
+
+  // State for task data with descriptions
+  const [localTaskData, setLocalTaskData] = React.useState({});
+
+  // Update local task data when backend data changes
+  React.useEffect(() => {
+    console.log('Backend tasks received:', backendTasks);
+    const transformed = transformBackendTasksToLocalFormat();
+    console.log('Transformed task data:', transformed);
+    setLocalTaskData(transformed);
+  }, [transformBackendTasksToLocalFormat]);
+
+  // Use local task data for UI (preserves expanded state and other UI-specific data)
+  const taskData = localTaskData;
 
   // PWA State
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
@@ -143,6 +219,7 @@ export default function TaskDashboard() {
 
   // State for selected task
   const [selectedTask, setSelectedTask] = React.useState(null);
+  const [selectedTaskId, setSelectedTaskId] = React.useState(null);
 
   // Utility function to convert date to Mountain Standard Time
   const toMST = (date) => {
@@ -150,272 +227,106 @@ export default function TaskDashboard() {
     return mstDate;
   };
 
-  // State for task data with descriptions
-  const [taskData, setTaskData] = React.useState({
-    'Review analytics report': {
-      description: 'Analyze weekly performance metrics, identify key trends, and prepare insights for the marketing team. Focus on conversion rates, user engagement, and ROI across all campaigns.',
-      expanded: false,
-      dueDate: toMST(new Date()).toISOString().split('T')[0], // Today in MST
-      project: 'marketing',
-      tags: ['analytics', 'reporting'],
-      completed: false
-    },
-    'Prepare presentation slides': {
-      description: 'Create compelling presentation materials for the quarterly business review. Include data visualizations, key achievements, and strategic recommendations for stakeholders.',
-      expanded: false,
-      dueDate: toMST(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 2 days from now in MST
-      project: 'marketing',
-      tags: ['presentation', 'Q4'],
-      completed: true
-    },
-    'Update campaign strategy': {
-      description: 'Revise digital marketing campaign approach based on recent performance data. Optimize targeting parameters, adjust budget allocation, and refine messaging for better engagement.',
-      expanded: false,
-      dueDate: toMST(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 5 days from now in MST
-      project: 'marketing',
-      tags: ['campaign', 'strategy'],
-      completed: false
-    },
-    'Conduct user interviews': {
-      description: 'Schedule and conduct user research interviews to gather feedback on product features. Document insights, pain points, and improvement suggestions for the development team.',
-      expanded: false,
-      dueDate: toMST(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 15 days from now in MST
-      project: 'techdev',
-      tags: ['research', 'user-feedback'],
-      completed: false
-    },
-    'Organize team meeting': {
-      description: 'Coordinate weekly team sync meeting, prepare agenda items, and ensure all team members have necessary materials. Focus on project updates and collaborative problem-solving.',
-      expanded: false,
-      dueDate: toMST(new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 45 days from now in MST
-      project: 'techdev',
-      tags: ['meeting', 'coordination'],
-      completed: true
-    }
-  });
+  // State for weekly tasks - dynamically generated from backend data
+  const [dayTasks, setDayTasks] = React.useState({});
 
-  // State for weekly tasks
-  const [dayTasks, setDayTasks] = React.useState({
-    Monday: [
-      {
-        title: 'Team standup meeting',
-        description: 'Daily team synchronization meeting to discuss progress, blockers, and priorities for the day.',
-        dueDate: toMST(new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 1 day from now in MST
-        project: 'techdev',
-        tags: ['meeting', 'standup'],
-        completed: false
-      },
-      {
-        title: 'Code review',
-        description: 'Review pull requests and provide feedback on code quality, best practices, and potential improvements.',
-        dueDate: toMST(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 3 days from now in MST
-        project: 'techdev',
-        tags: ['code', 'review'],
-        completed: true
-      },
-      {
-        title: 'Bug fixes',
-        description: 'Address critical bugs and issues reported by users or identified during testing.',
-        dueDate: toMST(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 7 days from now in MST
-        project: 'techdev',
-        tags: ['bugs', 'fixes'],
-        completed: false
+  // Function to organize backend tasks by day of the week
+  const organizeTasksByDay = React.useCallback(() => {
+    if (!backendTasks || backendTasks.length === 0) {
+      setDayTasks({});
+      return;
+    }
+
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const organizedTasks = {};
+
+    // Initialize empty arrays for each day
+    daysOfWeek.forEach(day => {
+      organizedTasks[day] = [];
+    });
+
+    // Organize tasks by their due date
+    backendTasks.forEach(task => {
+      if (task.dueDate) {
+        try {
+          const dueDate = new Date(task.dueDate);
+          const dayName = daysOfWeek[dueDate.getDay()];
+
+          if (organizedTasks[dayName]) {
+            organizedTasks[dayName].push({
+              title: task.title,
+              description: task.description,
+              dueDate: task.dueDate,
+              project: task.project,
+              tags: task.tags,
+              completed: task.completed,
+              _id: task._id // Keep the backend ID for operations
+            });
+          }
+        } catch (error) {
+          console.error('Error parsing due date for task:', task.title, error);
+        }
       }
-    ],
-    Tuesday: [
-      {
-        title: 'Content creation',
-        description: 'Create blog posts, social media content, and marketing materials for upcoming campaigns.',
-        dueDate: toMST(new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 4 days from now in MST
-        project: 'marketing',
-        tags: ['content', 'creation'],
-        completed: false
-      },
-      {
-        title: 'SEO optimization',
-        description: 'Optimize website content and structure for better search engine rankings and visibility.',
-        dueDate: toMST(new Date(Date.now() + 8 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 8 days from now in MST
-        project: 'marketing',
-        tags: ['seo', 'optimization'],
-        completed: false
-      },
-      {
-        title: 'Email campaign',
-        description: 'Design and send email marketing campaigns to engage subscribers and drive conversions.',
-        dueDate: toMST(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 14 days from now in MST
-        project: 'marketing',
-        tags: ['email', 'campaign'],
-        completed: true
-      }
-    ],
-    Wednesday: [
-      {
-        title: 'UI/UX design',
-        description: 'Create wireframes, mockups, and design prototypes for new features and improvements.',
-        dueDate: toMST(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 6 days from now in MST
-        project: 'design',
-        tags: ['design', 'ui-ux'],
-        completed: false
-      },
-      {
-        title: 'Brand guidelines',
-        description: 'Update and maintain brand guidelines to ensure consistency across all design materials.',
-        dueDate: toMST(new Date(Date.now() + 11 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 11 days from now in MST
-        project: 'design',
-        tags: ['brand', 'guidelines'],
-        completed: false
-      },
-      {
-        title: 'Design system',
-        description: 'Develop and maintain a comprehensive design system for consistent component usage.',
-        dueDate: toMST(new Date(Date.now() + 18 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 18 days from now in MST
-        project: 'design',
-        tags: ['design-system', 'components'],
-        completed: true
-      }
-    ],
-    Thursday: [
-      {
-        title: 'Client meeting',
-        description: 'Meet with clients to discuss project requirements, progress updates, and feedback.',
-        dueDate: toMST(new Date(Date.now() + 9 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 9 days from now in MST
-        project: 'sales',
-        tags: ['client', 'meeting'],
-        completed: false
-      },
-      {
-        title: 'Proposal writing',
-        description: 'Write and prepare project proposals for potential clients and business opportunities.',
-        dueDate: toMST(new Date(Date.now() + 13 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 13 days from now in MST
-        project: 'sales',
-        tags: ['proposal', 'writing'],
-        completed: false
-      },
-      {
-        title: 'Sales follow-up',
-        description: 'Follow up with leads and prospects to nurture relationships and close deals.',
-        dueDate: toMST(new Date(Date.now() + 20 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 20 days from now in MST
-        project: 'sales',
-        tags: ['sales', 'follow-up'],
-        completed: false
-      }
-    ],
-    Friday: [
-      {
-        title: 'Performance review',
-        description: 'Conduct performance reviews and provide feedback to team members on their work.',
-        dueDate: toMST(new Date(Date.now() + 16 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 16 days from now in MST
-        project: 'techdev',
-        tags: ['review', 'performance'],
-        completed: false
-      },
-      {
-        title: 'Documentation update',
-        description: 'Update technical documentation and user guides based on recent feature releases and user feedback.',
-        dueDate: toMST(new Date(Date.now() + 35 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 35 days from now in MST
-        project: 'techdev',
-        tags: ['documentation', 'update'],
-        completed: true
-      },
-      {
-        title: 'Next week planning',
-        description: 'Plan and prioritize tasks for the upcoming week. Allocate resources and set realistic deadlines.',
-        dueDate: toMST(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 90 days from now in MST
-        project: 'marketing',
-        tags: ['planning', 'priorities'],
-        completed: false
-      }
-    ],
-    Saturday: [
-      {
-        title: 'Personal project work',
-        description: 'Dedicated time for personal development projects and skill building. Focus on learning new technologies.',
-        dueDate: toMST(new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 10 days from now in MST
-        project: 'techdev',
-        tags: ['personal', 'development'],
-        completed: false
-      },
-      {
-        title: 'Skill development',
-        description: 'Online course completion and skill enhancement activities. Focus on areas identified for improvement.',
-        dueDate: toMST(new Date(Date.now() + 40 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 40 days from now in MST
-        project: 'techdev',
-        tags: ['learning', 'skills'],
-        completed: false
-      },
-      {
-        title: 'Creative brainstorming',
-        description: 'Free-form creative session to generate new ideas for projects and explore innovative solutions.',
-        dueDate: toMST(new Date(Date.now() + 100 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 100 days from now in MST
-        project: 'design',
-        tags: ['creative', 'brainstorming'],
-        completed: false
-      }
-    ],
-    Sunday: [
-      {
-        title: 'Week preparation',
-        description: 'Prepare for the upcoming week by organizing tasks, setting priorities, and reviewing calendar commitments.',
-        dueDate: toMST(new Date(Date.now() + 12 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 12 days from now in MST
-        project: 'marketing',
-        tags: ['preparation', 'planning'],
-        completed: false
-      },
-      {
-        title: 'Rest and recharge',
-        description: 'Dedicated time for rest and personal activities. Important for maintaining work-life balance and productivity.',
-        dueDate: toMST(new Date(Date.now() + 50 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 50 days from now in MST
-        project: 'personal',
-        tags: ['rest', 'balance'],
-        completed: false
-      },
-      {
-        title: 'Goal setting',
-        description: 'Review personal and professional goals, assess progress, and set new objectives for the upcoming period.',
-        dueDate: toMST(new Date(Date.now() + 120 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0], // 120 days from now in MST
-        project: 'personal',
-        tags: ['goals', 'planning'],
-        completed: false
-      }
-    ]
-  });
+    });
+
+    // Sort tasks within each day by due date
+    daysOfWeek.forEach(day => {
+      organizedTasks[day].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    });
+
+    setDayTasks(organizedTasks);
+  }, [backendTasks]);
+
+  // Update dayTasks when backend tasks change
+  React.useEffect(() => {
+    organizeTasksByDay();
+  }, [organizeTasksByDay]);
 
   // State for contextual task view
   const [currentView, setCurrentView] = React.useState('all'); // 'all', 'day', 'project', 'tag'
   const [currentFilter, setCurrentFilter] = React.useState('');
 
-  // Get all tasks from all sources for global search
+  // Get all tasks from backend for global search
   const getAllTasksForSearch = () => {
     const allTasks = [];
+    const seenIds = new Set(); // Track unique task _id values
 
-    // Add tasks from taskData (My Tasks)
+    // Add tasks from taskData (backend tasks) first
     Object.keys(taskData).forEach(taskName => {
-      allTasks.push({
-        title: taskName,
-        description: taskData[taskName].description,
-        dueDate: taskData[taskName].dueDate,
-        project: taskData[taskName].project,
-        tags: taskData[taskName].tags,
-        completed: taskData[taskName].completed,
-        expanded: taskData[taskName].expanded,
-        source: 'today'
-      });
+      const task = taskData[taskName];
+      if (task && task._id && !seenIds.has(task._id)) {
+        seenIds.add(task._id);
+        allTasks.push({
+          title: taskName,
+          description: task.description,
+          dueDate: task.dueDate,
+          project: task.project,
+          tags: task.tags,
+          completed: task.completed,
+          expanded: task.expanded,
+          _id: task._id,
+          source: 'today'
+        });
+      }
     });
 
-    // Add tasks from dayTasks (Weekly tasks)
+    // Add tasks from dayTasks (weekly view of backend tasks) only if not already seen
     Object.keys(dayTasks).forEach(day => {
       dayTasks[day].forEach(task => {
-        allTasks.push({
-          ...task,
-          source: 'week'
-        });
+        if (task._id && !seenIds.has(task._id)) {
+          seenIds.add(task._id);
+          allTasks.push({
+            ...task,
+            source: 'week'
+          });
+        }
       });
     });
 
     return allTasks;
   };
 
-  // Memoize filtered tasks to prevent race conditions
+  // Memoize filtered tasks to prevent race conditions - now only uses backend data
   const filteredTasks = React.useMemo(() => {
     try {
       if (currentView === 'all') {
@@ -434,27 +345,32 @@ export default function TaskDashboard() {
         })).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
       } else if (currentView === 'project' && currentFilter) {
         const allTasks = [];
+        const seenIds = new Set(); // Track unique task _id values
 
-        // Add tasks from taskData (Tasks for Today)
+        // Add tasks from taskData (backend tasks)
         Object.keys(taskData).forEach(taskName => {
-          if (taskData[taskName].project === currentFilter) {
+          const task = taskData[taskName];
+          if (task && task.project === currentFilter && task._id && !seenIds.has(task._id)) {
+            seenIds.add(task._id);
             allTasks.push({
               title: taskName,
-              description: taskData[taskName].description,
-              dueDate: taskData[taskName].dueDate,
-              project: taskData[taskName].project,
-              tags: taskData[taskName].tags,
-              completed: taskData[taskName].completed,
-              expanded: taskData[taskName].expanded,
+              description: task.description,
+              dueDate: task.dueDate,
+              project: task.project,
+              tags: task.tags,
+              completed: task.completed,
+              expanded: task.expanded,
+              _id: task._id,
               source: 'today'
             });
           }
         });
 
-        // Add tasks from dayTasks (This Week)
+        // Add tasks from dayTasks (weekly view of backend tasks) only if not already seen
         Object.keys(dayTasks).forEach(day => {
           dayTasks[day].forEach(task => {
-            if (task.project === currentFilter) {
+            if (task.project === currentFilter && task._id && !seenIds.has(task._id)) {
+              seenIds.add(task._id);
               allTasks.push({
                 ...task,
                 source: 'week'
@@ -466,27 +382,32 @@ export default function TaskDashboard() {
         return allTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
       } else if (currentView === 'tag' && currentFilter) {
         const allTasks = [];
+        const seenIds = new Set(); // Track unique task _id values
 
-        // Add tasks from taskData (Tasks for Today)
+        // Add tasks from taskData (backend tasks)
         Object.keys(taskData).forEach(taskName => {
-          if (taskData[taskName].tags.includes(currentFilter)) {
+          const task = taskData[taskName];
+          if (task && task.tags.includes(currentFilter) && task._id && !seenIds.has(task._id)) {
+            seenIds.add(task._id);
             allTasks.push({
               title: taskName,
-              description: taskData[taskName].description,
-              dueDate: taskData[taskName].dueDate,
-              project: taskData[taskName].project,
-              tags: taskData[taskName].tags,
-              completed: taskData[taskName].completed,
-              expanded: taskData[taskName].expanded,
+              description: task.description,
+              dueDate: task.dueDate,
+              project: task.project,
+              tags: task.tags,
+              completed: task.completed,
+              expanded: task.expanded,
+              _id: task._id,
               source: 'today'
             });
           }
         });
 
-        // Add tasks from dayTasks (This Week)
+        // Add tasks from dayTasks (weekly view of backend tasks) only if not already seen
         Object.keys(dayTasks).forEach(day => {
           dayTasks[day].forEach(task => {
-            if (task.tags.includes(currentFilter)) {
+            if (task.tags.includes(currentFilter) && task._id && !seenIds.has(task._id)) {
+              seenIds.add(task._id);
               allTasks.push({
                 ...task,
                 source: 'week'
@@ -500,7 +421,7 @@ export default function TaskDashboard() {
       return [];
     } catch (error) {
       console.error('Error computing filtered tasks:', error);
-      console.log('Current state:', { currentView, currentFilter, dayTasks: dayTasks ? Object.keys(dayTasks) : 'undefined' });
+      console.log('Current state:', { currentView, currentFilter, taskData: taskData ? Object.keys(taskData) : 'undefined', dayTasks: dayTasks ? Object.keys(dayTasks) : 'undefined' });
       return [];
     }
   }, [currentView, currentFilter, taskData, dayTasks]);
@@ -522,6 +443,7 @@ export default function TaskDashboard() {
 
       // Update selected task
       setSelectedTask(taskName);
+      setSelectedTaskId(taskData[taskName]._id);
       setTaskTitle(taskName);
       setTaskDescription(taskData[taskName].description);
 
@@ -537,7 +459,7 @@ export default function TaskDashboard() {
       }
 
       // Toggle expanded state for the clicked task
-      setTaskData(prev => ({
+      setLocalTaskData(prev => ({
         ...prev,
         [taskName]: {
           ...prev[taskName],
@@ -553,6 +475,7 @@ export default function TaskDashboard() {
     try {
       // Update selected task
       setSelectedTask(task.title);
+      setSelectedTaskId(task._id);
       setTaskTitle(task.title);
       setTaskDescription(task.description);
 
@@ -573,8 +496,34 @@ export default function TaskDashboard() {
 
   const handleFilteredTaskClick = (task) => {
     try {
+      console.log('Filtered task clicked:', task);
+      console.log('Task source:', task.source);
+      console.log('All backend tasks:', allBackendTasks.map(t => ({ title: t.title, _id: t._id })));
+
+      // Find the corresponding backend task to get the ID
+      let backendTask = null;
+      if (task.source === 'today') {
+        // For tasks from taskData, get the ID from localTaskData
+        const localTask = taskData[task.title];
+        if (localTask && localTask._id) {
+          backendTask = allBackendTasks.find(t => t._id === localTask._id);
+        }
+      } else if (task.source === 'week') {
+        // For tasks from dayTasks, use the _id directly since it's from backend data
+        if (task._id) {
+          backendTask = allBackendTasks.find(t => t._id === task._id);
+        }
+        // Fallback to title matching if _id is not available
+        if (!backendTask) {
+          backendTask = allBackendTasks.find(t => t.title === task.title);
+        }
+      }
+
+      console.log('Found backend task:', backendTask);
+
       // Update selected task
       setSelectedTask(task.title);
+      setSelectedTaskId(backendTask ? backendTask._id : null);
       setTaskTitle(task.title);
       setTaskDescription(task.description);
 
@@ -589,10 +538,16 @@ export default function TaskDashboard() {
         toggleDetail();
       }
 
+      // Show warning if task is not in backend
+      if (!backendTask) {
+        console.warn('Task not found in backend:', task.title);
+        console.warn('This task may be from local state or fallback data and cannot be updated.');
+      }
+
       // Toggle expanded state based on task source
       if (task.source === 'today' && taskData[task.title]) {
         // For tasks from taskData, update taskData expanded state
-        setTaskData(prev => ({
+        setLocalTaskData(prev => ({
           ...prev,
           [task.title]: {
             ...prev[task.title],
@@ -632,158 +587,139 @@ export default function TaskDashboard() {
     setSearchTerm('');
   };
 
-  const toggleTaskCompleted = (taskName, source = 'today') => {
-    try {
-      if (source === 'today') {
-        setTaskData(prev => {
-          // Validate that the task exists before accessing it
-          if (!prev[taskName]) {
-            return prev;
-          }
-          const newCompleted = !prev[taskName].completed;
-          // Sync editingCompleted if this is the selected task
-          if (selectedTask === taskName) {
-            setEditingCompleted(newCompleted);
-          }
-          return {
-            ...prev,
-            [taskName]: {
-              ...prev[taskName],
-              completed: newCompleted
-            }
-          };
-        });
-      } else {
-        // For weekly tasks, we need to find the task in the dayTasks structure
-        setDayTasks(prev => {
-          const newDayTasks = { ...prev };
-          let taskFound = false;
-
-          Object.keys(newDayTasks).forEach(day => {
-            newDayTasks[day] = newDayTasks[day].map(task => {
-              if (task.title === taskName) {
-                taskFound = true;
-                const newCompleted = !task.completed;
-                // Sync editingCompleted if this is the selected task
-                if (selectedTask === taskName) {
-                  setEditingCompleted(newCompleted);
-                }
-                return { ...task, completed: newCompleted };
-              }
-              return task;
-            });
-          });
-
-          if (!taskFound) {
-            console.error('Task not found in dayTasks:', taskName);
-          }
-
-          return newDayTasks;
-        });
-      }
-    } catch (error) {
-      console.error('Error in toggleTaskCompleted:', error);
-    }
-  };
-
-  // Get current day of the week in MST
-  const getCurrentDay = () => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const mstNow = toMST(new Date());
-    return days[mstNow.getDay()];
-  };
-
-  // Get due date category for a task in MST
-  const getDueDateCategory = (dueDate) => {
-    try {
-      const today = toMST(new Date());
-      const due = toMST(new Date(dueDate));
-
-      // Reset time to compare dates only
-      today.setHours(0, 0, 0, 0);
-      due.setHours(0, 0, 0, 0);
-
-      // Get start of current week (Sunday) in MST
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay());
-
-      // Get end of current week (Saturday) in MST
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-      // Get start and end of current month in MST
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-      if (due.getTime() === today.getTime()) {
-        return 'Today';
-      } else if (due >= startOfWeek && due <= endOfWeek) {
-        return 'Week';
-      } else if (due >= startOfMonth && due <= endOfMonth) {
-        return 'Month';
-      } else {
-        // Return month name for dates outside current month
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return months[due.getMonth()];
-      }
-    } catch (error) {
-      return 'Unknown';
-    }
-  };
-
   // Update task with edited content
-  const onUpdateTask = () => {
-    if (!selectedTask) return;
-    const updatedTask = {
-      description: taskDescription,
-      dueDate: editingDueDate,
-      project: editingProject,
-      tags: [...editingTags],
-      completed: editingCompleted,
-      expanded: false
-    };
-    if (currentView === 'all' && taskData[selectedTask]) {
-      // If title changed, rename key
-      if (taskTitle !== selectedTask) {
-        setTaskData(prev => {
-          const { [selectedTask]: oldTask, ...rest } = prev;
-          return {
-            ...rest,
-            [taskTitle]: { ...updatedTask }
-          };
-        });
-        setSelectedTask(taskTitle);
-      } else {
-        setTaskData(prev => ({
-          ...prev,
-          [selectedTask]: { ...prev[selectedTask], ...updatedTask }
-        }));
-      }
-    } else {
-      // Update in dayTasks for filtered/weekly views
-      setDayTasks(prev => {
-        const newDayTasks = { ...prev };
-        Object.keys(newDayTasks).forEach(day => {
-          newDayTasks[day] = newDayTasks[day].map(task => {
-            if (task.title === selectedTask) {
-              return {
-                ...task,
-                title: taskTitle,
-                description: taskDescription,
-                dueDate: editingDueDate,
-                project: editingProject,
-                tags: [...editingTags],
-                completed: editingCompleted
-              };
-            }
-            return task;
-          });
-        });
-        return newDayTasks;
+  const onUpdateTask = async () => {
+    if (!selectedTask) {
+      console.error('Missing selectedTask:', { selectedTask, selectedTaskId });
+      toast({
+        title: 'Error',
+        description: 'No task selected for update',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
       });
-      setSelectedTask(taskTitle);
+      return;
     }
-    toggleDetail();
+
+    if (!selectedTaskId) {
+      console.error('Missing selectedTaskId - task may not be from backend:', { selectedTask, selectedTaskId });
+      toast({
+        title: 'Cannot Update',
+        description: 'This task is not from the backend and cannot be updated. Only backend tasks can be modified.',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      console.log('=== UPDATE TASK DEBUG ===');
+      console.log('selectedTask:', selectedTask);
+      console.log('selectedTaskId:', selectedTaskId);
+      console.log('taskTitle (new):', taskTitle);
+      console.log('taskDescription:', taskDescription);
+      console.log('Current backend tasks (filtered):', backendTasks);
+      console.log('All backend tasks (unfiltered):', allBackendTasks);
+      console.log('Current taskData:', taskData);
+
+      const updatedTaskData = {
+        title: taskTitle,
+        description: taskDescription,
+        dueDate: editingDueDate,
+        project: editingProject,
+        tags: [...editingTags],
+        completed: editingCompleted
+      };
+
+      console.log('Updated task data:', updatedTaskData);
+
+      // Find the task in ALL backend tasks by ID (most reliable)
+      let task = allBackendTasks.find(t => t._id === selectedTaskId);
+      console.log('Found task by ID:', selectedTaskId, task);
+
+      // If not found by ID, fallback to title matching in all tasks
+      if (!task) {
+        console.log('Task not found by ID, trying title matching in all tasks...');
+        task = allBackendTasks.find(t => t.title === selectedTask);
+        console.log('Found task by original title:', selectedTask, task);
+      }
+
+      // If still not found, try finding by the new title
+      if (!task && taskTitle !== selectedTask) {
+        console.log('Task not found by original title, trying new title...');
+        task = allBackendTasks.find(t => t.title === taskTitle);
+        console.log('Found task by new title:', taskTitle, task);
+      }
+
+      console.log('Final found task in backend:', task);
+      console.log('Task details:', task ? {
+        _id: task._id,
+        title: task.title,
+        description: task.description,
+        project: task.project,
+        tags: task.tags,
+        completed: task.completed
+      } : 'No task found');
+      console.log('=== END UPDATE TASK DEBUG ===');
+
+      if (task) {
+        console.log('Updating task in backend with ID:', task._id);
+        console.log('Sending update request with data:', updatedTaskData);
+
+        // Use backend API to update task
+        const result = await updateTask(task._id, updatedTaskData);
+        console.log('Backend update result:', result);
+
+        // Update selectedTask if the title was changed
+        if (taskTitle !== selectedTask) {
+          console.log('Title was changed, updating selectedTask from', selectedTask, 'to', taskTitle);
+          setSelectedTask(taskTitle);
+        }
+
+        // Reload tasks to ensure UI is in sync with backend
+        await loadTasks();
+
+        // The useTasks hook will automatically update the local state with the response
+        console.log('Task updated successfully, local state should be updated automatically');
+
+        toast({
+          title: 'Success',
+          description: 'Task updated successfully',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        console.error('Task not found in backend:', selectedTask);
+        console.error('Available task IDs:', allBackendTasks.map(t => ({ id: t._id, title: t.title })));
+        toast({
+          title: 'Error',
+          description: 'Task not found in backend',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      toggleDetail();
+    } catch (error) {
+      console.error('Error updating task:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        selectedTask,
+        selectedTaskId,
+        taskTitle
+      });
+      toast({
+        title: 'Error',
+        description: 'Failed to update task',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   // Search handler
@@ -864,8 +800,173 @@ export default function TaskDashboard() {
     return sorted;
   };
 
+  // Get current day of the week in MST
+  const getCurrentDay = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const mstNow = toMST(new Date());
+    return days[mstNow.getDay()];
+  };
+
+  // Get due date category for a task in MST
+  const getDueDateCategory = (dueDate) => {
+    try {
+      const today = toMST(new Date());
+      const due = toMST(new Date(dueDate));
+
+      // Reset time to compare dates only
+      today.setHours(0, 0, 0, 0);
+      due.setHours(0, 0, 0, 0);
+
+      // Get start of current week (Sunday) in MST
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+
+      // Get end of current week (Saturday) in MST
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      // Get start and end of current month in MST
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      if (due.getTime() === today.getTime()) {
+        return 'Today';
+      } else if (due >= startOfWeek && due <= endOfWeek) {
+        return 'Week';
+      } else if (due >= startOfMonth && due <= endOfMonth) {
+        return 'Month';
+      } else {
+        // Return month name for dates outside current month
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return months[due.getMonth()];
+      }
+    } catch (error) {
+      return 'Unknown';
+    }
+  };
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const cancelRef = React.useRef();
+
+  const onDeleteTask = async () => {
+    if (!selectedTaskId) return;
+    setIsDeleting(true);
+    try {
+      await deleteTask(selectedTaskId);
+      toast({
+        title: 'Task deleted',
+        description: 'The task was deleted successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsDeleteDialogOpen(false);
+      setIsDeleting(false);
+      toggleDetail();
+      setSelectedTask(null);
+      setSelectedTaskId(null);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete task',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsDeleting(false);
+    }
+  };
+
+  // Toggle task completion - only works with backend tasks
+  const toggleTaskCompleted = async (taskName, source = 'today') => {
+    try {
+      // Find the task in backend tasks
+      let task = null;
+
+      // First try to find by ID if we have it stored
+      if (selectedTaskId && taskName === selectedTask) {
+        task = allBackendTasks.find(t => t._id === selectedTaskId);
+      }
+
+      // If not found by ID, try finding by title in all tasks
+      if (!task) {
+        task = allBackendTasks.find(t => t.title === taskName);
+      }
+
+      if (task) {
+        // Use backend API to toggle completion
+        await toggleTaskCompletion(task._id);
+
+        // Update local state for UI consistency
+        if (source === 'today') {
+          setLocalTaskData(prev => {
+            if (!prev[taskName]) {
+              return prev;
+            }
+            const newCompleted = !prev[taskName].completed;
+            if (selectedTask === taskName) {
+              setEditingCompleted(newCompleted);
+            }
+            return {
+              ...prev,
+              [taskName]: {
+                ...prev[taskName],
+                completed: newCompleted
+              }
+            };
+          });
+        } else if (source === 'week') {
+          // Update dayTasks for weekly view
+          setDayTasks(prev => {
+            const newDayTasks = { ...prev };
+            let taskFound = false;
+
+            Object.keys(newDayTasks).forEach(day => {
+              newDayTasks[day] = newDayTasks[day].map(task => {
+                if (task.title === taskName) {
+                  taskFound = true;
+                  const newCompleted = !task.completed;
+                  if (selectedTask === taskName) {
+                    setEditingCompleted(newCompleted);
+                  }
+                  return { ...task, completed: newCompleted };
+                }
+                return task;
+              });
+            });
+
+            if (!taskFound) {
+              console.error('Task not found in dayTasks:', taskName);
+            }
+
+            return newDayTasks;
+          });
+        }
+      } else {
+        console.warn('Task not found in backend, cannot toggle completion:', taskName);
+        toast({
+          title: 'Cannot Update',
+          description: 'This task is not from the backend and cannot be updated.',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error in toggleTaskCompleted:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update task completion status',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
-    <Box position="relative" minH="100vh">
+    <Box position="relative" minH="100vh" overflowX="hidden" maxW="100vw">
       {/* Search Bar - Always Visible at Top */}
       <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
         <Flex justify="space-between" align="center" p={4}>
@@ -1182,9 +1283,36 @@ export default function TaskDashboard() {
           {/* Tasks Label */}
           <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Tasks</Text>
 
+          {/* Backend Error Handling */}
+          {tasksError && (
+            <Alert status="error" mb={4}>
+              <AlertIcon />
+              <Box>
+                <AlertTitle>Backend Error!</AlertTitle>
+                <AlertDescription>
+                  {tasksError}. Please check if the backend server is running.
+                </AlertDescription>
+              </Box>
+            </Alert>
+          )}
+
+          {/* Loading State */}
+          {tasksLoading && (
+            <Flex justify="center" align="center" p={8}>
+              <VStack spacing={4}>
+                <Spinner size="lg" color="blue.500" />
+                <Text color="gray.400">Loading tasks from backend...</Text>
+              </VStack>
+            </Flex>
+          )}
+
           <VStack align="stretch" spacing={3}>
             {(() => {
               try {
+                console.log('Current taskData:', taskData);
+                console.log('Current filteredTasks:', filteredTasks);
+                console.log('Current searchTerm:', searchTerm);
+
                 // Add a simple check to see if we have tasks
                 if (filteredTasks.length === 0) {
                   return (
@@ -1493,7 +1621,7 @@ export default function TaskDashboard() {
                 if (selectedTask) {
                   if (currentView === 'all' && taskData[selectedTask]) {
                     // Update taskData for "My Tasks" view
-                    setTaskData(prev => ({
+                    setLocalTaskData(prev => ({
                       ...prev,
                       [selectedTask]: {
                         ...prev[selectedTask],
@@ -1526,8 +1654,61 @@ export default function TaskDashboard() {
           <Box>
             <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'white'}>Task Assets</Text>
             <Image bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} boxSize="60px" borderRadius="md" mb={3} />
-              <Button colorScheme="green" w="full" onClick={onUpdateTask}>Update</Button>
-            </Box>
+            {!selectedTaskId && (
+              <Alert status="warning" mb={3} borderRadius="md">
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>Local Task</AlertTitle>
+                  <AlertDescription>
+                    This task is not from the backend and cannot be updated or deleted.
+                  </AlertDescription>
+                </Box>
+              </Alert>
+            )}
+            <Button
+              colorScheme="green"
+              w="full"
+              onClick={onUpdateTask}
+              mb={2}
+              isDisabled={!selectedTaskId}
+            >
+              Update
+            </Button>
+            <Button
+              colorScheme="red"
+              w="full"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              isDisabled={!selectedTaskId || isDeleting}
+            >
+              Delete
+            </Button>
+          </Box>
+
+          {/* Delete Confirmation Dialog */}
+          <AlertDialog
+            isOpen={isDeleteDialogOpen}
+            leastDestructiveRef={cancelRef}
+            onClose={() => setIsDeleteDialogOpen(false)}
+          >
+            <AlertDialogOverlay>
+              <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                  Delete Task
+                </AlertDialogHeader>
+                <AlertDialogBody>
+                  Are you sure you want to delete this task? This action cannot be undone.
+                </AlertDialogBody>
+                <AlertDialogFooter>
+                  <Button ref={cancelRef} onClick={() => setIsDeleteDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button colorScheme="red" onClick={onDeleteTask} ml={3} isLoading={isDeleting}>
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
         </Box>
       )}
     </Flex>
