@@ -1505,6 +1505,124 @@ class ApiService {
       throw error;
     }
   }
+
+  // Sharing methods
+  async createTaskShareLink(taskId, permission = 'readonly') {
+    try {
+      const response = await this.request(`/tasks/${taskId}/share`, {
+        method: 'POST',
+        body: JSON.stringify({ permission }),
+      });
+      return response;
+    } catch (error) {
+      if (error.message === 'OFFLINE_MODE') {
+        throw new Error('Sharing requires an internet connection');
+      }
+      throw error;
+    }
+  }
+
+  async getSharedTask(token) {
+    try {
+      const response = await this.request(`/tasks/shared/${token}`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateSharedTask(token, taskData) {
+    try {
+      const response = await this.request(`/tasks/shared/${token}`, {
+        method: 'PUT',
+        body: JSON.stringify(taskData),
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async disableTaskSharing(taskId) {
+    try {
+      const response = await this.request(`/tasks/${taskId}/share`, {
+        method: 'DELETE',
+      });
+      return response;
+    } catch (error) {
+      if (error.message === 'OFFLINE_MODE') {
+        throw new Error('Disabling sharing requires an internet connection');
+      }
+      throw error;
+    }
+  }
+
+  async createProjectShareLink(projectId, permission = 'readonly') {
+    try {
+      const response = await this.request(`/projects/${projectId}/share`, {
+        method: 'POST',
+        body: JSON.stringify({ permission }),
+      });
+      return response;
+    } catch (error) {
+      if (error.message === 'OFFLINE_MODE') {
+        throw new Error('Sharing requires an internet connection');
+      }
+      throw error;
+    }
+  }
+
+  async getSharedProject(token) {
+    try {
+      const response = await this.request(`/projects/shared/${token}`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateSharedProject(token, projectData) {
+    try {
+      const response = await this.request(`/projects/shared/${token}`, {
+        method: 'PUT',
+        body: JSON.stringify(projectData),
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async disableProjectSharing(projectId) {
+    try {
+      const response = await this.request(`/projects/${projectId}/share`, {
+        method: 'DELETE',
+      });
+      return response;
+    } catch (error) {
+      if (error.message === 'OFFLINE_MODE') {
+        throw new Error('Disabling sharing requires an internet connection');
+      }
+      throw error;
+    }
+  }
+
+  // Utility method to copy share URL to clipboard
+  async copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return true;
+    }
+  }
 }
 
 // Create and export a singleton instance

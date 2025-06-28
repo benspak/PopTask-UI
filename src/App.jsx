@@ -41,10 +41,12 @@ import {
   Avatar,
   Tooltip,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, ChevronUpIcon, AddIcon, EditIcon, ChatIcon, DownloadIcon, DeleteIcon, WarningIcon, CalendarIcon, StarIcon, CheckCircleIcon, SunIcon, MoonIcon, InfoIcon, SettingsIcon, AttachmentIcon, CloseIcon, HamburgerIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, ChevronUpIcon, AddIcon, EditIcon, ChatIcon, DownloadIcon, DeleteIcon, WarningIcon, CalendarIcon, StarIcon, CheckCircleIcon, SunIcon, MoonIcon, InfoIcon, SettingsIcon, AttachmentIcon, CloseIcon, HamburgerIcon, LinkIcon } from '@chakra-ui/icons';
 import { useTasks } from './hooks/useTasks';
 import { useProjects } from './hooks/useProjects';
 import apiService, { OfflineNotifications } from './services/api';
+import SharedView from './components/SharedView';
+import ShareDialog from './components/ShareDialog';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -140,6 +142,56 @@ export default function TaskDashboard() {
   const [deferredPrompt, setDeferredPrompt] = React.useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = React.useState(false);
   const toast = useToast();
+
+  // Sharing state
+  const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
+  const [shareDialogType, setShareDialogType] = React.useState(null);
+  const [shareDialogItem, setShareDialogItem] = React.useState(null);
+  const [sharedContent, setSharedContent] = React.useState(null);
+
+  // URL-based routing for shared content
+  React.useEffect(() => {
+    const path = window.location.pathname;
+    const sharedMatch = path.match(/^\/shared\/(task|project)\/([a-f0-9]{32})$/);
+
+    if (sharedMatch) {
+      const [, type, token] = sharedMatch;
+      setSharedContent({ type, token });
+    } else {
+      setSharedContent(null);
+    }
+  }, []);
+
+  // Handle browser back/forward navigation
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const sharedMatch = path.match(/^\/shared\/(task|project)\/([a-f0-9]{32})$/);
+
+      if (sharedMatch) {
+        const [, type, token] = sharedMatch;
+        setSharedContent({ type, token });
+      } else {
+        setSharedContent(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Navigate to shared content
+  const navigateToShared = (type, token) => {
+    const path = `/shared/${type}/${token}`;
+    window.history.pushState({}, '', path);
+    setSharedContent({ type, token });
+  };
+
+  // Navigate back to main app
+  const navigateToMain = () => {
+    window.history.pushState({}, '', '/');
+    setSharedContent(null);
+  };
 
   // PWA Installation Handler
   React.useEffect(() => {
@@ -1681,108 +1733,189 @@ export default function TaskDashboard() {
     return userTags;
   };
 
+  // Share dialog handlers
+  const handleShareTask = (task) => {
+    setShareDialogType('task');
+    setShareDialogItem(task);
+    setIsShareDialogOpen(true);
+  };
+
+  const handleShareProject = (project) => {
+    setShareDialogType('project');
+    setShareDialogItem(project);
+    setIsShareDialogOpen(true);
+  };
+
+  const handleShareDialogClose = () => {
+    setIsShareDialogOpen(false);
+    setShareDialogType(null);
+    setShareDialogItem(null);
+  };
+
+  const handleShareCreated = (shareData) => {
+    // Update the item with sharing information
+    if (shareDialogType === 'task') {
+      const updatedTasks = backendTasks.map(task =>
+        task._id === shareDialogItem._id
+          ? { ...task, ...shareData.task }
+          : task
+      );
+      // Update the backend tasks state
+      // This would need to be handled through the useTasks hook
+    } else if (shareDialogType === 'project') {
+      const updatedProjects = projects.map(project =>
+        project._id === shareDialogItem._id
+          ? { ...project, ...shareData.project }
+          : project
+      );
+      // Update the projects state
+      // This would need to be handled through the useProjects hook
+    }
+  };
+
   return (
     <Box position="relative" minH="100vh" overflowX="hidden" maxW="100vw">
-      {/* Search Bar - Always Visible at Top */}
-      <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
-        <Flex justify="space-between" align="center" p={4}>
-          <Flex align="center" gap={3}>
-            <IconButton
-              icon={<CheckCircleIcon />}
-              aria-label="Go to My Tasks"
-              onClick={resetToAllTasks}
-              size="sm"
-              colorScheme={currentView === 'all' && !searchTerm ? "blue" : "gray"}
-              variant="solid"
-              borderRadius="md"
-              title="My Tasks"
-            />
-            <Input
-              placeholder="Filter tasks"
-              bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-              border={0}
-              w={{ base: "200px", md: "300px" }}
-              _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
-              color={colorMode === 'light' ? 'gray.800' : 'white'}
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          </Flex>
-          <Flex align="center" position="relative">
-            <Menu>
-              <MenuButton
-                as={Avatar}
+      {/* Show shared content if URL indicates shared view */}
+      {sharedContent ? (
+        <Box>
+          {/* Back to main app button */}
+          <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
+            <Flex justify="space-between" align="center" p={4}>
+              <Button
+                leftIcon={<ChevronDownIcon />}
+                onClick={navigateToMain}
+                variant="ghost"
                 size="sm"
-                bg="blue.500"
-                cursor="pointer"
-                _hover={{ opacity: 0.8 }}
-              />
-              <MenuList bg={colorMode === 'light' ? 'white' : 'gray.800'} borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}>
-                <MenuItem
+              >
+                Back to My Tasks
+              </Button>
+              <Flex align="center" gap={2}>
+                <IconButton
                   icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
                   onClick={toggleColorMode}
-                  bg={colorMode === 'light' ? 'white' : 'gray.800'}
-                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                  color={colorMode === 'light' ? 'gray.800' : 'white'}
-                >
-                  {colorMode === 'light' ? 'Dark Mode' : 'Light Mode'}
-                </MenuItem>
-                <MenuItem
-                  icon={<InfoIcon />}
-                  bg={colorMode === 'light' ? 'white' : 'gray.800'}
-                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                  color={colorMode === 'light' ? 'gray.800' : 'white'}
-                >
-                  User Profile
-                </MenuItem>
-                <MenuItem
-                  icon={<SettingsIcon />}
-                  bg={colorMode === 'light' ? 'white' : 'gray.800'}
-                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                  color={colorMode === 'light' ? 'gray.800' : 'white'}
-                >
-                  Settings
-                </MenuItem>
-              </MenuList>
-            </Menu>
-            {/* Online/Offline Status Dot */}
-            <Box
-              position="absolute"
-              bottom="0"
-              right="0"
-              w="12px"
-              h="12px"
-              borderRadius="full"
-              bg={isOnline ? "green.400" : "red.400"}
-              border="2px solid"
-              borderColor={colorMode === 'light' ? 'white' : 'gray.800'}
-              boxShadow="0 0 0 2px rgba(0,0,0,0.1)"
-            />
-          </Flex>
-        </Flex>
-      </Box>
+                  size="sm"
+                  variant="ghost"
+                />
+                <Box
+                  w="12px"
+                  h="12px"
+                  borderRadius="full"
+                  bg={isOnline ? "green.400" : "red.400"}
+                  border="2px solid"
+                  borderColor={colorMode === 'light' ? 'white' : 'gray.800'}
+                />
+              </Flex>
+            </Flex>
+          </Box>
 
-      {/* Offline Status and Sync */}
-      {tasksOffline && (
-        <Box bg="orange.500" color="white" p={3} textAlign="center">
-          <Flex justify="center" align="center" gap={3}>
-            <WarningIcon />
-            <Text fontSize="sm" fontWeight="medium">
-              Working offline - changes will sync when connection is restored
-            </Text>
-            <Button
-              size="xs"
-              colorScheme="whiteAlpha"
-              onClick={syncAllOfflineData}
-              isLoading={tasksLoading}
-            >
-              Sync Now
-            </Button>
-          </Flex>
+          {/* Shared content view */}
+          <SharedView
+            type={sharedContent.type}
+            token={sharedContent.token}
+          />
         </Box>
-      )}
+      ) : (
+        <>
+          {/* Search Bar - Always Visible at Top */}
+          <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
+            <Flex justify="space-between" align="center" p={4}>
+              <Flex align="center" gap={3}>
+                <IconButton
+                  icon={<CheckCircleIcon />}
+                  aria-label="Go to My Tasks"
+                  onClick={resetToAllTasks}
+                  size="sm"
+                  colorScheme={currentView === 'all' && !searchTerm ? "blue" : "gray"}
+                  variant="solid"
+                  borderRadius="md"
+                  title="My Tasks"
+                />
+                <Input
+                  placeholder="Filter tasks"
+                  bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                  border={0}
+                  w={{ base: "200px", md: "300px" }}
+                  _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
+                  color={colorMode === 'light' ? 'gray.800' : 'white'}
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                />
+              </Flex>
+              <Flex align="center" position="relative">
+                <Menu>
+                  <MenuButton
+                    as={Avatar}
+                    size="sm"
+                    bg="blue.500"
+                    cursor="pointer"
+                    _hover={{ opacity: 0.8 }}
+                  />
+                  <MenuList bg={colorMode === 'light' ? 'white' : 'gray.800'} borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}>
+                    <MenuItem
+                      icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+                      onClick={toggleColorMode}
+                      bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                      _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                      color={colorMode === 'light' ? 'gray.800' : 'white'}
+                    >
+                      {colorMode === 'light' ? 'Dark Mode' : 'Light Mode'}
+                    </MenuItem>
+                    <MenuItem
+                      icon={<InfoIcon />}
+                      bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                      _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                      color={colorMode === 'light' ? 'gray.800' : 'white'}
+                    >
+                      User Profile
+                    </MenuItem>
+                    <MenuItem
+                      icon={<SettingsIcon />}
+                      bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                      _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                      color={colorMode === 'light' ? 'gray.800' : 'white'}
+                    >
+                      Settings
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+                {/* Online/Offline Status Dot */}
+                <Box
+                  position="absolute"
+                  bottom="0"
+                  right="0"
+                  w="12px"
+                  h="12px"
+                  borderRadius="full"
+                  bg={isOnline ? "green.400" : "red.400"}
+                  border="2px solid"
+                  borderColor={colorMode === 'light' ? 'white' : 'gray.800'}
+                  boxShadow="0 0 0 2px rgba(0,0,0,0.1)"
+                />
+              </Flex>
+            </Flex>
+          </Box>
 
-      <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg={colorMode === 'light' ? 'gray.50' : 'gray.900'} color={colorMode === 'light' ? 'gray.800' : 'white'} pb="80px">
+          {/* Offline Status and Sync */}
+          {tasksOffline && (
+            <Box bg="orange.500" color="white" p={3} textAlign="center">
+              <Flex justify="center" align="center" gap={3}>
+                <WarningIcon />
+                <Text fontSize="sm" fontWeight="medium">
+                  Working offline - changes will sync when connection is restored
+                </Text>
+                <Button
+                  size="xs"
+                  colorScheme="whiteAlpha"
+                  onClick={syncAllOfflineData}
+                  isLoading={tasksLoading}
+                >
+                  Sync Now
+                </Button>
+              </Flex>
+            </Box>
+          )}
+
+          <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg={colorMode === 'light' ? 'gray.50' : 'gray.900'} color={colorMode === 'light' ? 'gray.800' : 'white'} pb="80px">
       {/* Sidebar */}
       {isSidebarOpen && (
         <Box
@@ -2041,6 +2174,21 @@ export default function TaskDashboard() {
                           Offline
                         </Badge>
                       )}
+                      <HStack position="absolute" top={2} right={2} spacing={1}>
+                        <Tooltip label="Share project">
+                          <IconButton
+                            icon={<LinkIcon />}
+                            aria-label="Share project"
+                            size="xs"
+                            colorScheme="green"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShareProject(project);
+                            }}
+                          />
+                        </Tooltip>
+                      </HStack>
                       <IconButton
                         icon={<HamburgerIcon />}
                         aria-label="Edit project"
@@ -2135,6 +2283,21 @@ export default function TaskDashboard() {
                           Offline
                         </Badge>
                       )}
+                      <HStack position="absolute" top={2} right={2} spacing={1}>
+                        <Tooltip label="Share project">
+                          <IconButton
+                            icon={<LinkIcon />}
+                            aria-label="Share project"
+                            size="xs"
+                            colorScheme="green"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShareProject(project);
+                            }}
+                          />
+                        </Tooltip>
+                      </HStack>
                 </Box>
                   ))}
                   <Box
@@ -2275,6 +2438,21 @@ export default function TaskDashboard() {
                                     <Tag size="sm" colorScheme={getDueDateCategory(taskInfo.dueDate) === 'Today' ? 'red' : getDueDateCategory(taskInfo.dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskInfo.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
                                       {getDueDateCategory(taskInfo.dueDate)}
                                     </Tag>
+                                    <Tooltip label="Share task">
+                                      <IconButton
+                                        icon={<LinkIcon />}
+                                        size="xs"
+                                        variant="ghost"
+                                        colorScheme="blue"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const backendTask = backendTasks.find(t => t.title === task.title);
+                                          if (backendTask) {
+                                            handleShareTask(backendTask);
+                                          }
+                                        }}
+                                      />
+                                    </Tooltip>
                                   </HStack>
                                 </Flex>
 
@@ -2371,6 +2549,21 @@ export default function TaskDashboard() {
                                       <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
                                         {getDueDateCategory(task.dueDate)}
                                       </Tag>
+                                      <Tooltip label="Share task">
+                                        <IconButton
+                                          icon={<LinkIcon />}
+                                          size="xs"
+                                          variant="ghost"
+                                          colorScheme="blue"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const backendTask = backendTasks.find(t => t.title === task.title);
+                                            if (backendTask) {
+                                              handleShareTask(backendTask);
+                                            }
+                                          }}
+                                        />
+                                      </Tooltip>
                                     </HStack>
                                   </Flex>
 
@@ -3063,6 +3256,17 @@ export default function TaskDashboard() {
           </Box>
         </Collapse>
       </Box>
+
+      {/* Share Dialog */}
+      <ShareDialog
+        isOpen={isShareDialogOpen}
+        onClose={handleShareDialogClose}
+        type={shareDialogType}
+        item={shareDialogItem}
+        onShareCreated={handleShareCreated}
+      />
+        </>
+      )}
     </Box>
   );
 }
