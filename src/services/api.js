@@ -1,8 +1,9 @@
 // Environment-based API configuration
 const getApiBaseUrl = () => {
-  // In production, use relative URLs or environment variable
+  // In production, use the production API URL or relative URLs
   if (import.meta.env.PROD) {
-    return import.meta.env.VITE_API_URL || '/api';
+    // Use VITE_API_BASE_URL if set, otherwise use relative URLs
+    return import.meta.env.VITE_API_BASE_URL || '/api';
   }
   // In development, use localhost
   return 'http://localhost:3001/api';
