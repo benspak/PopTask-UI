@@ -107,10 +107,7 @@ export default function TaskDashboard() {
 
   // Update local task data when backend data changes
   React.useEffect(() => {
-    console.log('Backend tasks received:', backendTasks);
-    const transformed = transformBackendTasksToLocalFormat();
-    console.log('Transformed task data:', transformed);
-    setLocalTaskData(transformed);
+    setLocalTaskData(transformBackendTasksToLocalFormat());
   }, [transformBackendTasksToLocalFormat]);
 
   // Use local task data for UI (preserves expanded state and other UI-specific data)
@@ -181,9 +178,6 @@ export default function TaskDashboard() {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
       }
       setDeferredPrompt(null);
       setShowInstallPrompt(false);
@@ -264,7 +258,6 @@ export default function TaskDashboard() {
             });
           }
         } catch (error) {
-          console.error('Error parsing due date for task:', task.title, error);
         }
       }
     });
@@ -335,7 +328,6 @@ export default function TaskDashboard() {
       } else if (currentView === 'day' && currentFilter && dayTasks[currentFilter]) {
         const dayTasksArray = dayTasks[currentFilter];
         if (!Array.isArray(dayTasksArray)) {
-          console.error('dayTasks[currentFilter] is not an array:', dayTasksArray);
           return [];
         }
         // For day view, all tasks come from dayTasks, so source should be 'week'
@@ -420,8 +412,6 @@ export default function TaskDashboard() {
       }
       return [];
     } catch (error) {
-      console.error('Error computing filtered tasks:', error);
-      console.log('Current state:', { currentView, currentFilter, taskData: taskData ? Object.keys(taskData) : 'undefined', dayTasks: dayTasks ? Object.keys(dayTasks) : 'undefined' });
       return [];
     }
   }, [currentView, currentFilter, taskData, dayTasks]);
@@ -437,7 +427,6 @@ export default function TaskDashboard() {
     try {
       // Check if task exists in taskData
       if (!taskData[taskName]) {
-        console.error('Task not found in taskData:', taskName);
         return;
       }
 
@@ -467,7 +456,6 @@ export default function TaskDashboard() {
         }
       }));
     } catch (error) {
-      console.error('Error in handleTaskClick:', error);
     }
   };
 
@@ -490,16 +478,11 @@ export default function TaskDashboard() {
         toggleDetail();
       }
     } catch (error) {
-      console.error('Error in handleWeeklyTaskClick:', error);
     }
   };
 
   const handleFilteredTaskClick = (task) => {
     try {
-      console.log('Filtered task clicked:', task);
-      console.log('Task source:', task.source);
-      console.log('All backend tasks:', allBackendTasks.map(t => ({ title: t.title, _id: t._id })));
-
       // Find the corresponding backend task to get the ID
       let backendTask = null;
       if (task.source === 'today') {
@@ -518,8 +501,6 @@ export default function TaskDashboard() {
           backendTask = allBackendTasks.find(t => t.title === task.title);
         }
       }
-
-      console.log('Found backend task:', backendTask);
 
       // Update selected task
       setSelectedTask(task.title);
@@ -541,7 +522,6 @@ export default function TaskDashboard() {
       // Show warning if task is not in backend
       if (!backendTask) {
         console.warn('Task not found in backend:', task.title);
-        console.warn('This task may be from local state or fallback data and cannot be updated.');
       }
 
       // Toggle expanded state based on task source
@@ -562,7 +542,6 @@ export default function TaskDashboard() {
         }));
       }
     } catch (error) {
-      console.error('Error in handleFilteredTaskClick:', error);
     }
   };
 
@@ -590,7 +569,6 @@ export default function TaskDashboard() {
   // Update task with edited content
   const onUpdateTask = async () => {
     if (!selectedTask) {
-      console.error('Missing selectedTask:', { selectedTask, selectedTaskId });
       toast({
         title: 'Error',
         description: 'No task selected for update',
@@ -602,7 +580,6 @@ export default function TaskDashboard() {
     }
 
     if (!selectedTaskId) {
-      console.error('Missing selectedTaskId - task may not be from backend:', { selectedTask, selectedTaskId });
       toast({
         title: 'Cannot Update',
         description: 'This task is not from the backend and cannot be updated. Only backend tasks can be modified.',
@@ -614,15 +591,6 @@ export default function TaskDashboard() {
     }
 
     try {
-      console.log('=== UPDATE TASK DEBUG ===');
-      console.log('selectedTask:', selectedTask);
-      console.log('selectedTaskId:', selectedTaskId);
-      console.log('taskTitle (new):', taskTitle);
-      console.log('taskDescription:', taskDescription);
-      console.log('Current backend tasks (filtered):', backendTasks);
-      console.log('All backend tasks (unfiltered):', allBackendTasks);
-      console.log('Current taskData:', taskData);
-
       const updatedTaskData = {
         title: taskTitle,
         description: taskDescription,
@@ -632,56 +600,30 @@ export default function TaskDashboard() {
         completed: editingCompleted
       };
 
-      console.log('Updated task data:', updatedTaskData);
-
       // Find the task in ALL backend tasks by ID (most reliable)
       let task = allBackendTasks.find(t => t._id === selectedTaskId);
-      console.log('Found task by ID:', selectedTaskId, task);
 
       // If not found by ID, fallback to title matching in all tasks
       if (!task) {
-        console.log('Task not found by ID, trying title matching in all tasks...');
         task = allBackendTasks.find(t => t.title === selectedTask);
-        console.log('Found task by original title:', selectedTask, task);
       }
 
       // If still not found, try finding by the new title
       if (!task && taskTitle !== selectedTask) {
-        console.log('Task not found by original title, trying new title...');
         task = allBackendTasks.find(t => t.title === taskTitle);
-        console.log('Found task by new title:', taskTitle, task);
       }
 
-      console.log('Final found task in backend:', task);
-      console.log('Task details:', task ? {
-        _id: task._id,
-        title: task.title,
-        description: task.description,
-        project: task.project,
-        tags: task.tags,
-        completed: task.completed
-      } : 'No task found');
-      console.log('=== END UPDATE TASK DEBUG ===');
-
       if (task) {
-        console.log('Updating task in backend with ID:', task._id);
-        console.log('Sending update request with data:', updatedTaskData);
-
         // Use backend API to update task
-        const result = await updateTask(task._id, updatedTaskData);
-        console.log('Backend update result:', result);
+        await updateTask(task._id, updatedTaskData);
 
         // Update selectedTask if the title was changed
         if (taskTitle !== selectedTask) {
-          console.log('Title was changed, updating selectedTask from', selectedTask, 'to', taskTitle);
           setSelectedTask(taskTitle);
         }
 
         // Reload tasks to ensure UI is in sync with backend
         await loadTasks();
-
-        // The useTasks hook will automatically update the local state with the response
-        console.log('Task updated successfully, local state should be updated automatically');
 
         toast({
           title: 'Success',
@@ -704,14 +646,6 @@ export default function TaskDashboard() {
 
       toggleDetail();
     } catch (error) {
-      console.error('Error updating task:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        selectedTask,
-        selectedTaskId,
-        taskTitle
-      });
       toast({
         title: 'Error',
         description: 'Failed to update task',
@@ -937,14 +871,12 @@ export default function TaskDashboard() {
             });
 
             if (!taskFound) {
-              console.error('Task not found in dayTasks:', taskName);
             }
 
             return newDayTasks;
           });
         }
       } else {
-        console.warn('Task not found in backend, cannot toggle completion:', taskName);
         toast({
           title: 'Cannot Update',
           description: 'This task is not from the backend and cannot be updated.',
@@ -954,7 +886,6 @@ export default function TaskDashboard() {
         });
       }
     } catch (error) {
-      console.error('Error in toggleTaskCompleted:', error);
       toast({
         title: 'Error',
         description: 'Failed to update task completion status',
@@ -1309,10 +1240,6 @@ export default function TaskDashboard() {
           <VStack align="stretch" spacing={3}>
             {(() => {
               try {
-                console.log('Current taskData:', taskData);
-                console.log('Current filteredTasks:', filteredTasks);
-                console.log('Current searchTerm:', searchTerm);
-
                 // Add a simple check to see if we have tasks
                 if (filteredTasks.length === 0) {
                   return (
@@ -1332,7 +1259,6 @@ export default function TaskDashboard() {
                         try {
                           const taskInfo = task;
                           if (!taskInfo) {
-                            console.error('Task info not found for:', task.title);
                             return null;
                           }
 
@@ -1410,112 +1336,99 @@ export default function TaskDashboard() {
                             </Box>
                           );
                         } catch (error) {
-                          console.error('Error rendering task:', task.title, error);
                           return null;
                         }
                       }).filter(Boolean)
                     ) : (
                       // Show filtered tasks
                       (() => {
-                        try {
-                          return sortTasksByPriority(getFilteredTasksBySearch(filteredTasks)).map((task, idx) => {
-                            try {
-                              return (
-                                <Box key={idx}>
-                                  <Box
-                                    p={3}
-                                    bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
-                                    borderRadius="md"
-                                    cursor="pointer"
-                                    onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
-                                    _hover={{ bg: 'gray.700' }}
-                                    border={selectedTask === task.title ? '2px solid' : '1px solid'}
-                                    borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
-                                  >
-                                    <Flex justify="space-between" align="center" mb={2}>
-                                      <Flex align="center" flex={1}>
-                                        <Checkbox
-                                          isChecked={task.completed}
-                                          onChange={(e) => {
-                                            e.stopPropagation();
-                                            toggleTaskCompleted(task.title, task.source);
-                                          }}
-                                          colorScheme="green"
-                                          size="md"
-                                          mr={3}
-                                        />
-                                        <Text
-                                          color={selectedTask === task.title ? 'green.300' : task.completed ? 'gray.500' : 'white'}
-                                          fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
-                                          textDecoration={task.completed ? "line-through" : "none"}
-                                        >
-                                          {task.title}
-                                        </Text>
-                                      </Flex>
-                                      <HStack spacing={2}>
-                                        <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
-                                          {getDueDateCategory(task.dueDate)}
-                                        </Tag>
-                                      </HStack>
-                                    </Flex>
-
-                                    {/* Task metadata */}
-                                    <VStack align="start" spacing={1}>
-                                      <HStack spacing={4} fontSize="xs" color="gray.400">
-                                        <Text>Due: {task.dueDate}</Text>
-                                        <Text>Project: {task.project}</Text>
-                                      </HStack>
-                                      <HStack spacing={1}>
-                                        {task.tags.map((tag, tagIndex) => (
-                                          <Tag
-                                            key={tagIndex}
-                                            size="sm"
-                                            colorScheme="blue"
-                                            variant="subtle"
-                                            cursor="pointer"
-                                            onClick={() => handleTagClick(tag)}
-                                            _hover={{ bg: 'blue.600' }}
-                                          >
-                                            {tag}
-                                          </Tag>
-                                        ))}
-                                      </HStack>
-                                    </VStack>
-                                  </Box>
-                                  <Collapse in={task.source === 'today' && taskData[task.title] ? taskData[task.title].expanded : expandedFilteredTasks[task.title]} animateOpacity>
-                                    <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
-                                      <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
-                                        {task.description.length > 150
-                                          ? task.description.slice(0, 150) + '...'
-                                          : task.description}
+                        return sortTasksByPriority(getFilteredTasksBySearch(filteredTasks)).map((task, idx) => {
+                          try {
+                            return (
+                              <Box key={idx}>
+                                <Box
+                                  p={3}
+                                  bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
+                                  borderRadius="md"
+                                  cursor="pointer"
+                                  onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
+                                  _hover={{ bg: 'gray.700' }}
+                                  border={selectedTask === task.title ? '2px solid' : '1px solid'}
+                                  borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
+                                >
+                                  <Flex justify="space-between" align="center" mb={2}>
+                                    <Flex align="center" flex={1}>
+                                      <Checkbox
+                                        isChecked={task.completed}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          toggleTaskCompleted(task.title, task.source);
+                                        }}
+                                        colorScheme="green"
+                                        size="md"
+                                        mr={3}
+                                      />
+                                      <Text
+                                        color={selectedTask === task.title ? 'green.300' : task.completed ? 'gray.500' : 'white'}
+                                        fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
+                                        textDecoration={task.completed ? "line-through" : "none"}
+                                      >
+                                        {task.title}
                                       </Text>
-                                    </Box>
-                                  </Collapse>
+                                    </Flex>
+                                    <HStack spacing={2}>
+                                      <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
+                                        {getDueDateCategory(task.dueDate)}
+                                      </Tag>
+                                    </HStack>
+                                  </Flex>
+
+                                  {/* Task metadata */}
+                                  <VStack align="start" spacing={1}>
+                                    <HStack spacing={4} fontSize="xs" color="gray.400">
+                                      <Text>Due: {task.dueDate}</Text>
+                                      <Text>Project: {task.project}</Text>
+                                    </HStack>
+                                    <HStack spacing={1}>
+                                      {task.tags.map((tag, tagIndex) => (
+                                        <Tag
+                                          key={tagIndex}
+                                          size="sm"
+                                          colorScheme="blue"
+                                          variant="subtle"
+                                          cursor="pointer"
+                                          onClick={() => handleTagClick(tag)}
+                                          _hover={{ bg: 'blue.600' }}
+                                        >
+                                          {tag}
+                                        </Tag>
+                                      ))}
+                                    </HStack>
+                                  </VStack>
                                 </Box>
-                              );
-                            } catch (error) {
-                              console.error('Error rendering filtered task:', task, error);
-                              return null;
-                            }
-                          }).filter(Boolean);
-                        } catch (error) {
-                          console.error('Error rendering filtered tasks:', error);
-                          return (
-                            <Box p={4} bg="red.900" borderRadius="md">
-                              <Text color="red.200">Error loading tasks. Please refresh the page.</Text>
-                            </Box>
-                          );
-                        }
+                                <Collapse in={task.source === 'today' && taskData[task.title] ? taskData[task.title].expanded : expandedFilteredTasks[task.title]} animateOpacity>
+                                  <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                                    <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
+                                      {task.description.length > 150
+                                        ? task.description.slice(0, 150) + '...'
+                                        : task.description}
+                                    </Text>
+                                  </Box>
+                                </Collapse>
+                              </Box>
+                            );
+                          } catch (error) {
+                            return null;
+                          }
+                        }).filter(Boolean);
                       })()
                     )}
                   </>
                 );
               } catch (error) {
-                console.error('Error in main content render:', error);
                 return (
                   <Box p={4} bg="red.900" borderRadius="md">
                     <Text color="red.200">Error loading content. Please refresh the page.</Text>
-                    <Text color="red.300" fontSize="sm" mt={2}>Error: {error.message}</Text>
                   </Box>
                 );
               }
@@ -1656,7 +1569,6 @@ export default function TaskDashboard() {
             <Image bg={colorMode === 'light' ? 'gray.200' : 'gray.700'} boxSize="60px" borderRadius="md" mb={3} />
             {!selectedTaskId && (
               <Alert status="warning" mb={3} borderRadius="md">
-                <AlertIcon />
                 <Box>
                   <AlertTitle>Local Task</AlertTitle>
                   <AlertDescription>
