@@ -37,7 +37,7 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon, SunIcon, MoonIcon, SettingsIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon, CalendarIcon, StarIcon, InfoIcon, ChatIcon, EditIcon, DownloadIcon, CheckCircleIcon, WarningIcon, SunIcon, MoonIcon, SettingsIcon, AddIcon } from '@chakra-ui/icons';
 import { useTasks } from './hooks/useTasks';
 import { useProjects } from './hooks/useProjects';
 import apiService from './services/api';
@@ -1256,7 +1256,6 @@ export default function TaskDashboard() {
               {currentView === 'project' && `${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Tasks`}
               {currentView === 'tag' && `#${currentFilter} Tasks`}
             </Heading>
-            <Button colorScheme="blue" onClick={handleAddTask}>Add Task</Button>
             <Text fontSize="sm" color="gray.400">
               {(() => {
                 if (currentView === 'all') {
@@ -1715,6 +1714,16 @@ export default function TaskDashboard() {
               variant="solid"
               borderRadius="full"
               _hover={{ bg: 'gray.700' }}
+            />
+            <IconButton
+              icon={<AddIcon />}
+              aria-label="Add New Task"
+              onClick={handleAddTask}
+              size={{ base: "md", md: "sm" }}
+              colorScheme="green"
+              variant="solid"
+              borderRadius="full"
+              _hover={{ bg: 'green.600' }}
             />
             {selectedTask && (
               <IconButton
