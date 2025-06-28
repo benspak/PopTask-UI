@@ -255,13 +255,24 @@ export default function TaskDashboard() {
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef();
 
+  // Debug wrapper for setUploadedFiles
+  const setUploadedFilesWithDebug = React.useCallback((value) => {
+    console.log('setUploadedFiles called with:', value);
+    if (Array.isArray(value) && value.length === 0) {
+      console.trace('Files being cleared - stack trace:');
+    }
+    setUploadedFiles(value);
+  }, []);
+
   // Automatically reload task files when selectedTaskId changes
   React.useEffect(() => {
+    console.log('useEffect triggered - selectedTaskId changed to:', selectedTaskId);
     if (selectedTaskId) {
+      console.log('Loading files for task ID:', selectedTaskId);
       loadTaskFiles(selectedTaskId);
-    } else {
-      setUploadedFiles([]);
     }
+    // Only clear files when explicitly going to add mode or when no task is selected
+    // Don't clear files when selectedTaskId becomes null due to other state changes
   }, [selectedTaskId]);
 
   // Utility function to convert date to Mountain Standard Time
@@ -513,7 +524,7 @@ export default function TaskDashboard() {
         loadTaskFiles(foundTaskData._id);
       } else {
         setSelectedTaskId(null);
-        setUploadedFiles([]);
+        setUploadedFilesWithDebug([]);
       }
     } else {
       // If task not found, set default values
@@ -524,7 +535,7 @@ export default function TaskDashboard() {
       setEditingTags(ensureThreeTags([]));
       setEditingCompleted(false);
       setSelectedTaskId(null);
-      setUploadedFiles([]);
+      setUploadedFilesWithDebug([]);
     }
 
     if (!isDetailOpen) toggleDetail();
@@ -548,7 +559,7 @@ export default function TaskDashboard() {
     if (task._id) {
       loadTaskFiles(task._id);
     } else {
-      setUploadedFiles([]);
+      setUploadedFilesWithDebug([]);
     }
 
     if (!isDetailOpen) toggleDetail();
@@ -572,7 +583,7 @@ export default function TaskDashboard() {
     if (task._id) {
       loadTaskFiles(task._id);
       } else {
-      setUploadedFiles([]);
+      setUploadedFilesWithDebug([]);
     }
 
     if (!isDetailOpen) toggleDetail();
@@ -598,6 +609,7 @@ export default function TaskDashboard() {
     // Clear task-related state
     setSelectedTask(null);
     setSelectedTaskId(null);
+    setUploadedFilesWithDebug([]); // Clear uploaded files when switching to project mode
 
     // Filter tasks by this project
     setCurrentView('project');
@@ -688,7 +700,7 @@ export default function TaskDashboard() {
 
       // Reload task files using the updated task data
       if (updatedTask && updatedTask.fileAttachments) {
-        setUploadedFiles(updatedTask.fileAttachments);
+        setUploadedFilesWithDebug(updatedTask.fileAttachments);
       } else {
         // Fallback: reload files using the task ID
         await loadTaskFiles(currentTaskId);
@@ -860,6 +872,7 @@ export default function TaskDashboard() {
       toggleDetail();
       setSelectedTask(null);
       setSelectedTaskId(null);
+      setUploadedFilesWithDebug([]); // Clear uploaded files when task is deleted
     } catch (error) {
       toast({
         title: 'Error',
@@ -968,7 +981,7 @@ export default function TaskDashboard() {
     setEditingProject('general');
     setEditingTags(ensureThreeTags([]));
     setEditingCompleted(false);
-    setUploadedFiles([]); // Clear uploaded files for new task
+    setUploadedFilesWithDebug([]); // Clear uploaded files for new task
 
     if (!isDetailOpen) toggleDetail();
   };
@@ -1003,7 +1016,7 @@ export default function TaskDashboard() {
       setEditingProject('general');
       setEditingTags(ensureThreeTags([]));
       setEditingCompleted(false);
-      setUploadedFiles([]); // Clear uploaded files
+      setUploadedFilesWithDebug([]); // Clear uploaded files
     } catch (error) {
       toast({
         title: 'Error',
@@ -1147,6 +1160,7 @@ export default function TaskDashboard() {
     setIsEditProjectMode(false);
     setSelectedTask(null);
     setSelectedTaskId(null);
+    setUploadedFilesWithDebug([]); // Clear uploaded files when switching to project add mode
     setProjectTitle('');
     setProjectDescription('');
     if (!isDetailOpen) toggleDetail();
@@ -1246,7 +1260,7 @@ export default function TaskDashboard() {
 
     try {
       await apiService.deleteFile(selectedTaskId, filename);
-      setUploadedFiles(prev => prev.filter(file => file.filename !== filename));
+      setUploadedFilesWithDebug(prev => prev.filter(file => file.filename !== filename));
       toast({
         title: 'Success',
         description: 'File deleted successfully',
@@ -1283,17 +1297,27 @@ export default function TaskDashboard() {
   };
 
   const loadTaskFiles = async (taskId) => {
+    console.log('loadTaskFiles called with taskId:', taskId);
     if (!taskId) {
-      setUploadedFiles([]);
+      console.log('No taskId provided, clearing files');
+      setUploadedFilesWithDebug([]);
       return;
     }
 
     try {
-      const task = await apiService.getTask(taskId);
-      setUploadedFiles(task.fileAttachments || []);
+      console.log('Fetching task data for ID:', taskId);
+      const response = await apiService.getTask(taskId);
+      console.log('Task response received:', response);
+
+      // Handle the API response structure: {success: true, data: {...}}
+      const task = response.data || response;
+      console.log('Task data:', task);
+      console.log('File attachments:', task.fileAttachments);
+      setUploadedFilesWithDebug(task.fileAttachments || []);
+      console.log('Files set successfully');
     } catch (error) {
       console.error('Error loading task files:', error);
-      setUploadedFiles([]);
+      setUploadedFilesWithDebug([]);
     }
   };
 
