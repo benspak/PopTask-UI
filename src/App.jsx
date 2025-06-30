@@ -2424,11 +2424,11 @@ export default function TaskDashboard() {
                             <Box key={idx}>
                               <Box
                                 p={3}
-                                bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
+                                bg={colorMode === 'light' ? 'gray.100' : selectedTask === task.title ? 'gray.700' : 'gray.800'}
                                 borderRadius="md"
                                 cursor="pointer"
                                 onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
-                                _hover={{ bg: 'gray.700' }}
+                                _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.700' }}
                                 border={selectedTask === task.title ? '2px solid' : '1px solid'}
                                 borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
                               >
@@ -2445,7 +2445,11 @@ export default function TaskDashboard() {
                                       mr={3}
                                     />
                                     <Text
-                                      color={selectedTask === task.title ? 'green.300' : taskInfo.completed ? 'gray.500' : 'white'}
+                                      color={selectedTask === task.title
+                                        ? (colorMode === 'light' ? 'green.600' : 'green.300')
+                                        : taskInfo.completed
+                                          ? 'gray.500'
+                                          : (colorMode === 'light' ? 'gray.800' : 'white')}
                                       fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
                                       textDecoration={taskInfo.completed ? "line-through" : "none"}
                                     >
@@ -2535,11 +2539,11 @@ export default function TaskDashboard() {
                               <Box key={idx}>
                                 <Box
                                   p={3}
-                                  bg={selectedTask === task.title ? 'gray.700' : 'gray.800'}
+                                  bg={colorMode === 'light' ? 'gray.100' : selectedTask === task.title ? 'gray.700' : 'gray.800'}
                                   borderRadius="md"
                                   cursor="pointer"
                                   onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
-                                  _hover={{ bg: 'gray.700' }}
+                                  _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.700' }}
                                   border={selectedTask === task.title ? '2px solid' : '1px solid'}
                                   borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
                                 >
@@ -2556,7 +2560,11 @@ export default function TaskDashboard() {
                                         mr={3}
                                       />
                                       <Text
-                                        color={selectedTask === task.title ? 'green.300' : task.completed ? 'gray.500' : 'white'}
+                                        color={selectedTask === task.title
+                                          ? (colorMode === 'light' ? 'green.600' : 'green.300')
+                                          : task.completed
+                                            ? 'gray.500'
+                                            : (colorMode === 'light' ? 'gray.800' : 'white')}
                                         fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
                                         textDecoration={task.completed ? "line-through" : "none"}
                                       >
