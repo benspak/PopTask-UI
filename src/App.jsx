@@ -47,6 +47,11 @@ import { useProjects } from './hooks/useProjects';
 import apiService, { OfflineNotifications } from './services/api';
 import SharedView from './components/SharedView';
 import ShareDialog from './components/ShareDialog';
+import BottomNav from './components/BottomNav';
+import MobileBackdropOverlay from './components/MobileBackdropOverlay';
+import FooterPromptPanel from './components/FooterPromptPanel';
+import MainTaskList from './components/MainTaskList';
+import ProjectsPanel from './components/ProjectsPanel';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -79,7 +84,6 @@ export default function TaskDashboard() {
     createProject,
     updateProject,
     deleteProject,
-    syncOfflineData: syncProjectsOfflineData,
   } = useProjects();
 
   // State for all tasks (unfiltered) - needed for updates
@@ -97,20 +101,31 @@ export default function TaskDashboard() {
     }
   }, [loadTasks, loadProjects, sharedContent]);
 
+  // Debug projects loading
+  React.useEffect(() => {
+    if (!sharedContent) {
+      // Projects are now loaded from IndexedDB first
+      console.log('🔍 DEBUG: Projects loaded:', Array.isArray(projects) ? projects.length : 0);
+      console.log('🔍 DEBUG: Online status:', navigator.onLine);
+      // Optionally, log IndexedDB state
+      // apiService.debugIndexedDB();
+    }
+  }, [projects, sharedContent]);
+
   // Keep all tasks in sync with backend
   React.useEffect(() => {
     // Only sync tasks if we're not in shared view mode
     if (!sharedContent) {
-      setAllBackendTasks(backendTasks);
+      setAllBackendTasks(Array.isArray(backendTasks) ? backendTasks : []);
     }
   }, [backendTasks, sharedContent]);
 
   // Transform backend tasks to match local state format
   const transformBackendTasksToLocalFormat = React.useCallback(() => {
-    if (!backendTasks || backendTasks.length === 0) return {};
+    if (!Array.isArray(backendTasks) || backendTasks.length === 0) return {};
 
     const transformed = {};
-    backendTasks.forEach(task => {
+    (Array.isArray(backendTasks) ? backendTasks : []).forEach(task => {
       transformed[task.title] = {
         description: task.description,
         expanded: false,
@@ -136,13 +151,14 @@ export default function TaskDashboard() {
   // Use local task data for UI (preserves expanded state and other UI-specific data)
   const taskData = localTaskData;
 
-  // Combined sync function for both tasks and projects
-  const syncAllOfflineData = async () => {
+  // Simple online/offline status check
+  const checkOnlineStatus = async () => {
     try {
-      await syncOfflineData(); // Sync tasks
-      await syncProjectsOfflineData(); // Sync projects
+      const isCurrentlyOnline = await apiService.checkServerConnection();
+      setIsOnline(isCurrentlyOnline);
     } catch (error) {
-      console.error('Failed to sync offline data:', error);
+      console.error('Failed to check online status:', error);
+      setIsOnline(false);
     }
   };
 
@@ -223,126 +239,27 @@ export default function TaskDashboard() {
 
     const handleOnlineStatusChange = () => {
       setIsOnline(navigator.onLine);
-      if (navigator.onLine) {
-        toast({
-          title: 'Back Online',
-          description: 'You are now connected to the internet.',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: 'Offline Mode',
-          description: 'You are currently offline. Tasks will be saved locally.',
-          status: 'warning',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
     };
 
-    // Offline notification handler
+    // Online/offline notification handler
     const handleOfflineNotification = (type, data) => {
       switch (type) {
-        case 'offline_task_created':
-          toast({
-            title: '📝 Task Saved Offline',
-            description: `"${data.title}" has been saved locally and will sync when you're back online.`,
-            status: 'info',
-            duration: 4000,
-            isClosable: true,
-            position: 'top-right',
-          });
-          break;
-        case 'offline_task_updated':
-          toast({
-            title: '✏️ Task Updated Offline',
-            description: `"${data.title}" has been updated locally and will sync when you're back online.`,
-            status: 'info',
-            duration: 4000,
-            isClosable: true,
-            position: 'top-right',
-          });
-          break;
-        case 'offline_task_deleted':
-          toast({
-            title: '🗑️ Task Deleted Offline',
-            description: `"${data.title}" has been deleted locally and will sync when you're back online.`,
-            status: 'info',
-            duration: 4000,
-            isClosable: true,
-            position: 'top-right',
-          });
-          break;
-        case 'offline_project_created':
-          toast({
-            title: '📁 Project Saved Offline',
-            description: `"${data.name}" has been saved locally and will sync when you're back online.`,
-            status: 'info',
-            duration: 4000,
-            isClosable: true,
-            position: 'top-right',
-          });
-          break;
-        case 'offline_project_updated':
-          toast({
-            title: '✏️ Project Updated Offline',
-            description: `"${data.name}" has been updated locally and will sync when you're back online.`,
-            status: 'info',
-            duration: 4000,
-            isClosable: true,
-            position: 'top-right',
-          });
-          break;
-        case 'offline_project_deleted':
-          toast({
-            title: '🗑️ Project Deleted Offline',
-            description: `"${data.name}" has been deleted locally and will sync when you're back online.`,
-            status: 'info',
-            duration: 4000,
-            isClosable: true,
-            position: 'top-right',
-          });
-          break;
-        case 'sync_completed':
-          if (data.tasksCount > 0 || data.projectsCount > 0) {
-            toast({
-              title: '🔄 Sync Completed',
-              description: `Successfully synced ${data.tasksCount} tasks and ${data.projectsCount} projects.`,
-              status: 'success',
-              duration: 5000,
-              isClosable: true,
-              position: 'top-right',
-            });
-          }
-          break;
-        case 'sync_error':
-          toast({
-            title: '⚠️ Sync Error',
-            description: data.error,
-            status: 'warning',
-            duration: 6000,
-            isClosable: true,
-            position: 'top-right',
-          });
-          break;
-        case 'manual_sync_start':
-          toast({
-            title: '🔄 Syncing...',
-            description: 'Syncing offline changes with the server.',
-            status: 'info',
-            duration: 3000,
-            isClosable: true,
-            position: 'top-right',
-          });
-          break;
         case 'going_offline':
           toast({
             title: '📱 Going Offline',
-            description: 'You are now offline. Tasks and projects will be saved locally.',
+            description: 'You are now offline. Please check your internet connection.',
             status: 'warning',
             duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          break;
+        case 'back_online':
+          toast({
+            title: '✅ Back Online',
+            description: 'You are now connected to the internet.',
+            status: 'success',
+            duration: 3000,
             isClosable: true,
             position: 'top-right',
           });
@@ -483,7 +400,7 @@ export default function TaskDashboard() {
     });
 
     // Organize tasks by their due date
-    backendTasks.forEach(task => {
+    (Array.isArray(backendTasks) ? backendTasks : []).forEach(task => {
       if (task.dueDate) {
         try {
           const dueDate = new Date(task.dueDate);
@@ -928,7 +845,7 @@ export default function TaskDashboard() {
 
         toast({
           title: 'Success',
-        description: updatedTask.isOffline ? 'Task updated offline - will sync when connection is restored' : 'Task updated successfully',
+          description: 'Task updated successfully',
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -1099,7 +1016,7 @@ export default function TaskDashboard() {
       const response = await deleteTask(selectedTaskId);
       toast({
         title: 'Task deleted',
-        description: response.isOffline ? 'Task deleted offline - will sync when connection is restored' : 'The task was deleted successfully.',
+        description: 'The task was deleted successfully.',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -1292,13 +1209,13 @@ export default function TaskDashboard() {
         completed: editingCompleted
       };
       const createdTask = await createTask(newTask);
-      toast({
-        title: 'Task created',
-        description: createdTask.isOffline ? 'Task created offline - will sync when connection is restored' : 'The new task was created successfully.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+              toast({
+          title: 'Task created',
+          description: 'The new task was created successfully.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
       setIsAddMode(false);
       toggleDetail();
       // Reset fields
@@ -1747,15 +1664,19 @@ export default function TaskDashboard() {
 
   // Share dialog handlers
   const handleShareTask = (task) => {
+    console.log('handleShareTask called with:', task);
     setShareDialogType('task');
     setShareDialogItem(task);
     setIsShareDialogOpen(true);
+    console.log('ShareDialog should open for task:', task);
   };
 
   const handleShareProject = (project) => {
+    console.log('handleShareProject called with:', project);
     setShareDialogType('project');
     setShareDialogItem(project);
     setIsShareDialogOpen(true);
+    console.log('ShareDialog should open for project:', project);
   };
 
   const handleShareDialogClose = () => {
@@ -1765,23 +1686,62 @@ export default function TaskDashboard() {
   };
 
   const handleShareCreated = (shareData) => {
-    // Update the item with sharing information
-    if (shareDialogType === 'task') {
+    // Optionally update the item with sharing information if needed
+    // (e.g., update local state if you want to show 'currently shared' in the UI)
+    console.log('Share created:', shareData);
+
+    // Update the local item with sharing info if available
+    if (shareData && shareData.task) {
+      // For tasks, update the tasks list
       const updatedTasks = backendTasks.map(task =>
-        task._id === shareDialogItem._id
-          ? { ...task, ...shareData.task }
-          : task
+        task._id === shareData.task._id ? { ...task, ...shareData.task } : task
       );
-      // Update the backend tasks state
-      // This would need to be handled through the useTasks hook
-    } else if (shareDialogType === 'project') {
+      // Note: You would need to add a setTasks function to update the state
+    } else if (shareData && shareData.project) {
+      // For projects, update the projects list
       const updatedProjects = projects.map(project =>
-        project._id === shareDialogItem._id
-          ? { ...project, ...shareData.project }
-          : project
+        project._id === shareData.project._id ? { ...project, ...shareData.project } : project
       );
-      // Update the projects state
-      // This would need to be handled through the useProjects hook
+      // Note: You would need to add a setProjects function to update the state
+    }
+  };
+
+  // Test function to verify sharing is working
+  const testSharing = async () => {
+    try {
+      // Test creating a share link for the first task
+      if (backendTasks.length > 0) {
+        const firstTask = backendTasks[0];
+        console.log('Testing sharing for task:', firstTask);
+
+        const response = await apiService.createTaskShareLink(firstTask._id, 'readonly');
+        console.log('Share link created:', response);
+
+        toast({
+          title: 'Sharing Test Success',
+          description: `Share link created: ${response.data.shareUrl}`,
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: 'No Tasks Available',
+          description: 'Create a task first to test sharing',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Sharing test failed:', error);
+      toast({
+        title: 'Sharing Test Failed',
+        description: error.message || 'Failed to create share link',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -1806,904 +1766,894 @@ export default function TaskDashboard() {
   };
 
   return (
-    <Box position="relative" minH="100vh" overflowX="hidden" maxW="100vw">
-      {/* Show shared content if URL indicates shared view */}
-      {sharedContent ? (
-        <Box>
-          {/* Back to main app button */}
-          <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
-            <Flex justify="space-between" align="center" p={4}>
-              <Button
-                leftIcon={<ChevronDownIcon />}
-                onClick={navigateToMain}
-                variant="ghost"
-                size="sm"
-              >
-                Back to My Tasks
-              </Button>
-              <Flex align="center" gap={2}>
+    <>
+      <Box position="relative" minH="100vh" overflowX="hidden" maxW="100vw">
+        {/* Show shared content if URL indicates shared view */}
+        {sharedContent ? (
+          <Box>
+            {/* Back to main app button */}
+            <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
+              <Flex justify="space-between" align="center" p={4}>
+                <Button
+                  leftIcon={<ChevronDownIcon />}
+                  onClick={navigateToMain}
+                  variant="ghost"
+                  size="sm"
+                >
+                  Back to My Tasks
+                </Button>
+                <Flex align="center" gap={2}>
+                  <IconButton
+                    icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+                    onClick={toggleColorMode}
+                    size="sm"
+                    variant="ghost"
+                  />
+                  <Box
+                    w="12px"
+                    h="12px"
+                    borderRadius="full"
+                    bg={isOnline ? "green.400" : "red.400"}
+                    border="2px solid"
+                    borderColor={colorMode === 'light' ? 'white' : 'gray.800'}
+                  />
+                </Flex>
+              </Flex>
+            </Box>
+
+            {/* Shared content view */}
+            <SharedView
+              type={sharedContent.type}
+              token={sharedContent.token}
+            />
+          </Box>
+        ) : (
+          <>
+            {/* Search Bar - Always Visible at Top */}
+            <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
+              <Flex justify="space-between" align="center" p={4}>
+                <Flex align="center" gap={3}>
+                  <IconButton
+                    icon={<CheckCircleIcon />}
+                    aria-label="Go to My Tasks"
+                    onClick={resetToAllTasks}
+                    size="sm"
+                    colorScheme={currentView === 'all' && !searchTerm ? "blue" : "gray"}
+                    variant="solid"
+                    borderRadius="md"
+                    title="My Tasks"
+                  />
+                  <Input
+                    placeholder="Filter tasks"
+                    bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                    border={0}
+                    w={{ base: "200px", md: "300px" }}
+                    _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
+                    color={colorMode === 'light' ? 'gray.800' : 'white'}
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                  />
+                </Flex>
+                <Flex align="center" position="relative">
+                  <Menu>
+                    <MenuButton
+                      as={Avatar}
+                      size="sm"
+                      bg="blue.500"
+                      cursor="pointer"
+                      _hover={{ opacity: 0.8 }}
+                    />
+                    <MenuList bg={colorMode === 'light' ? 'white' : 'gray.800'} borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}>
+                      <MenuItem
+                        icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+                        onClick={toggleColorMode}
+                        bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                        _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                        color={colorMode === 'light' ? 'gray.800' : 'white'}
+                      >
+                        {colorMode === 'light' ? 'Dark Mode' : 'Light Mode'}
+                      </MenuItem>
+                      <MenuItem
+                        icon={<InfoIcon />}
+                        bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                        _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                        color={colorMode === 'light' ? 'gray.800' : 'white'}
+                      >
+                        User Profile
+                      </MenuItem>
+                      <MenuItem
+                        icon={<SettingsIcon />}
+                        bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                        _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                        color={colorMode === 'light' ? 'gray.800' : 'white'}
+                      >
+                        Settings
+                      </MenuItem>
+                      <MenuItem
+                        icon={<LinkIcon />}
+                        onClick={testSharing}
+                        bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                        _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                        color={colorMode === 'light' ? 'gray.800' : 'white'}
+                      >
+                        Test Sharing
+                      </MenuItem>
+                    </MenuList>
+                  </Menu>
+                  {/* Online/Offline Status Dot */}
+                  <Box
+                    position="absolute"
+                    bottom="0"
+                    right="0"
+                    w="12px"
+                    h="12px"
+                    borderRadius="full"
+                    bg={isOnline ? "green.400" : "red.400"}
+                    border="2px solid"
+                    borderColor={colorMode === 'light' ? 'white' : 'gray.800'}
+                    boxShadow="0 0 0 2px rgba(0,0,0,0.1)"
+                  />
+                </Flex>
+              </Flex>
+            </Box>
+
+            {/* Offline Status */}
+            {tasksOffline && (
+              <Box bg="orange.500" color="white" p={3} textAlign="center">
+                <Flex justify="center" align="center" gap={3}>
+                  <WarningIcon />
+                  <Text fontSize="sm" fontWeight="medium">
+                    Working offline - please check your internet connection
+                  </Text>
+                  <Button
+                    size="xs"
+                    colorScheme="whiteAlpha"
+                    onClick={checkOnlineStatus}
+                    isLoading={tasksLoading}
+                  >
+                    Check Connection
+                  </Button>
+                </Flex>
+              </Box>
+            )}
+
+            <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg={colorMode === 'light' ? 'gray.50' : 'gray.900'} color={colorMode === 'light' ? 'gray.800' : 'white'} pb="80px">
+          {/* Sidebar */}
+          {isSidebarOpen && (
+            <Box
+              w={{ base: '100%', md: isCenterOpen ? '250px' : '400px' }}
+              bg={colorMode === 'light' ? 'white' : 'gray.800'}
+              p={4}
+              position={{ base: 'fixed', md: 'relative' }}
+              top={{ base: '60px', md: 'auto' }}
+              left={{ base: 0, md: 'auto' }}
+              right={{ base: 0, md: 'auto' }}
+              bottom={{ base: 0, md: 'auto' }}
+              zIndex={{ base: 60, md: 'auto' }}
+              overflowY={{ base: 'auto', md: 'visible' }}
+              boxShadow={{ base: 'lg', md: 'none' }}
+            >
+              {/* Mobile: Show close button and heading */}
+              <Flex justify="space-between" align="center" mb={4} display={{ base: 'flex', md: 'none' }}>
+                <Heading size="md" color={colorMode === 'light' ? 'gray.800' : 'white'}>Calendar</Heading>
                 <IconButton
-                  icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
-                  onClick={toggleColorMode}
+                  icon={<CloseIcon />}
+                  aria-label="Close calendar"
                   size="sm"
                   variant="ghost"
-                />
-                <Box
-                  w="12px"
-                  h="12px"
-                  borderRadius="full"
-                  bg={isOnline ? "green.400" : "red.400"}
-                  border="2px solid"
-                  borderColor={colorMode === 'light' ? 'white' : 'gray.800'}
+                  onClick={toggleSidebar}
+                  color={colorMode === 'light' ? 'gray.600' : 'gray.400'}
+                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
                 />
               </Flex>
-            </Flex>
-          </Box>
-
-          {/* Shared content view */}
-          <SharedView
-            type={sharedContent.type}
-            token={sharedContent.token}
-          />
-        </Box>
-      ) : (
-        <>
-          {/* Search Bar - Always Visible at Top */}
-          <Box position="sticky" top={0} zIndex={50} bg={colorMode === 'light' ? 'white' : 'gray.900'} borderBottom="1px solid" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.700'}>
-            <Flex justify="space-between" align="center" p={4}>
-              <Flex align="center" gap={3}>
-                <IconButton
-                  icon={<CheckCircleIcon />}
-                  aria-label="Go to My Tasks"
-                  onClick={resetToAllTasks}
-                  size="sm"
-                  colorScheme={currentView === 'all' && !searchTerm ? "blue" : "gray"}
-                  variant="solid"
-                  borderRadius="md"
-                  title="My Tasks"
-                />
-                <Input
-                  placeholder="Filter tasks"
-                  bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                  border={0}
-                  w={{ base: "200px", md: "300px" }}
-                  _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
-                  color={colorMode === 'light' ? 'gray.800' : 'white'}
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
-              </Flex>
-              <Flex align="center" position="relative">
-                <Menu>
-                  <MenuButton
-                    as={Avatar}
-                    size="sm"
-                    bg="blue.500"
-                    cursor="pointer"
-                    _hover={{ opacity: 0.8 }}
-                  />
-                  <MenuList bg={colorMode === 'light' ? 'white' : 'gray.800'} borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}>
-                    <MenuItem
-                      icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
-                      onClick={toggleColorMode}
-                      bg={colorMode === 'light' ? 'white' : 'gray.800'}
-                      _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                      color={colorMode === 'light' ? 'gray.800' : 'white'}
-                    >
-                      {colorMode === 'light' ? 'Dark Mode' : 'Light Mode'}
-                    </MenuItem>
-                    <MenuItem
-                      icon={<InfoIcon />}
-                      bg={colorMode === 'light' ? 'white' : 'gray.800'}
-                      _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                      color={colorMode === 'light' ? 'gray.800' : 'white'}
-                    >
-                      User Profile
-                    </MenuItem>
-                    <MenuItem
-                      icon={<SettingsIcon />}
-                      bg={colorMode === 'light' ? 'white' : 'gray.800'}
-                      _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                      color={colorMode === 'light' ? 'gray.800' : 'white'}
-                    >
-                      Settings
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
-                {/* Online/Offline Status Dot */}
-                <Box
-                  position="absolute"
-                  bottom="0"
-                  right="0"
-                  w="12px"
-                  h="12px"
-                  borderRadius="full"
-                  bg={isOnline ? "green.400" : "red.400"}
-                  border="2px solid"
-                  borderColor={colorMode === 'light' ? 'white' : 'gray.800'}
-                  boxShadow="0 0 0 2px rgba(0,0,0,0.1)"
-                />
-              </Flex>
-            </Flex>
-          </Box>
-
-          {/* Offline Status and Sync */}
-          {tasksOffline && (
-            <Box bg="orange.500" color="white" p={3} textAlign="center">
-              <Flex justify="center" align="center" gap={3}>
-                <WarningIcon />
-                <Text fontSize="sm" fontWeight="medium">
-                  Working offline - changes will sync when connection is restored
-                </Text>
-                <Button
-                  size="xs"
-                  colorScheme="whiteAlpha"
-                  onClick={syncAllOfflineData}
-                  isLoading={tasksLoading}
-                >
-                  Sync Now
-                </Button>
-              </Flex>
+              {/* Desktop: Show heading only */}
+              <Heading size="md" mb={4} display={{ base: 'none', md: 'block' }}>Workload</Heading>
+              <VStack align="start" spacing={4}>
+                <Box w="full">
+                  <Text fontSize="sm" mb={1} color="gray.400">This Week</Text>
+                  <VStack align="stretch" spacing={1} w="full">
+                    {Object.keys(dayTasks).map((day) => (
+                      <Box key={day} w="full">
+                        <Flex
+                          cursor="pointer"
+                          p={2}
+                          bg={colorMode === 'light' ? 'gray.600' : 'gray.700'}
+                          borderRadius="md"
+                          w="full"
+                          justify="space-between"
+                          align="center"
+                          onClick={() => handleDayClick(day)}
+                          _hover={{ bg: colorMode === 'light' ? 'gray.500' : 'gray.600' }}
+                        >
+                          <HStack spacing={2}>
+                            <Text color={colorMode === 'light' ? 'white' : 'inherit'}>{day}</Text>
+                            {day === getCurrentDay() && (
+                              <Text fontSize="xs" color="green.300" fontWeight="medium">(today)</Text>
+                            )}
+                          </HStack>
+                        </Flex>
+                        <Collapse in={expandedDays[day]} animateOpacity>
+                          <VStack align="start" spacing={1} mt={1} ml={4} w="full">
+                            {dayTasks[day].map((task, index) => (
+                              <Box key={index} w="full">
+                                <Flex align="center" w="full">
+                                  <Checkbox
+                                    isChecked={task.completed}
+                                    onChange={() => toggleTaskCompleted(task.title, 'week')}
+                                    colorScheme="green"
+                                    size="sm"
+                                    mr={2}
+                                  />
+                                  <Text
+                                    fontSize="sm"
+                                    color={task.completed ? "gray.500" : "gray.300"}
+                                    cursor="pointer"
+                                    p={1}
+                                    flex={1}
+                                    _hover={{ color: 'white' }}
+                                    onClick={() => handleWeeklyTaskClick(task)}
+                                    textDecoration={task.completed ? "line-through" : "none"}
+                                  >
+                                    {task.title}
+                                  </Text>
+                                  {task.fileAttachments && task.fileAttachments.length > 0 && (
+                                    renderFileAttachmentIndicator(task.fileAttachments)
+                                  )}
+                                </Flex>
+                                <Text
+                                  fontSize="xs"
+                                  color="gray.500"
+                                  ml={6}
+                                  mb={1}
+                                >
+                                  Due: {task.dueDate}
+                                </Text>
+                              </Box>
+                            ))}
+                          </VStack>
+                        </Collapse>
+                      </Box>
+                    ))}
+                  </VStack>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" mb={2} color="gray.400">Sponsors</Text>
+                  <VStack align="start" spacing={2}>
+                    {/* First 2 sponsors - visible on all screen sizes */}
+                    <Box>
+                      <Text
+                        fontSize="sm"
+                        color="blue.300"
+                        cursor="pointer"
+                        _hover={{ color: 'blue.200', textDecoration: 'underline' }}
+                        onClick={() => window.open('https://www.notion.so', '_blank')}
+                      >
+                        Notion
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">All-in-one workspace for notes & docs</Text>
+                    </Box>
+                    <Box>
+                      <Text
+                        fontSize="sm"
+                        color="blue.300"
+                        cursor="pointer"
+                        _hover={{ color: 'blue.200', textDecoration: 'underline' }}
+                        onClick={() => window.open('https://www.atlassian.com', '_blank')}
+                      >
+                        Atlassian
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">Project management & team collaboration</Text>
+                    </Box>
+                    {/* Remaining 3 sponsors - hidden on mobile, visible on desktop */}
+                    <Box display={{ base: 'none', md: 'block' }}>
+                      <Text
+                        fontSize="sm"
+                        color="blue.300"
+                        cursor="pointer"
+                        _hover={{ color: 'blue.200', textDecoration: 'underline' }}
+                        onClick={() => window.open('https://www.asana.com', '_blank')}
+                      >
+                        Asana
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">Work management for teams</Text>
+                    </Box>
+                    <Box display={{ base: 'none', md: 'block' }}>
+                      <Text
+                        fontSize="sm"
+                        color="blue.300"
+                        cursor="pointer"
+                        _hover={{ color: 'blue.200', textDecoration: 'underline' }}
+                        onClick={() => window.open('https://www.trello.com', '_blank')}
+                      >
+                        Trello
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">Visual project management boards</Text>
+                    </Box>
+                    <Box display={{ base: 'none', md: 'block' }}>
+                      <Text
+                        fontSize="sm"
+                        color="blue.300"
+                        cursor="pointer"
+                        _hover={{ color: 'blue.200', textDecoration: 'underline' }}
+                        onClick={() => window.open('https://www.monday.com', '_blank')}
+                      >
+                        Monday.com
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">Work operating system for teams</Text>
+                    </Box>
+                  </VStack>
+                </Box>
+              </VStack>
             </Box>
           )}
+          {!isSidebarOpen && (
+            <></>
+          )}
 
-          <Flex direction={{ base: 'column', md: 'row' }} minH="100vh" bg={colorMode === 'light' ? 'gray.50' : 'gray.900'} color={colorMode === 'light' ? 'gray.800' : 'white'} pb="80px">
-      {/* Sidebar */}
-      {isSidebarOpen && (
-        <Box
-          w={{ base: '100%', md: isCenterOpen ? '250px' : '400px' }}
-          bg={colorMode === 'light' ? 'white' : 'gray.800'}
-          p={4}
-          position={{ base: 'fixed', md: 'relative' }}
-          top={{ base: '60px', md: 'auto' }}
-          left={{ base: 0, md: 'auto' }}
-          right={{ base: 0, md: 'auto' }}
-          bottom={{ base: 0, md: 'auto' }}
-          zIndex={{ base: 60, md: 'auto' }}
-          overflowY={{ base: 'auto', md: 'visible' }}
-          boxShadow={{ base: 'lg', md: 'none' }}
-        >
-          {/* Mobile: Show close button and heading */}
-          <Flex justify="space-between" align="center" mb={4} display={{ base: 'flex', md: 'none' }}>
-            <Heading size="md" color={colorMode === 'light' ? 'gray.800' : 'white'}>Calendar</Heading>
-            <IconButton
-              icon={<CloseIcon />}
-              aria-label="Close calendar"
-              size="sm"
-              variant="ghost"
-              onClick={toggleSidebar}
-              color={colorMode === 'light' ? 'gray.600' : 'gray.400'}
-              _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-            />
-          </Flex>
-          {/* Desktop: Show heading only */}
-          <Heading size="md" mb={4} display={{ base: 'none', md: 'block' }}>Workload</Heading>
-          <VStack align="start" spacing={4}>
-            <Box w="full">
-              <Text fontSize="sm" mb={1} color="gray.400">This Week</Text>
-              <VStack align="stretch" spacing={1} w="full">
-                {Object.keys(dayTasks).map((day) => (
-                  <Box key={day} w="full">
-                    <Flex
-                      cursor="pointer"
-                      p={2}
-                      bg={colorMode === 'light' ? 'gray.600' : 'gray.700'}
-                      borderRadius="md"
-                      w="full"
-                      justify="space-between"
-                      align="center"
-                      onClick={() => handleDayClick(day)}
-                      _hover={{ bg: colorMode === 'light' ? 'gray.500' : 'gray.600' }}
-                    >
-                      <HStack spacing={2}>
-                        <Text color={colorMode === 'light' ? 'white' : 'inherit'}>{day}</Text>
-                        {day === getCurrentDay() && (
-                          <Text fontSize="xs" color="green.300" fontWeight="medium">(today)</Text>
-                        )}
-                      </HStack>
+          {/* Main Content */}
+            <Box flex={1} pt={2} px={6} bg={colorMode === 'light' ? 'gray.50' : 'gray.850'} position="relative">
+              {/* PWA Status Indicators */}
+              <Flex position="fixed" top="10px" right="10px" zIndex={40} gap={2}>
+                {/* Install Prompt */}
+                {showInstallPrompt && (
+                  <Button
+                    leftIcon={<DownloadIcon />}
+                    colorScheme="blue"
+                    size="sm"
+                    onClick={handleInstallClick}
+                    borderRadius="md"
+                  >
+                    Install App
+                  </Button>
+                )}
+              </Flex>
+
+              {/* Projects Section - Mobile pop-over */}
+              {isCenterOpen && (
+                <Box
+                  position={{ base: 'fixed', md: 'relative' }}
+                  top={{ base: '60px', md: 'auto' }}
+                  left={{ base: 0, md: 'auto' }}
+                  right={{ base: 0, md: 'auto' }}
+                  bottom={{ base: 0, md: 'auto' }}
+                  zIndex={{ base: 70, md: 'auto' }}
+                  bg={colorMode === 'light' ? 'white' : 'gray.800'}
+                  p={4}
+                  overflowY={{ base: 'auto', md: 'visible' }}
+                  boxShadow={{ base: 'lg', md: 'none' }}
+                  display={{ base: 'block', md: 'none' }}
+                >
+                  <Flex justify="space-between" align="center" mb={4}>
+                    <Heading size="md" color={colorMode === 'light' ? 'gray.800' : 'white'}>Projects</Heading>
+                    <IconButton
+                      icon={<CloseIcon />}
+                      aria-label="Close projects"
+                      size="sm"
+                      variant="ghost"
+                      onClick={toggleCenter}
+                      color={colorMode === 'light' ? 'gray.600' : 'gray.400'}
+                      _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                    />
+                  </Flex>
+                  {projectsLoading ? (
+                    <Flex justify="center" align="center" p={4}>
+                      <Spinner size="sm" color="blue.500" />
                     </Flex>
-                    <Collapse in={expandedDays[day]} animateOpacity>
-                      <VStack align="start" spacing={1} mt={1} ml={4} w="full">
-                        {dayTasks[day].map((task, index) => (
-                          <Box key={index} w="full">
-                            <Flex align="center" w="full">
-                              <Checkbox
-                                isChecked={task.completed}
-                                onChange={() => toggleTaskCompleted(task.title, 'week')}
-                                colorScheme="green"
-                                size="sm"
-                                mr={2}
-                              />
-                              <Text
-                                fontSize="sm"
-                                color={task.completed ? "gray.500" : "gray.300"}
-                                cursor="pointer"
-                                p={1}
-                                flex={1}
-                                _hover={{ color: 'white' }}
-                                onClick={() => handleWeeklyTaskClick(task)}
-                                textDecoration={task.completed ? "line-through" : "none"}
-                              >
-                                {task.title}
-                              </Text>
-                              {task.fileAttachments && task.fileAttachments.length > 0 && (
-                                renderFileAttachmentIndicator(task.fileAttachments)
-                              )}
-                            </Flex>
-                            <Text
+                  ) : projectsError ? (
+                    <Alert status="error" mb={4}>
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>Projects Error!</AlertTitle>
+                        <AlertDescription>
+                          {projectsError}. Please check if the backend server is running.
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
+                  ) : (
+                    <SimpleGrid columns={2} spacing={3}>
+                      {(Array.isArray(projects) ? projects : []).map((project) => (
+                        <Box
+                          key={project._id}
+                          p={4}
+                          bg={colorMode === 'light' ? 'gray.200' : 'gray.800'}
+                          borderRadius="lg"
+                          cursor="pointer"
+                          _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }}
+                          onClick={() => handleProjectFilter(project.name)}
+                          position="relative"
+                        >
+                          <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
+                          <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>{project.description || 'No description'}</Text>
+                          {project.isOffline && (
+                            <Badge
+                              position="absolute"
+                              top={2}
+                              left={2}
+                              colorScheme="orange"
+                              size="sm"
                               fontSize="xs"
-                              color="gray.500"
-                              ml={6}
-                              mb={1}
                             >
-                              Due: {task.dueDate}
-                            </Text>
-                          </Box>
-                        ))}
-                      </VStack>
-                    </Collapse>
+                              Offline
+                            </Badge>
+                          )}
+                          <HStack position="absolute" top={2} right={2} spacing={1}>
+                            <Tooltip label="Share project">
+                              <IconButton
+                                icon={<LinkIcon />}
+                                aria-label="Share project"
+                                size="xs"
+                                colorScheme="green"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShareProject(project);
+                                }}
+                              />
+                            </Tooltip>
+                          </HStack>
+                          <IconButton
+                            icon={<HamburgerIcon />}
+                            aria-label="Edit project"
+                            size="xs"
+                            position="absolute"
+                            top={2}
+                            right={2}
+                            colorScheme="blue"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProjectClick(project);
+                            }}
+                          />
+                          <IconButton
+                            icon={<StarIcon />}
+                            aria-label="Filter by project"
+                            size="xs"
+                            position="absolute"
+                            top={2}
+                            right={8}
+                            colorScheme="blue"
+                            variant="ghost"
+                            display={{ base: 'none', md: 'inline-flex' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProjectFilter(project.name);
+                            }}
+                          />
+                        </Box>
+                      ))}
+                      <Box
+                        p={4}
+                        bg={colorMode === 'light' ? 'blue.100' : 'blue.900'}
+                        borderRadius="lg"
+                        cursor="pointer"
+                        border="2px dashed"
+                        borderColor={colorMode === 'light' ? 'blue.300' : 'blue.600'}
+                        _hover={{ bg: colorMode === 'light' ? 'blue.200' : 'blue.800' }}
+                        onClick={handleAddProject}
+                      >
+                        <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'blue.800' : 'blue.200'} textAlign="center">+ Add Project</Text>
+                        <Text fontSize="sm" color={colorMode === 'light' ? 'blue.600' : 'blue.300'} textAlign="center">Create a new project</Text>
+                      </Box>
+                    </SimpleGrid>
+                  )}
+                </Box>
+              )}
+
+              {/* Projects Section - Desktop view (above tasks) */}
+              <Collapse in={isCenterOpen} animateOpacity>
+                <Box mb={2} display={{ base: 'none', md: 'block' }}>
+                  <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
+                  {projectsLoading ? (
+                    <Flex justify="center" align="center" p={4}>
+                      <Spinner size="sm" color="blue.500" />
+                    </Flex>
+                  ) : projectsError ? (
+                    <Alert status="error" mb={4}>
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>Projects Error!</AlertTitle>
+                        <AlertDescription>
+                          {projectsError}. Please check if the backend server is running.
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
+                  ) : (
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
+                      {(Array.isArray(projects) ? projects : []).map((project) => (
+                        <Box
+                          key={project._id}
+                          p={4}
+                          bg={colorMode === 'light' ? 'gray.200' : 'gray.800'}
+                          borderRadius="lg"
+                          cursor="pointer"
+                          _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }}
+                          onClick={() => handleProjectFilter(project.name)}
+                          position="relative"
+                        >
+                          <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
+                          <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>{project.description || 'No description'}</Text>
+                          {project.isOffline && (
+                            <Badge
+                              position="absolute"
+                              top={2}
+                              left={2}
+                              colorScheme="orange"
+                              size="sm"
+                              fontSize="xs"
+                            >
+                              Offline
+                            </Badge>
+                          )}
+                          <HStack position="absolute" top={2} right={2} spacing={1}>
+                            <Tooltip label="Share project">
+                              <IconButton
+                                icon={<LinkIcon />}
+                                aria-label="Share project"
+                                size="xs"
+                                colorScheme="green"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShareProject(project);
+                                }}
+                              />
+                            </Tooltip>
+                          </HStack>
+                </Box>
+                      ))}
+                      <Box
+                        p={4}
+                        bg={colorMode === 'light' ? 'blue.100' : 'blue.900'}
+                        borderRadius="lg"
+                        cursor="pointer"
+                        border="2px dashed"
+                        borderColor={colorMode === 'light' ? 'blue.300' : 'blue.600'}
+                        _hover={{ bg: colorMode === 'light' ? 'blue.200' : 'blue.800' }}
+                        onClick={handleAddProject}
+                      >
+                        <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'blue.800' : 'blue.200'} textAlign="center">+ Add Project</Text>
+                        <Text fontSize="sm" color={colorMode === 'light' ? 'blue.600' : 'blue.300'} textAlign="center">Create a new project</Text>
+                    </Box>
+                  </SimpleGrid>
+                  )}
+                </Box>
+              </Collapse>
+
+              {/* Large Title - Now below projects */}
+              <Flex justify="space-between" align="center" mb={4}>
+                <Heading size="lg">
+                  {currentView === 'all' && 'My Tasks'}
+                  {currentView === 'day' && `${currentFilter} Tasks`}
+                  {currentView === 'project' && `${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Tasks`}
+                  {currentView === 'tag' && `#${currentFilter} Tasks`}
+                </Heading>
+                <Text fontSize="sm" color="gray.400">
+                  {(() => {
+                    if (currentView === 'all') {
+                      return getFilteredTasksBySearch(filteredTasks).length;
+                    } else {
+                      return getFilteredTasksBySearch(filteredTasks).length;
+                    }
+                  })()} tasks
+                </Text>
+              </Flex>
+
+              {/* Tasks Label */}
+              <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Tasks</Text>
+
+              {/* Backend Error Handling */}
+              {tasksError && (
+                <Alert status="error" mb={4}>
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Connection Error</AlertTitle>
+                    <AlertDescription>
+                      Unable to connect to the server. Please check your internet connection and try again.
+                    </AlertDescription>
                   </Box>
-                ))}
+                </Alert>
+              )}
+
+              {/* Loading State */}
+              {tasksLoading && (
+                <Flex justify="center" align="center" p={8}>
+                  <VStack spacing={4}>
+                    <Spinner size="lg" color="blue.500" />
+                    <Text color="gray.400">Loading tasks from backend...</Text>
+                  </VStack>
+                </Flex>
+              )}
+
+              <VStack align="stretch" spacing={3}>
+                {(() => {
+                  try {
+                    // Add a simple check to see if we have tasks
+                    if (filteredTasks.length === 0) {
+                      return (
+                        <Box p={4} bg="gray.800" borderRadius="md">
+                          <Text color="gray.400">No tasks found. {searchTerm ? `No results for "${searchTerm}"` : 'Add some tasks to get started.'}</Text>
+                        </Box>
+                      );
+                    }
+
+                    return (
+                      <>
+                        {currentView === 'all' ? (
+                          // Show all tasks from all sources
+                          sortTasksByPriority(
+                            getFilteredTasksBySearch(filteredTasks)
+                          ).map((task, idx) => {
+                            try {
+                              const taskInfo = task;
+                              if (!taskInfo) {
+                                return null;
+                              }
+
+                              return (
+                                <Box key={idx}>
+                                  <Box
+                                    p={3}
+                                    bg={colorMode === 'light' ? 'gray.100' : selectedTask === task.title ? 'gray.700' : 'gray.800'}
+                                    borderRadius="md"
+                                    cursor="pointer"
+                                    onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
+                                    _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.700' }}
+                                    border={selectedTask === task.title ? '2px solid' : '1px solid'}
+                                    borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
+                                  >
+                                    <Flex justify="space-between" align="center" mb={2}>
+                                      <Flex align="center" flex={1}>
+                                        <Checkbox
+                                          isChecked={taskInfo.completed}
+                                          onChange={(e) => {
+                                            e.stopPropagation();
+                                            toggleTaskCompleted(task.title, task.source);
+                                          }}
+                                          colorScheme="green"
+                                          size="md"
+                                          mr={3}
+                                        />
+                                        <Text
+                                          color={selectedTask === task.title
+                                            ? (colorMode === 'light' ? 'green.600' : 'green.300')
+                                            : taskInfo.completed
+                                              ? 'gray.500'
+                                              : (colorMode === 'light' ? 'gray.800' : 'white')}
+                                          fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
+                                          textDecoration={taskInfo.completed ? "line-through" : "none"}
+                                        >
+                                          {task.title}
+                                        </Text>
+                                        {taskInfo.fileAttachments && taskInfo.fileAttachments.length > 0 && (
+                                          renderFileAttachmentIndicator(taskInfo.fileAttachments)
+                                        )}
+
+                                      </Flex>
+                                      <HStack spacing={2}>
+                                        <Tag size="sm" colorScheme={getDueDateCategory(taskInfo.dueDate) === 'Today' ? 'red' : getDueDateCategory(taskInfo.dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskInfo.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
+                                          {getDueDateCategory(taskInfo.dueDate)}
+                                        </Tag>
+                                        <Tooltip label="Share task">
+                                          <IconButton
+                                            icon={<LinkIcon />}
+                                            size="xs"
+                                            variant="ghost"
+                                            colorScheme="blue"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const backendTask = backendTasks.find(t => t.title === task.title);
+                                              if (backendTask) {
+                                                handleShareTask(backendTask);
+                                              }
+                                            }}
+                                          />
+                                        </Tooltip>
+                                      </HStack>
+                                    </Flex>
+
+                                    {/* Task metadata */}
+                                    <VStack align="start" spacing={1}>
+                                      <HStack spacing={4} fontSize="xs" color="gray.400">
+                                        <Text>Due: {taskInfo.dueDate}</Text>
+                                        <Text>Project: {taskInfo.project}</Text>
+                                      </HStack>
+                                      <HStack spacing={1}>
+                                        {prepareTagsForDisplay(taskInfo.tags, taskInfo.fileAttachments, taskInfo.title).map((tag, tagIndex) => (
+                                          <Tag
+                                            key={tagIndex}
+                                            size="sm"
+                                            colorScheme="blue"
+                                            variant="subtle"
+                                            cursor="pointer"
+                                            onClick={() => handleTagClick(tag)}
+                                            _hover={{ bg: 'blue.600' }}
+                                          >
+                                            {tag}
+                                          </Tag>
+                                        ))}
+                                      </HStack>
+                                    </VStack>
+                                  </Box>
+                                  <Collapse in={task.source === 'today' && Boolean(taskData[task.title]) ? taskInfo.expanded : expandedFilteredTasks[task.title]} animateOpacity>
+                                    <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                                      <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
+                                        {taskInfo.description.length > 150
+                                          ? taskInfo.description.slice(0, 150) + '...'
+                                          : taskInfo.description}
+                                      </Text>
+                                    </Box>
+                                  </Collapse>
+                                </Box>
+                              );
+                            } catch (error) {
+                              return null;
+                            }
+                          }).filter(Boolean)
+                        ) : (
+                          // Show filtered tasks
+                          (() => {
+                            return sortTasksByPriority(getFilteredTasksBySearch(filteredTasks)).map((task, idx) => {
+                              try {
+                                return (
+                                  <Box key={idx}>
+                                    <Box
+                                      p={3}
+                                      bg={colorMode === 'light' ? 'gray.100' : selectedTask === task.title ? 'gray.700' : 'gray.800'}
+                                      borderRadius="md"
+                                      cursor="pointer"
+                                      onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
+                                      _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.700' }}
+                                      border={selectedTask === task.title ? '2px solid' : '1px solid'}
+                                      borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
+                                    >
+                                      <Flex justify="space-between" align="center" mb={2}>
+                                        <Flex align="center" flex={1}>
+                                          <Checkbox
+                                            isChecked={task.completed}
+                                            onChange={(e) => {
+                                              e.stopPropagation();
+                                              toggleTaskCompleted(task.title, task.source);
+                                            }}
+                                            colorScheme="green"
+                                            size="md"
+                                            mr={3}
+                                          />
+                                          <Text
+                                            color={selectedTask === task.title
+                                              ? (colorMode === 'light' ? 'green.600' : 'green.300')
+                                              : task.completed
+                                                ? 'gray.500'
+                                                : (colorMode === 'light' ? 'gray.800' : 'white')}
+                                            fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
+                                            textDecoration={task.completed ? "line-through" : "none"}
+                                          >
+                                            {task.title}
+                                          </Text>
+                                          {task.fileAttachments && task.fileAttachments.length > 0 && (
+                                            renderFileAttachmentIndicator(task.fileAttachments)
+                                          )}
+
+                                        </Flex>
+                                        <HStack spacing={2}>
+                                          <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
+                                            {getDueDateCategory(task.dueDate)}
+                                          </Tag>
+                                          <Tooltip label="Share task">
+                                            <IconButton
+                                              icon={<LinkIcon />}
+                                              size="xs"
+                                              variant="ghost"
+                                              colorScheme="blue"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const backendTask = backendTasks.find(t => t.title === task.title);
+                                                if (backendTask) {
+                                                  handleShareTask(backendTask);
+                                                }
+                                              }}
+                                            />
+                                          </Tooltip>
+                                        </HStack>
+                                      </Flex>
+
+                                      {/* Task metadata */}
+                                      <VStack align="start" spacing={1}>
+                                        <HStack spacing={4} fontSize="xs" color="gray.400">
+                                          <Text>Due: {task.dueDate}</Text>
+                                          <Text>Project: {task.project}</Text>
+                                        </HStack>
+                                        <HStack spacing={1}>
+                                          {prepareTagsForDisplay(task.tags, task.fileAttachments, task.title).map((tag, tagIndex) => (
+                                            <Tag
+                                              key={tagIndex}
+                                              size="sm"
+                                              colorScheme="blue"
+                                              variant="subtle"
+                                              cursor="pointer"
+                                              onClick={() => handleTagClick(tag)}
+                                              _hover={{ bg: 'blue.600' }}
+                                            >
+                                              {tag}
+                                            </Tag>
+                                          ))}
+                                        </HStack>
+                                      </VStack>
+                                    </Box>
+                                    <Collapse in={task.source === 'today' && Boolean(taskData[task.title]) ? taskData[task.title].expanded : expandedFilteredTasks[task.title]} animateOpacity>
+                                      <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
+                                        <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
+                                          {task.description.length > 150
+                                            ? task.description.slice(0, 150) + '...'
+                                            : task.description}
+                                        </Text>
+                                      </Box>
+                                    </Collapse>
+                                  </Box>
+                                );
+                              } catch (error) {
+                                return null;
+                              }
+                            }).filter(Boolean);
+                          })()
+                        )}
+                      </>
+                    );
+                  } catch (error) {
+                    return (
+                      <Box p={4} bg="red.900" borderRadius="md">
+                        <Text color="red.200">Error loading content. Please refresh the page.</Text>
+                      </Box>
+                    );
+                  }
+                })()}
               </VStack>
             </Box>
-            <Box>
-              <Text fontSize="sm" mb={2} color="gray.400">Sponsors</Text>
-              <VStack align="start" spacing={2}>
-                {/* First 2 sponsors - visible on all screen sizes */}
-                <Box>
-                  <Text
-                    fontSize="sm"
-                    color="blue.300"
-                    cursor="pointer"
-                    _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                    onClick={() => window.open('https://www.notion.so', '_blank')}
-                  >
-                    Notion
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">All-in-one workspace for notes & docs</Text>
-                </Box>
-                <Box>
-                  <Text
-                    fontSize="sm"
-                    color="blue.300"
-                    cursor="pointer"
-                    _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                    onClick={() => window.open('https://www.atlassian.com', '_blank')}
-                  >
-                    Atlassian
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">Project management & team collaboration</Text>
-                </Box>
-                {/* Remaining 3 sponsors - hidden on mobile, visible on desktop */}
-                <Box display={{ base: 'none', md: 'block' }}>
-                  <Text
-                    fontSize="sm"
-                    color="blue.300"
-                    cursor="pointer"
-                    _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                    onClick={() => window.open('https://www.asana.com', '_blank')}
-                  >
-                    Asana
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">Work management for teams</Text>
-                </Box>
-                <Box display={{ base: 'none', md: 'block' }}>
-                  <Text
-                    fontSize="sm"
-                    color="blue.300"
-                    cursor="pointer"
-                    _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                    onClick={() => window.open('https://www.trello.com', '_blank')}
-                  >
-                    Trello
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">Visual project management boards</Text>
-                </Box>
-                <Box display={{ base: 'none', md: 'block' }}>
-                  <Text
-                    fontSize="sm"
-                    color="blue.300"
-                    cursor="pointer"
-                    _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                    onClick={() => window.open('https://www.monday.com', '_blank')}
-                  >
-                    Monday.com
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">Work operating system for teams</Text>
-                </Box>
-              </VStack>
-            </Box>
-          </VStack>
-        </Box>
-      )}
-      {!isSidebarOpen && (
-        <></>
-      )}
 
-      {/* Main Content */}
-        <Box flex={1} pt={2} px={6} bg={colorMode === 'light' ? 'gray.50' : 'gray.850'} position="relative">
-          {/* PWA Status Indicators */}
-          <Flex position="fixed" top="10px" right="10px" zIndex={40} gap={2}>
-            {/* Install Prompt */}
-            {showInstallPrompt && (
-              <Button
-                leftIcon={<DownloadIcon />}
-                colorScheme="blue"
-                size="sm"
-                onClick={handleInstallClick}
-                borderRadius="md"
-              >
-                Install App
-              </Button>
-            )}
-          </Flex>
-
-          {/* Projects Section - Mobile pop-over */}
-          {isCenterOpen && (
+          {/* Detail Panel */}
+          {isDetailOpen && (
             <Box
+              w={{ base: '100%', md: isCenterOpen ? '350px' : '500px' }}
+              bg={colorMode === 'light' ? 'white' : 'gray.800'}
+              p={6}
               position={{ base: 'fixed', md: 'relative' }}
               top={{ base: '60px', md: 'auto' }}
               left={{ base: 0, md: 'auto' }}
               right={{ base: 0, md: 'auto' }}
               bottom={{ base: 0, md: 'auto' }}
               zIndex={{ base: 70, md: 'auto' }}
-              bg={colorMode === 'light' ? 'white' : 'gray.800'}
-              p={4}
               overflowY={{ base: 'auto', md: 'visible' }}
               boxShadow={{ base: 'lg', md: 'none' }}
-              display={{ base: 'block', md: 'none' }}
             >
               <Flex justify="space-between" align="center" mb={4}>
-                <Heading size="md" color={colorMode === 'light' ? 'gray.800' : 'white'}>Projects</Heading>
+                <Heading size="md" color={colorMode === 'light' ? 'gray.800' : 'white'}>
+                  {isAddProjectMode ? 'Add New Project' : isEditProjectMode ? 'Update Project' : isAddMode ? 'Add New Task' : 'Update Selected Task'}
+                </Heading>
                 <IconButton
                   icon={<CloseIcon />}
-                  aria-label="Close projects"
+                  aria-label="Close panel"
                   size="sm"
                   variant="ghost"
-                  onClick={toggleCenter}
+                  onClick={toggleDetail}
                   color={colorMode === 'light' ? 'gray.600' : 'gray.400'}
                   _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
                 />
               </Flex>
-              {projectsLoading ? (
-                <Flex justify="center" align="center" p={4}>
-                  <Spinner size="sm" color="blue.500" />
-                </Flex>
-              ) : projectsError ? (
-                <Alert status="error" mb={4}>
-                  <AlertIcon />
-                  <Box>
-                    <AlertTitle>Projects Error!</AlertTitle>
-                    <AlertDescription>
-                      {projectsError}. Please check if the backend server is running.
-                    </AlertDescription>
-                  </Box>
-                </Alert>
-              ) : (
-                <SimpleGrid columns={2} spacing={3}>
-                  {projects.map((project) => (
-                    <Box
-                      key={project._id}
-                      p={4}
-                      bg={colorMode === 'light' ? 'gray.200' : 'gray.800'}
-                      borderRadius="lg"
-                      cursor="pointer"
-                      _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }}
-                      onClick={() => handleProjectFilter(project.name)}
-                      position="relative"
-                    >
-                      <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
-                      <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>{project.description || 'No description'}</Text>
-                      {project.isOffline && (
-                        <Badge
-                          position="absolute"
-                          top={2}
-                          left={2}
-                          colorScheme="orange"
-                          size="sm"
-                          fontSize="xs"
-                        >
-                          Offline
-                        </Badge>
-                      )}
-                      <HStack position="absolute" top={2} right={2} spacing={1}>
-                        <Tooltip label="Share project">
-                          <IconButton
-                            icon={<LinkIcon />}
-                            aria-label="Share project"
-                            size="xs"
-                            colorScheme="green"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShareProject(project);
-                            }}
-                          />
-                        </Tooltip>
-                      </HStack>
-                      <IconButton
-                        icon={<HamburgerIcon />}
-                        aria-label="Edit project"
-                        size="xs"
-                        position="absolute"
-                        top={2}
-                        right={2}
-                        colorScheme="blue"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleProjectClick(project);
-                        }}
-                      />
-                      <IconButton
-                        icon={<StarIcon />}
-                        aria-label="Filter by project"
-                        size="xs"
-                        position="absolute"
-                        top={2}
-                        right={8}
-                        colorScheme="blue"
-                        variant="ghost"
-                        display={{ base: 'none', md: 'inline-flex' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleProjectFilter(project.name);
-                        }}
-                      />
-                    </Box>
-                  ))}
-                  <Box
-                    p={4}
-                    bg={colorMode === 'light' ? 'blue.100' : 'blue.900'}
-                    borderRadius="lg"
-                    cursor="pointer"
-                    border="2px dashed"
-                    borderColor={colorMode === 'light' ? 'blue.300' : 'blue.600'}
-                    _hover={{ bg: colorMode === 'light' ? 'blue.200' : 'blue.800' }}
-                    onClick={handleAddProject}
-                  >
-                    <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'blue.800' : 'blue.200'} textAlign="center">+ Add Project</Text>
-                    <Text fontSize="sm" color={colorMode === 'light' ? 'blue.600' : 'blue.300'} textAlign="center">Create a new project</Text>
-                  </Box>
-                </SimpleGrid>
-              )}
-            </Box>
-          )}
 
-          {/* Projects Section - Desktop view (above tasks) */}
-          <Collapse in={isCenterOpen} animateOpacity>
-            <Box mb={2} display={{ base: 'none', md: 'block' }}>
-              <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
-              {projectsLoading ? (
-                <Flex justify="center" align="center" p={4}>
-                  <Spinner size="sm" color="blue.500" />
-                </Flex>
-              ) : projectsError ? (
-                <Alert status="error" mb={4}>
-                  <AlertIcon />
-                  <Box>
-                    <AlertTitle>Projects Error!</AlertTitle>
-                    <AlertDescription>
-                      {projectsError}. Please check if the backend server is running.
-                    </AlertDescription>
-                  </Box>
-                </Alert>
-              ) : (
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
-                  {projects.map((project) => (
-                    <Box
-                      key={project._id}
-                      p={4}
-                      bg={colorMode === 'light' ? 'gray.200' : 'gray.800'}
-                      borderRadius="lg"
-                      cursor="pointer"
-                      _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }}
-                      onClick={() => handleProjectFilter(project.name)}
-                      position="relative"
-                    >
-                      <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>
-                      <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>{project.description || 'No description'}</Text>
-                      {project.isOffline && (
-                        <Badge
-                          position="absolute"
-                          top={2}
-                          left={2}
-                          colorScheme="orange"
-                          size="sm"
-                          fontSize="xs"
-                        >
-                          Offline
-                        </Badge>
-                      )}
-                      <HStack position="absolute" top={2} right={2} spacing={1}>
-                        <Tooltip label="Share project">
-                          <IconButton
-                            icon={<LinkIcon />}
-                            aria-label="Share project"
-                            size="xs"
-                            colorScheme="green"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShareProject(project);
-                            }}
-                          />
-                        </Tooltip>
-                      </HStack>
-                </Box>
-                  ))}
-                  <Box
-                    p={4}
-                    bg={colorMode === 'light' ? 'blue.100' : 'blue.900'}
-                    borderRadius="lg"
-                    cursor="pointer"
-                    border="2px dashed"
-                    borderColor={colorMode === 'light' ? 'blue.300' : 'blue.600'}
-                    _hover={{ bg: colorMode === 'light' ? 'blue.200' : 'blue.800' }}
-                    onClick={handleAddProject}
-                  >
-                    <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'blue.800' : 'blue.200'} textAlign="center">+ Add Project</Text>
-                    <Text fontSize="sm" color={colorMode === 'light' ? 'blue.600' : 'blue.300'} textAlign="center">Create a new project</Text>
-                </Box>
-              </SimpleGrid>
-              )}
-            </Box>
-          </Collapse>
-
-          {/* Large Title - Now below projects */}
-          <Flex justify="space-between" align="center" mb={4}>
-            <Heading size="lg">
-              {currentView === 'all' && 'My Tasks'}
-              {currentView === 'day' && `${currentFilter} Tasks`}
-              {currentView === 'project' && `${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} Tasks`}
-              {currentView === 'tag' && `#${currentFilter} Tasks`}
-            </Heading>
-            <Text fontSize="sm" color="gray.400">
-              {(() => {
-                if (currentView === 'all') {
-                  return getFilteredTasksBySearch(filteredTasks).length;
-                } else {
-                  return getFilteredTasksBySearch(filteredTasks).length;
-                }
-              })()} tasks
-            </Text>
-          </Flex>
-
-          {/* Tasks Label */}
-          <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Tasks</Text>
-
-          {/* Backend Error Handling */}
-          {tasksError && (
-            <Alert status="error" mb={4}>
-              <AlertIcon />
-              <Box>
-                <AlertTitle>Connection Error</AlertTitle>
-                <AlertDescription>
-                  Unable to connect to the server. Please check your internet connection and try again.
-                </AlertDescription>
-              </Box>
-            </Alert>
-          )}
-
-          {/* Loading State */}
-          {tasksLoading && (
-            <Flex justify="center" align="center" p={8}>
-              <VStack spacing={4}>
-                <Spinner size="lg" color="blue.500" />
-                <Text color="gray.400">Loading tasks from backend...</Text>
-              </VStack>
-            </Flex>
-          )}
-
-          <VStack align="stretch" spacing={3}>
-            {(() => {
-              try {
-                // Add a simple check to see if we have tasks
-                if (filteredTasks.length === 0) {
-                  return (
-                    <Box p={4} bg="gray.800" borderRadius="md">
-                      <Text color="gray.400">No tasks found. {searchTerm ? `No results for "${searchTerm}"` : 'Add some tasks to get started.'}</Text>
-                    </Box>
-                  );
-                }
-
-                return (
-                  <>
-                    {currentView === 'all' ? (
-                      // Show all tasks from all sources
-                      sortTasksByPriority(
-                        getFilteredTasksBySearch(filteredTasks)
-                      ).map((task, idx) => {
-                        try {
-                          const taskInfo = task;
-                          if (!taskInfo) {
-                            return null;
-                          }
-
-                          return (
-                            <Box key={idx}>
-                              <Box
-                                p={3}
-                                bg={colorMode === 'light' ? 'gray.100' : selectedTask === task.title ? 'gray.700' : 'gray.800'}
-                                borderRadius="md"
-                                cursor="pointer"
-                                onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
-                                _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.700' }}
-                                border={selectedTask === task.title ? '2px solid' : '1px solid'}
-                                borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
-                              >
-                                <Flex justify="space-between" align="center" mb={2}>
-                                  <Flex align="center" flex={1}>
-                                    <Checkbox
-                                      isChecked={taskInfo.completed}
-                                      onChange={(e) => {
-                                        e.stopPropagation();
-                                        toggleTaskCompleted(task.title, task.source);
-                                      }}
-                                      colorScheme="green"
-                                      size="md"
-                                      mr={3}
-                                    />
-                                    <Text
-                                      color={selectedTask === task.title
-                                        ? (colorMode === 'light' ? 'green.600' : 'green.300')
-                                        : taskInfo.completed
-                                          ? 'gray.500'
-                                          : (colorMode === 'light' ? 'gray.800' : 'white')}
-                                      fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
-                                      textDecoration={taskInfo.completed ? "line-through" : "none"}
-                                    >
-                                      {task.title}
-                                    </Text>
-                                    {taskInfo.fileAttachments && taskInfo.fileAttachments.length > 0 && (
-                                      renderFileAttachmentIndicator(taskInfo.fileAttachments)
-                                    )}
-                                    {taskInfo.isOffline && (
-                                      <Badge
-                                        size="sm"
-                                        colorScheme="orange"
-                                        variant="subtle"
-                                        ml={2}
-                                        title="This task is stored offline"
-                                      >
-                                        📱
-                                      </Badge>
-                                    )}
-                                  </Flex>
-                                  <HStack spacing={2}>
-                                    <Tag size="sm" colorScheme={getDueDateCategory(taskInfo.dueDate) === 'Today' ? 'red' : getDueDateCategory(taskInfo.dueDate) === 'Week' ? 'orange' : getDueDateCategory(taskInfo.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
-                                      {getDueDateCategory(taskInfo.dueDate)}
-                                    </Tag>
-                                    <Tooltip label="Share task">
-                                      <IconButton
-                                        icon={<LinkIcon />}
-                                        size="xs"
-                                        variant="ghost"
-                                        colorScheme="blue"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const backendTask = backendTasks.find(t => t.title === task.title);
-                                          if (backendTask) {
-                                            handleShareTask(backendTask);
-                                          }
-                                        }}
-                                      />
-                                    </Tooltip>
-                                  </HStack>
-                                </Flex>
-
-                                {/* Task metadata */}
-                                <VStack align="start" spacing={1}>
-                                  <HStack spacing={4} fontSize="xs" color="gray.400">
-                                    <Text>Due: {taskInfo.dueDate}</Text>
-                                    <Text>Project: {taskInfo.project}</Text>
-                                  </HStack>
-                                  <HStack spacing={1}>
-                                    {prepareTagsForDisplay(taskInfo.tags, taskInfo.fileAttachments, taskInfo.title).map((tag, tagIndex) => (
-                                      <Tag
-                                        key={tagIndex}
-                                        size="sm"
-                                        colorScheme="blue"
-                                        variant="subtle"
-                                        cursor="pointer"
-                                        onClick={() => handleTagClick(tag)}
-                                        _hover={{ bg: 'blue.600' }}
-                                      >
-                                        {tag}
-                                      </Tag>
-                                    ))}
-                                  </HStack>
-                                </VStack>
-                              </Box>
-                              <Collapse in={task.source === 'today' && Boolean(taskData[task.title]) ? taskInfo.expanded : expandedFilteredTasks[task.title]} animateOpacity>
-                                <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
-                                  <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
-                                    {taskInfo.description.length > 150
-                                      ? taskInfo.description.slice(0, 150) + '...'
-                                      : taskInfo.description}
-                                  </Text>
-                                </Box>
-                              </Collapse>
-                            </Box>
-                          );
-                        } catch (error) {
-                          return null;
-                        }
-                      }).filter(Boolean)
-                    ) : (
-                      // Show filtered tasks
-                      (() => {
-                        return sortTasksByPriority(getFilteredTasksBySearch(filteredTasks)).map((task, idx) => {
-                          try {
-                            return (
-                              <Box key={idx}>
-                                <Box
-                                  p={3}
-                                  bg={colorMode === 'light' ? 'gray.100' : selectedTask === task.title ? 'gray.700' : 'gray.800'}
-                                  borderRadius="md"
-                                  cursor="pointer"
-                                  onClick={() => task.source === 'today' ? handleTaskClick(task.title) : handleFilteredTaskClick(task)}
-                                  _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.700' }}
-                                  border={selectedTask === task.title ? '2px solid' : '1px solid'}
-                                  borderColor={selectedTask === task.title ? 'blue.400' : 'transparent'}
-                                >
-                                  <Flex justify="space-between" align="center" mb={2}>
-                                    <Flex align="center" flex={1}>
-                                      <Checkbox
-                                        isChecked={task.completed}
-                                        onChange={(e) => {
-                                          e.stopPropagation();
-                                          toggleTaskCompleted(task.title, task.source);
-                                        }}
-                                        colorScheme="green"
-                                        size="md"
-                                        mr={3}
-                                      />
-                                      <Text
-                                        color={selectedTask === task.title
-                                          ? (colorMode === 'light' ? 'green.600' : 'green.300')
-                                          : task.completed
-                                            ? 'gray.500'
-                                            : (colorMode === 'light' ? 'gray.800' : 'white')}
-                                        fontWeight={selectedTask === task.title ? 'bold' : 'normal'}
-                                        textDecoration={task.completed ? "line-through" : "none"}
-                                      >
-                                        {task.title}
-                                      </Text>
-                                      {task.fileAttachments && task.fileAttachments.length > 0 && (
-                                        renderFileAttachmentIndicator(task.fileAttachments)
-                                      )}
-                                      {task.isOffline && (
-                                        <Badge
-                                          size="sm"
-                                          colorScheme="orange"
-                                          variant="subtle"
-                                          ml={2}
-                                          title="This task is stored offline"
-                                        >
-                                          📱
-                                        </Badge>
-                                      )}
-                                    </Flex>
-                                    <HStack spacing={2}>
-                                      <Tag size="sm" colorScheme={getDueDateCategory(task.dueDate) === 'Today' ? 'red' : getDueDateCategory(task.dueDate) === 'Week' ? 'orange' : getDueDateCategory(task.dueDate) === 'Month' ? 'yellow' : 'gray'} variant="subtle">
-                                        {getDueDateCategory(task.dueDate)}
-                                      </Tag>
-                                      <Tooltip label="Share task">
-                                        <IconButton
-                                          icon={<LinkIcon />}
-                                          size="xs"
-                                          variant="ghost"
-                                          colorScheme="blue"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            const backendTask = backendTasks.find(t => t.title === task.title);
-                                            if (backendTask) {
-                                              handleShareTask(backendTask);
-                                            }
-                                          }}
-                                        />
-                                      </Tooltip>
-                                    </HStack>
-                                  </Flex>
-
-                                  {/* Task metadata */}
-                                  <VStack align="start" spacing={1}>
-                                    <HStack spacing={4} fontSize="xs" color="gray.400">
-                                      <Text>Due: {task.dueDate}</Text>
-                                      <Text>Project: {task.project}</Text>
-                                    </HStack>
-                                    <HStack spacing={1}>
-                                      {prepareTagsForDisplay(task.tags, task.fileAttachments, task.title).map((tag, tagIndex) => (
-                                        <Tag
-                                          key={tagIndex}
-                                          size="sm"
-                                          colorScheme="blue"
-                                          variant="subtle"
-                                          cursor="pointer"
-                                          onClick={() => handleTagClick(tag)}
-                                          _hover={{ bg: 'blue.600' }}
-                                        >
-                                          {tag}
-                                        </Tag>
-                                      ))}
-                                    </HStack>
-                                  </VStack>
-                                </Box>
-                                <Collapse in={task.source === 'today' && Boolean(taskData[task.title]) ? taskData[task.title].expanded : expandedFilteredTasks[task.title]} animateOpacity>
-                                  <Box p={3} bg={colorMode === 'light' ? 'gray.100' : 'gray.750'} borderRadius="md" mt={1} borderLeft="3px solid" borderColor="blue.400">
-                                    <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.300'} lineHeight="1.6">
-                                      {task.description.length > 150
-                                        ? task.description.slice(0, 150) + '...'
-                                        : task.description}
-                                    </Text>
-                                  </Box>
-                                </Collapse>
-                              </Box>
-                            );
-                          } catch (error) {
-                            return null;
-                          }
-                        }).filter(Boolean);
-                      })()
-                    )}
-                  </>
-                );
-              } catch (error) {
-                return (
-                  <Box p={4} bg="red.900" borderRadius="md">
-                    <Text color="red.200">Error loading content. Please refresh the page.</Text>
-                  </Box>
-                );
-              }
-            })()}
-          </VStack>
-        </Box>
-
-      {/* Detail Panel */}
-      {isDetailOpen && (
-        <Box
-          w={{ base: '100%', md: isCenterOpen ? '350px' : '500px' }}
-          bg={colorMode === 'light' ? 'white' : 'gray.800'}
-          p={6}
-          position={{ base: 'fixed', md: 'relative' }}
-          top={{ base: '60px', md: 'auto' }}
-          left={{ base: 0, md: 'auto' }}
-          right={{ base: 0, md: 'auto' }}
-          bottom={{ base: 0, md: 'auto' }}
-          zIndex={{ base: 70, md: 'auto' }}
-          overflowY={{ base: 'auto', md: 'visible' }}
-          boxShadow={{ base: 'lg', md: 'none' }}
-        >
-          <Flex justify="space-between" align="center" mb={4}>
-            <Heading size="md" color={colorMode === 'light' ? 'gray.800' : 'white'}>
-              {isAddProjectMode ? 'Add New Project' : isEditProjectMode ? 'Update Project' : isAddMode ? 'Add New Task' : 'Update Selected Task'}
-            </Heading>
-            <IconButton
-              icon={<CloseIcon />}
-              aria-label="Close panel"
-              size="sm"
-              variant="ghost"
-              onClick={toggleDetail}
-              color={colorMode === 'light' ? 'gray.600' : 'gray.400'}
-              _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-            />
-          </Flex>
-
-          {isAddProjectMode ? (
-            // Project creation form
-            <>
-          <Input
-                placeholder="Project name"
-                value={projectTitle}
-            fontSize="lg"
-            fontWeight="bold"
-                bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-            border={0}
-                p={2}
-            mb={2}
-                borderRadius="md"
-            color={colorMode === 'light' ? 'gray.800' : 'white'}
+              {isAddProjectMode ? (
+                // Project creation form
+                <>
+              <Input
+                    placeholder="Project name"
+                    value={projectTitle}
+                fontSize="lg"
+                fontWeight="bold"
+                    bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                border={0}
+                    p={2}
+                mb={2}
+                    borderRadius="md"
+                color={colorMode === 'light' ? 'gray.800' : 'white'}
                 _focus={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.600', border: '1px solid', borderColor: 'blue.400' }}
                 _hover={{ bg: colorMode === 'light' ? 'gray.200' : 'gray.600' }}
                 onChange={(e) => setProjectTitle(e.target.value)}
@@ -2801,7 +2751,7 @@ export default function TaskDashboard() {
               onChange={(e) => setEditingProject(e.target.value)}
                     isDisabled={projectsLoading}
                   >
-                    {projects.map((project) => (
+                    {(Array.isArray(projects) ? projects : []).map((project) => (
                       <option key={project._id} value={project.name}>
                         {project.name.charAt(0).toUpperCase() + project.name.slice(1)}
                       </option>
@@ -3142,162 +3092,41 @@ export default function TaskDashboard() {
     </Flex>
 
       {/* Bottom Navigation - Visible on both mobile and desktop */}
-      <Box
-        position="fixed"
-        bottom={0}
-        left={0}
-        right={0}
-        zIndex={25}
-        bg="gray.800"
-        borderTop="1px solid"
-        borderColor="gray.700"
-        p={{ base: 3, md: 2 }}
-      >
-        <Flex justify="center" align="center">
-          <Flex
-            justify="space-between"
-            align="center"
-            maxW="600px"
-            w="full"
-            px={4}
-            gap={{ base: 4, md: 2 }}
-          >
-            <IconButton
-              icon={<CalendarIcon />}
-              aria-label="Toggle Sidebar"
-              onClick={toggleSidebar}
-              size={{ base: "md", md: "sm" }}
-              colorScheme={isSidebarOpen ? "blue" : "gray"}
-              variant="solid"
-              borderRadius="full"
-              _hover={{ bg: 'gray.700' }}
-            />
-            <IconButton
-              icon={<StarIcon />}
-              aria-label="Toggle Projects Panel"
-              onClick={toggleCenter}
-              size={{ base: "md", md: "sm" }}
-              colorScheme={isCenterOpen ? "blue" : "gray"}
-              variant="solid"
-              borderRadius="full"
-              _hover={{ bg: 'gray.700' }}
-            />
-            <Tooltip
-              label={isAddMode ? "Close Add Task" : "Add New Task"}
-              placement="top"
-              hasArrow
-            >
-              <IconButton
-                icon={isAddMode ? <CloseIcon /> : <AddIcon />}
-                aria-label={isAddMode ? "Close Add Task" : "Add New Task"}
-                onClick={handleAddTask}
-                size={{ base: "md", md: "sm" }}
-                colorScheme={isAddMode ? "red" : "green"}
-                variant="solid"
-                borderRadius="full"
-                _hover={{ bg: isAddMode ? 'red.600' : 'green.600' }}
-              />
-            </Tooltip>
-            {selectedTask && (
-              <IconButton
-                icon={<EditIcon />}
-                aria-label="Toggle Detail Panel"
-                onClick={toggleDetail}
-                size={{ base: "md", md: "sm" }}
-                colorScheme={isDetailOpen ? "blue" : "gray"}
-                variant="solid"
-                borderRadius="full"
-                _hover={{ bg: 'gray.700' }}
-              />
-            )}
-            <IconButton
-              icon={<ChatIcon />}
-              aria-label="Toggle Footer Panel"
-              onClick={toggleFooter}
-              size={{ base: "md", md: "sm" }}
-              colorScheme={isFooterOpen ? "blue" : "gray"}
-              variant="solid"
-              borderRadius="full"
-              _hover={{ bg: 'gray.700' }}
-            />
-          </Flex>
-        </Flex>
-      </Box>
+      <BottomNav
+        isSidebarOpen={isSidebarOpen}
+        isCenterOpen={isCenterOpen}
+        isAddMode={isAddMode}
+        isDetailOpen={isDetailOpen}
+        isFooterOpen={isFooterOpen}
+        selectedTask={selectedTask}
+        toggleSidebar={toggleSidebar}
+        toggleCenter={toggleCenter}
+        handleAddTask={handleAddTask}
+        toggleDetail={toggleDetail}
+        toggleFooter={toggleFooter}
+      />
 
       {/* Mobile Backdrop Overlays */}
-      {(isSidebarOpen || isCenterOpen || isDetailOpen || (isFooterOpen && !(isSidebarOpen || isCenterOpen || isDetailOpen))) && (
-        <Box
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bg="blackAlpha.300"
-          zIndex={50}
-          display={{ base: 'block', md: 'none' }}
-          onClick={(e) => {
-            // Only close panels if not just the prompt popover
-            if (isFooterOpen && !(isSidebarOpen || isCenterOpen || isDetailOpen)) {
-              // Do nothing, prompt popover should only close via ESC or X
-              return;
-            }
-            if (isSidebarOpen) toggleSidebar();
-            if (isCenterOpen) toggleCenter();
-            if (isDetailOpen) toggleDetail();
-          }}
-        />
-      )}
+      <MobileBackdropOverlay
+        isSidebarOpen={isSidebarOpen}
+        isCenterOpen={isCenterOpen}
+        isDetailOpen={isDetailOpen}
+        isFooterOpen={isFooterOpen}
+        toggleSidebar={toggleSidebar}
+        toggleCenter={toggleCenter}
+        toggleDetail={toggleDetail}
+      />
 
       {/* Collapsible Footer Panel */}
-      <Box position="fixed" bottom={0} left={0} right={0} zIndex={100}>
-        {/* Footer Content */}
-        <Collapse in={isFooterOpen} animateOpacity>
-          <Box
-            data-footer-panel
-            w="full"
-            bg="gray.800"
-            p={{ base: 4, md: 6 }}
-            pt={{ base: 5, md: 6 }}
-            borderTop="1px solid"
-            borderColor="gray.700"
-            height={{ base: "380px", md: "300px" }}
-            maxH={{ base: "90vh", md: "none" }}
-            position="relative"
-            overflowY="auto"
-          >
-            <Flex justify="space-between" align="center" mb={4} display={{ base: 'flex', md: 'none' }}>
-              <Heading size="md" color="white">Tasks Prompt</Heading>
-              <IconButton
-                icon={<CloseIcon />}
-                aria-label="Close tasks prompt"
-                size="sm"
-                variant="ghost"
-                onClick={toggleFooter}
-                color="gray.400"
-                _hover={{ bg: 'gray.700' }}
-              />
-            </Flex>
-            <Flex justify="space-between" align="start" maxW="1200px" mx="auto" gap={8}>
-              <Box flex={1}>
-                <Heading size="md" mb={4} color="white" display={{ base: 'none', md: 'block' }}>Tasks Prompt</Heading>
-                <Textarea
-                  placeholder="Enter your tasks prompt here"
-                  mb={4}
-                  minH={{ base: "120px", md: "100px" }}
-                  maxH={{ base: "200px", md: "none" }}
-                  color="white"
-                  _placeholder={{ color: 'gray.400' }}
-                  value={tasksPrompt}
-                  onChange={(e) => setTasksPrompt(e.target.value)}
-                />
-                <Button colorScheme="green" w="full">Submit</Button>
-              </Box>
-            </Flex>
-          </Box>
-        </Collapse>
+      <FooterPromptPanel
+        isFooterOpen={isFooterOpen}
+        toggleFooter={toggleFooter}
+        tasksPrompt={tasksPrompt}
+        setTasksPrompt={setTasksPrompt}
+      />
+        </>
+        )}
       </Box>
-
-      {/* Share Dialog */}
       <ShareDialog
         isOpen={isShareDialogOpen}
         onClose={handleShareDialogClose}
@@ -3305,8 +3134,6 @@ export default function TaskDashboard() {
         item={shareDialogItem}
         onShareCreated={handleShareCreated}
       />
-        </>
-      )}
-    </Box>
+    </>
   );
 }
