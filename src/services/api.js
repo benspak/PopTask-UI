@@ -1,5 +1,3 @@
-import { idb } from './idb';
-
 // Environment-based API configuration
 const getApiBaseUrl = () => {
   // Use VITE_API_BASE_URL if set, otherwise default to localhost:3001/api
