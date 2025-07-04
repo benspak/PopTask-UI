@@ -99,13 +99,25 @@ const ProjectDetailPanel = ({
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update project',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      // Handle limit errors specifically
+      if (error.isLimitError) {
+        toast({
+          title: 'Project Limit Reached',
+          description: error.message || 'You have reached your project limit. Upgrade to Pro for unlimited projects.',
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to update project',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 

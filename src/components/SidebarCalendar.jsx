@@ -58,7 +58,6 @@ const SidebarCalendar = ({
           />
         </Flex>
         {/* Desktop: Show heading only */}
-        <Heading size="md" mb={4} display={{ base: 'none', md: 'block' }}>Workload</Heading>
         <VStack align="start" spacing={4}>
           <Box w="full">
             <Text fontSize="sm" mb={1} color="gray.400">Days</Text>

@@ -24,6 +24,10 @@ import {
   Link,
   IconButton,
   Tooltip,
+  SimpleGrid,
+  Stat,
+  StatLabel,
+  StatNumber,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, CopyIcon, CheckIcon, EditIcon, ViewIcon } from '@chakra-ui/icons';
 import apiService from '../services/api';
@@ -220,7 +224,7 @@ const SharedView = () => {
 
   const item = data[type];
   const permission = data.sharePermission;
-  const hasEmailAccess = data.hasEmailAccess || false;
+  const hasUsernameAccess = data.hasUsernameAccess || false;
   const shareStats = data.shareStats;
 
   // Add safety check for missing item
@@ -247,12 +251,12 @@ const SharedView = () => {
                 Shared {type === 'task' ? 'Task' : 'Project'}
               </Text>
               <HStack spacing={2}>
-                <Badge colorScheme={hasEmailAccess ? 'green' : 'blue'}>
-                  {hasEmailAccess ? 'Editable' : 'Read-only'}
+                <Badge colorScheme={hasUsernameAccess ? 'green' : 'blue'}>
+                  {hasUsernameAccess ? 'Editable' : 'Read-only'}
                 </Badge>
-                {hasEmailAccess && (
+                {hasUsernameAccess && (
                   <Badge colorScheme="orange" variant="subtle">
-                    Email Access
+                    Username Access
                   </Badge>
                 )}
                 {shareStats && (
@@ -271,7 +275,7 @@ const SharedView = () => {
                   size="sm"
                 />
               </Tooltip>
-              {hasEmailAccess && (
+              {hasUsernameAccess && (
                 <Button
                   leftIcon={isEditing ? <ViewIcon /> : <EditIcon />}
                   onClick={() => setIsEditing(!isEditing)}
@@ -319,7 +323,7 @@ const SharedView = () => {
             onCancel={handleCancel}
             saving={saving}
             permission={permission}
-            hasEmailAccess={hasEmailAccess}
+            hasUsernameAccess={hasUsernameAccess}
             formatFileSize={formatFileSize}
           />
         ) : (
@@ -332,7 +336,7 @@ const SharedView = () => {
             onCancel={handleCancel}
             saving={saving}
             permission={permission}
-            hasEmailAccess={hasEmailAccess}
+            hasUsernameAccess={hasUsernameAccess}
             tasks={data.tasks || []}
             projectStats={data.projectStats}
           />
@@ -353,7 +357,7 @@ const SharedView = () => {
   }
 };
 
-const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCancel, saving, permission, hasEmailAccess, formatFileSize }) => {
+const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCancel, saving, permission, hasUsernameAccess, formatFileSize }) => {
   const { colorMode } = useColorMode();
 
   // Add safety checks
@@ -544,7 +548,7 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
       )}
 
       {/* Edit Actions */}
-      {isEditing && hasEmailAccess && (
+      {isEditing && hasUsernameAccess && (
         <HStack spacing={3} justify="flex-end">
           <Button onClick={onCancel} variant="outline">
             Cancel
@@ -558,7 +562,7 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
   );
 };
 
-const SharedProjectView = ({ project, isEditing, editData, setEditData, onSave, onCancel, saving, permission, hasEmailAccess, tasks = [], projectStats }) => {
+const SharedProjectView = ({ project, isEditing, editData, setEditData, onSave, onCancel, saving, permission, hasUsernameAccess, tasks = [], projectStats }) => {
   const { colorMode } = useColorMode();
 
   if (!project) return null;
@@ -582,136 +586,136 @@ const SharedProjectView = ({ project, isEditing, editData, setEditData, onSave, 
 
   return (
     <VStack spacing={6} align="stretch">
-      {/* Name */}
+      {/* Project Header */}
       <Box>
-        <Text fontSize="sm" mb={2} color="white">
-          Project Name
-        </Text>
-        {isEditing ? (
-          <Input
-            value={editData.name || ''}
-            onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-            placeholder="Project name"
-            size="lg"
-          />
-        ) : (
-          <Text fontSize="lg" fontWeight="medium" color="white">
-            {project.name}
-          </Text>
-        )}
-      </Box>
-
-      {/* Description */}
-      <Box>
-        <Text fontSize="sm" mb={2} color="white">
-          Description
-        </Text>
-        {isEditing ? (
-          <Textarea
-            value={editData.description || ''}
-            onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-            placeholder="Project description"
-            rows={4}
-          />
-        ) : (
-          <Text color="white">
-            {project.description || 'No description'}
-          </Text>
-        )}
-      </Box>
-
-      {/* Color */}
-      <Box>
-        <Text fontSize="sm" mb={2} color="white">
-          Color
-        </Text>
-        {isEditing ? (
-          <Input
-            type="color"
-            value={editData.color || '#3182ce'}
-            onChange={(e) => setEditData({ ...editData, color: e.target.value })}
-            w="100px"
-          />
-        ) : (
-          <HStack>
-            <Box w="20px" h="20px" borderRadius="full" bg={project.color} />
-            <Text color="white">
-              {project.color}
-            </Text>
-          </HStack>
-        )}
-      </Box>
-
-      {/* Project Statistics and Time Summary */}
-      {projectStats && (
-        <Box p={4} border="1px" borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'} borderRadius="md" bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}>
-          <Text fontSize="md" fontWeight="semibold" mb={3} color="white">Project Statistics</Text>
-          <VStack spacing={3} align="stretch">
-            <HStack justify="space-between">
-              <Text fontSize="sm" color="white">Total Tasks</Text>
-              <Text fontSize="sm" fontWeight="medium" color="white">{projectStats.totalTasks}</Text>
+        <HStack justify="space-between" align="start">
+          <VStack align="start" spacing={2}>
+            <HStack>
+              <Box
+                w={4}
+                h={4}
+                borderRadius="full"
+                bg={project.color || '#3182ce'}
+                flexShrink={0}
+              />
+              <Text fontSize="2xl" fontWeight="bold">
+                {isEditing ? (
+                  <Input
+                    value={editData.name || project.name}
+                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                    size="lg"
+                    fontWeight="bold"
+                  />
+                ) : (
+                  project.name
+                )}
+              </Text>
             </HStack>
-            <HStack justify="space-between">
-              <Text fontSize="sm" color="white">Completed Tasks</Text>
-              <Text fontSize="sm" fontWeight="medium" color="white">{projectStats.completedTasks}</Text>
-            </HStack>
-            <HStack justify="space-between">
-              <Text fontSize="sm" color="white">Pending Tasks</Text>
-              <Text fontSize="sm" fontWeight="medium" color="white">{projectStats.pendingTasks}</Text>
-            </HStack>
-            <HStack justify="space-between">
-              <Text fontSize="sm" color="white">Completion Rate</Text>
-              <Text fontSize="sm" fontWeight="medium" color="white">{projectStats.completionRate}%</Text>
-            </HStack>
-            <HStack justify="space-between">
-              <Text fontSize="sm" color="white">Total Time Tracked</Text>
-              <Text fontSize="sm" fontWeight="medium" color="white">{formatTime(projectStats.totalTimeTracked)}</Text>
-            </HStack>
+            {project.description && (
+              <Text color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
+                {isEditing ? (
+                  <Textarea
+                    value={editData.description || project.description}
+                    onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                    placeholder="Project description"
+                    resize="vertical"
+                  />
+                ) : (
+                  project.description
+                )}
+              </Text>
+            )}
           </VStack>
+
+          {/* Permission Badge */}
+          <Badge
+            colorScheme={permission === 'editable' ? 'green' : 'gray'}
+            variant="subtle"
+            fontSize="sm"
+          >
+            {permission === 'editable' ? 'Can Edit' : 'Read Only'}
+          </Badge>
+        </HStack>
+      </Box>
+
+      {/* Project Statistics */}
+      {projectStats && (
+        <Box p={4} bg={colorMode === 'light' ? 'gray.50' : 'gray.700'} borderRadius="md">
+          <Text fontSize="lg" fontWeight="semibold" mb={3}>
+            Project Statistics
+          </Text>
+          <SimpleGrid columns={2} spacing={4}>
+            <Stat>
+              <StatLabel>Total Tasks</StatLabel>
+              <StatNumber>{projectStats.totalTasks}</StatNumber>
+            </Stat>
+            <Stat>
+              <StatLabel>Completed</StatLabel>
+              <StatNumber>{projectStats.completedTasks}</StatNumber>
+            </Stat>
+            <Stat>
+              <StatLabel>Pending</StatLabel>
+              <StatNumber>{projectStats.pendingTasks}</StatNumber>
+            </Stat>
+            <Stat>
+              <StatLabel>Completion Rate</StatLabel>
+              <StatNumber>{projectStats.completionRate}%</StatNumber>
+            </Stat>
+          </SimpleGrid>
+          {projectStats.totalTimeTracked > 0 && (
+            <Box mt={3}>
+              <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
+                Total Time Tracked: {formatTime(projectStats.totalTimeTracked)}
+              </Text>
+            </Box>
+          )}
         </Box>
       )}
 
       {/* Tasks List */}
-      {tasks && tasks.length > 0 && (
+      {tasks.length > 0 && (
         <Box>
-          <Text fontSize="sm" mb={3} color="white">
+          <Text fontSize="lg" fontWeight="semibold" mb={3}>
             Tasks ({tasks.length})
           </Text>
           <VStack spacing={2} align="stretch">
-            {tasks.map((task, index) => (
+            {tasks.map((task) => (
               <Box
-                key={task._id || index}
+                key={task._id}
                 p={3}
                 border="1px"
                 borderColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
                 borderRadius="md"
                 bg={colorMode === 'light' ? 'white' : 'gray.800'}
               >
-                <HStack justify="space-between" align="start">
-                  <VStack align="start" spacing={1} flex={1}>
-                    <Text fontSize="sm" fontWeight="medium" color="white">
+                <HStack justify="space-between">
+                  <VStack align="start" spacing={1}>
+                    <Text fontWeight="medium" textDecoration={task.completed ? 'line-through' : 'none'}>
                       {task.title}
                     </Text>
                     {task.description && (
-                      <Text fontSize="xs" color="white" noOfLines={2}>
+                      <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
                         {task.description}
                       </Text>
                     )}
-                    <HStack spacing={2}>
-                      <Badge
-                        size="sm"
-                        colorScheme={task.completed ? 'green' : 'blue'}
-                        variant="subtle"
-                      >
-                        {task.completed ? 'Completed' : 'Pending'}
-                      </Badge>
-                      {task.timeTracking?.totalTime > 0 && (
-                        <Badge size="sm" colorScheme="purple" variant="subtle">
-                          {formatTime(task.timeTracking.totalTime)}
-                        </Badge>
-                      )}
-                    </HStack>
+                    {task.dueDate && (
+                      <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                        Due: {task.dueDate}
+                      </Text>
+                    )}
                   </VStack>
+                  <HStack spacing={2}>
+                    {task.completed && (
+                      <Badge colorScheme="green" size="sm">
+                        Completed
+                      </Badge>
+                    )}
+                    {task.timeTracking?.totalTime > 0 && (
+                      <Badge colorScheme="blue" size="sm">
+                        {formatTime(task.timeTracking.totalTime)}
+                      </Badge>
+                    )}
+                  </HStack>
                 </HStack>
               </Box>
             ))}
@@ -720,7 +724,7 @@ const SharedProjectView = ({ project, isEditing, editData, setEditData, onSave, 
       )}
 
       {/* Edit Actions */}
-      {isEditing && hasEmailAccess && (
+      {isEditing && hasUsernameAccess && (
         <HStack spacing={3} justify="flex-end">
           <Button onClick={onCancel} variant="outline">
             Cancel

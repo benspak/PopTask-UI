@@ -22,6 +22,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { SearchIcon, AddIcon } from '@chakra-ui/icons';
+import LimitsDisplay from './LimitsDisplay';
 
 const SearchAndFilters = ({
   searchTerm,
@@ -34,6 +35,7 @@ const SearchAndFilters = ({
   setSortOrder,
   onCreateTask,
   selectedProject,
+  refreshLimitsTrigger = 0,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [newTask, setNewTask] = useState({
@@ -63,6 +65,7 @@ const SearchAndFilters = ({
       onClose();
     } catch (error) {
       console.error('Failed to create task:', error);
+      // Note: Error handling is done in the parent component
     }
   };
 
@@ -138,6 +141,11 @@ const SearchAndFilters = ({
               </Select>
             </FormControl>
           </HStack>
+
+          {/* Task Limits Display */}
+          <Box>
+            <LimitsDisplay type="tasks" refreshTrigger={refreshLimitsTrigger} />
+          </Box>
 
           {/* Selected Project Info */}
           {selectedProject && (

@@ -22,7 +22,7 @@ const TimeTrackingButton = ({ task, onTimeUpdate }) => {
 
   useEffect(() => {
     if (task?.timeTracking) {
-      setIsTracking(task.timeTracking.isActive);
+      setIsTracking(task.timeTracking.isRunning);
       setTotalTime(task.timeTracking.totalTime || 0);
     }
   }, [task]);
@@ -73,13 +73,13 @@ const TimeTrackingButton = ({ task, onTimeUpdate }) => {
 
   const handleStopTimer = async () => {
     try {
-      const data = await apiService.stopTaskTimer(task._id);
+      const response = await apiService.stopTaskTimer(task._id);
       setIsTracking(false);
-      setTotalTime(prev => prev + data.sessionDuration);
+      setTotalTime(prev => prev + response.data.sessionDuration);
       setElapsedTime(0);
       toast({
         title: 'Timer Stopped',
-        description: `Session completed: ${formatTime(data.sessionDuration)}`,
+        description: `Session completed: ${formatTime(response.data.sessionDuration)}`,
         status: 'success',
         duration: 3000,
       });

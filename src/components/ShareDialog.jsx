@@ -41,8 +41,8 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
   const [loading, setLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
-  const [allowedEmails, setAllowedEmails] = useState([]);
-  const [emailInput, setEmailInput] = useState('');
+  const [sharedUsernames, setSharedUsernames] = useState([]);
+  const [usernameInput, setUsernameInput] = useState('');
 
   const handleCreateShare = async () => {
     if (!item || !item._id) {
@@ -61,9 +61,9 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
 
       let response;
       if (type === 'task') {
-        response = await apiService.createTaskShareLink(item._id, allowedEmails);
+        response = await apiService.createTaskShareLink(item._id, sharedUsernames);
       } else {
-        response = await apiService.createProjectShareLink(item._id, allowedEmails);
+        response = await apiService.createProjectShareLink(item._id, sharedUsernames);
       }
 
       setShareUrl(response.data.shareUrl);
@@ -130,22 +130,41 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
     }
   };
 
+  const addUsername = () => {
+    const username = usernameInput.trim().toLowerCase();
+    if (username && !sharedUsernames.includes(username)) {
+      setSharedUsernames([...sharedUsernames, username]);
+      setUsernameInput('');
+    }
+  };
+
+  const removeUsername = (usernameToRemove) => {
+    setSharedUsernames(sharedUsernames.filter(username => username !== usernameToRemove));
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addUsername();
+    }
+  };
+
   const copyToClipboard = async () => {
     try {
-      await apiService.copyToClipboard(shareUrl);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
       toast({
-        title: 'Link copied',
-        description: 'Share URL copied to clipboard',
+        title: 'Copied!',
+        description: 'Share link copied to clipboard',
         status: 'success',
         duration: 2000,
         isClosable: true,
       });
-      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast({
-        title: 'Copy failed',
-        description: 'Failed to copy link to clipboard',
+        title: 'Error',
+        description: 'Failed to copy to clipboard',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -153,41 +172,12 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
     }
   };
 
-  const openShareUrl = () => {
+  const openShareLink = () => {
     window.open(shareUrl, '_blank');
   };
 
-  const handleClose = () => {
-    setShareUrl('');
-    setCopied(false);
-    setAllowedEmails([]);
-    setEmailInput('');
-    onClose();
-  };
-
-  const addEmail = () => {
-    const email = emailInput.trim().toLowerCase();
-    if (email && !allowedEmails.includes(email)) {
-      setAllowedEmails([...allowedEmails, email]);
-      setEmailInput('');
-    }
-  };
-
-  const removeEmail = (emailToRemove) => {
-    setAllowedEmails(allowedEmails.filter(email => email !== emailToRemove));
-  };
-
-  const handleEmailKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addEmail();
-    }
-  };
-
-  const isCurrentlyShared = item && item.isShared && item.shareToken;
-
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
@@ -196,117 +186,43 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} align="stretch">
-            {/* Item Info */}
-            <Box p={4} bg={colorMode === 'light' ? 'gray.50' : 'gray.700'} borderRadius="md">
-              <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'} mb={1}>
-                {type === 'task' ? 'Task' : 'Project'} Name
-              </Text>
-              <Text fontWeight="medium">
-                {type === 'task' ? item?.title : item?.name}
-              </Text>
-            </Box>
-
-            {/* Current Share Status */}
-            {isCurrentlyShared && (
-              <Alert status="info">
-                <AlertIcon />
-                <AlertDescription>
-                  This {type} is currently shared publicly. Anyone with the link can view it.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Share Statistics */}
-            {isCurrentlyShared && item.shareViewCount !== undefined && (
-              <Box p={4} bg={colorMode === 'light' ? 'blue.50' : 'blue.900'} borderRadius="md">
-                <Text fontSize="sm" fontWeight="medium" mb={2} color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
-                  Share Statistics
-                </Text>
-                <VStack align="start" spacing={1}>
-                  <HStack justify="space-between" w="full">
-                    <Text fontSize="xs" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
-                      Views:
-                    </Text>
-                    <Text fontSize="xs" fontWeight="medium" color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
-                      {item.shareViewCount || 0}
-                    </Text>
-                  </HStack>
-                  {item.shareCreatedAt && (
-                    <HStack justify="space-between" w="full">
-                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
-                        Created:
-                      </Text>
-                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
-                        {new Date(item.shareCreatedAt).toLocaleDateString()}
-                      </Text>
-                    </HStack>
-                  )}
-                  {item.lastViewedAt && (
-                    <HStack justify="space-between" w="full">
-                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
-                        Last viewed:
-                      </Text>
-                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
-                        {new Date(item.lastViewedAt).toLocaleDateString()}
-                      </Text>
-                    </HStack>
-                  )}
-                  {item.shareExpiresAt && (
-                    <HStack justify="space-between" w="full">
-                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
-                        Expires:
-                      </Text>
-                      <Text fontSize="xs" color={colorMode === 'light' ? 'blue.800' : 'blue.200'}>
-                        {new Date(item.shareExpiresAt).toLocaleDateString()}
-                      </Text>
-                    </HStack>
-                  )}
-                </VStack>
-              </Box>
-            )}
-
-            {/* Email Access Control */}
+            {/* Username Input */}
             <Box>
               <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
-                Grant Edit Access to Specific Users
+                Add usernames to share with
               </Text>
-              <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
-                Add email addresses to allow specific users to edit this {type} (optional)
-              </Text>
-
-              {/* Email Input */}
-              <HStack mb={3}>
+              <HStack>
                 <Input
-                  placeholder="Enter email address"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  onKeyPress={handleEmailKeyPress}
-                  disabled={loading}
+                  placeholder="Enter username"
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
                 />
-                <Button
-                  size="sm"
-                  onClick={addEmail}
-                  disabled={!emailInput.trim() || loading}
-                  leftIcon={<AddIcon />}
-                >
-                  Add
-                </Button>
+                <IconButton
+                  icon={<AddIcon />}
+                  onClick={addUsername}
+                  colorScheme="blue"
+                  aria-label="Add username"
+                />
               </HStack>
-
-              {/* Email Tags */}
-              {allowedEmails.length > 0 && (
-                <Wrap spacing={2}>
-                  {allowedEmails.map((email) => (
-                    <WrapItem key={email}>
-                      <Tag size="sm" colorScheme="blue" borderRadius="full">
-                        <TagLabel>{email}</TagLabel>
-                        <TagCloseButton onClick={() => removeEmail(email)} />
-                      </Tag>
-                    </WrapItem>
-                  ))}
-                </Wrap>
-              )}
+              <Text fontSize="xs" mt={1} color={colorMode === 'light' ? 'gray.500' : 'gray.400'}>
+                Press Enter or click the + button to add
+              </Text>
             </Box>
+
+            {/* Username Tags */}
+            {sharedUsernames.length > 0 && (
+              <Wrap spacing={2}>
+                {sharedUsernames.map((username) => (
+                  <WrapItem key={username}>
+                    <Tag size="sm" colorScheme="blue" borderRadius="full">
+                      <TagLabel>{username}</TagLabel>
+                      <TagCloseButton onClick={() => removeUsername(username)} />
+                    </Tag>
+                  </WrapItem>
+                ))}
+              </Wrap>
+            )}
 
             {/* Share URL Display */}
             {shareUrl && (
@@ -323,60 +239,63 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
                   />
                   <InputRightElement width="4.5rem">
                     <HStack spacing={1}>
-                      <Tooltip label="Open link">
+                      <Tooltip label="Copy link">
                         <IconButton
-                          icon={<ExternalLinkIcon />}
-                          onClick={openShareUrl}
+                          h="1.75rem"
                           size="sm"
-                          variant="ghost"
-                          aria-label="Open share link"
-                        />
-                      </Tooltip>
-                      <Tooltip label={copied ? 'Copied!' : 'Copy link'}>
-                        <IconButton
                           icon={copied ? <CheckIcon /> : <CopyIcon />}
                           onClick={copyToClipboard}
-                          size="sm"
-                          variant="ghost"
-                          aria-label="Copy share link"
                           colorScheme={copied ? 'green' : 'blue'}
+                        />
+                      </Tooltip>
+                      <Tooltip label="Open link">
+                        <IconButton
+                          h="1.75rem"
+                          size="sm"
+                          icon={<ExternalLinkIcon />}
+                          onClick={openShareLink}
+                          colorScheme="blue"
                         />
                       </Tooltip>
                     </HStack>
                   </InputRightElement>
                 </InputGroup>
-                <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mt={1}>
-                  Share this link with others to give them view access. Only users with their email addresses added above can edit.
-                </Text>
               </Box>
             )}
+
+            {/* Info Alert */}
+            <Alert status="info" borderRadius="md">
+              <AlertIcon />
+              <AlertDescription>
+                Only users with the specified usernames will be able to edit this {type}.
+                Anyone with the link can view it.
+              </AlertDescription>
+            </Alert>
           </VStack>
         </ModalBody>
 
         <ModalFooter>
           <HStack spacing={3}>
-            {isCurrentlyShared && (
+            {shareUrl && (
               <Button
-                onClick={handleDisableSharing}
-                colorScheme="red"
                 variant="outline"
+                onClick={handleDisableSharing}
                 isLoading={loading}
               >
                 Disable Sharing
               </Button>
             )}
-            {!shareUrl ? (
+            <Button variant="ghost" onClick={onClose}>
+              Close
+            </Button>
+            {!shareUrl && (
               <Button
-                onClick={handleCreateShare}
                 colorScheme="blue"
+                onClick={handleCreateShare}
                 isLoading={loading}
                 loadingText="Creating..."
               >
                 Create Share Link
-              </Button>
-            ) : (
-              <Button onClick={handleClose}>
-                Done
               </Button>
             )}
           </HStack>

@@ -31,8 +31,57 @@ const Changelog = () => {
 
   const changelogData = [
     {
-      version: '2.1.0',
+      version: '2.2.0',
       date: 'April 27, 2025',
+      title: 'Production-Ready Release',
+      description: 'Complete task management platform with enterprise-grade features',
+      type: 'major',
+      changes: [
+        {
+          type: 'feature',
+          items: [
+            'Complete user authentication system with JWT tokens',
+            'Email verification and password reset functionality',
+            'Project-based task organization with unlimited projects',
+            'Advanced task filtering and search capabilities',
+            'File upload system with 10MB limit and thumbnails',
+            'Task sharing with public links and user permissions',
+            'Real-time collaboration features',
+            'Progressive Web App (PWA) with offline support',
+            'Responsive design optimized for mobile and desktop',
+            'Dark theme with modern UI/UX design',
+            'User limits and upgrade prompts for monetization',
+            'Comprehensive API with rate limiting and security'
+          ]
+        },
+        {
+          type: 'improvement',
+          items: [
+            'Enhanced security with account locking and rate limiting',
+            'Improved performance with optimized database queries',
+            'Better error handling and user feedback',
+            'Streamlined authentication flow with auto-login',
+            'Enhanced mobile responsiveness and touch interactions',
+            'Optimized bundle size and loading times',
+            'Comprehensive logging and monitoring'
+          ]
+        },
+        {
+          type: 'fix',
+          items: [
+            'Fixed authentication token validation issues',
+            'Resolved file upload and download problems',
+            'Corrected task sharing and permission bugs',
+            'Fixed mobile layout and navigation issues',
+            'Resolved offline/online synchronization problems',
+            'Corrected email verification flow issues'
+          ]
+        }
+      ]
+    },
+    {
+      version: '2.1.0',
+      date: 'April 20, 2025',
       title: 'Password Reset & Enhanced Security',
       description: 'Major security improvements and user experience enhancements',
       type: 'major',
@@ -68,7 +117,7 @@ const Changelog = () => {
     },
     {
       version: '2.0.0',
-      date: 'April 20, 2025',
+      date: 'April 15, 2025',
       title: 'Task Management Overhaul',
       description: 'Complete redesign of the task management system with new features',
       type: 'major',

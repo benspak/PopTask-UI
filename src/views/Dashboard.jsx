@@ -72,6 +72,7 @@ const Dashboard = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareItem, setShareItem] = useState(null);
   const [shareType, setShareType] = useState('task');
+  const [refreshLimitsTrigger, setRefreshLimitsTrigger] = useState(0);
 
   // Hooks
   const {
@@ -204,13 +205,25 @@ const Dashboard = () => {
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create project',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      // Handle limit errors specifically
+      if (error.isLimitError) {
+        toast({
+          title: 'Project Limit Reached',
+          description: error.message || 'You have reached your project limit. Upgrade to Pro for unlimited projects.',
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to create project',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -245,6 +258,8 @@ const Dashboard = () => {
         setIsProjectDetailOpen(false);
         setIsProjectDetailModalOpen(false);
       }
+      // Refresh limits display
+      setRefreshLimitsTrigger(prev => prev + 1);
       toast({
         title: 'Success',
         description: 'Project deleted successfully',
@@ -298,6 +313,8 @@ const Dashboard = () => {
         setSelectedTask(null);
         setIsDetailOpen(false);
       }
+      // Refresh limits display
+      setRefreshLimitsTrigger(prev => prev + 1);
       toast({
         title: 'Success',
         description: 'Task deleted successfully',
@@ -328,13 +345,25 @@ const Dashboard = () => {
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create task',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      // Handle limit errors specifically
+      if (error.isLimitError) {
+        toast({
+          title: 'Task Limit Reached',
+          description: error.message || 'You have reached your task limit. Upgrade to Pro for unlimited tasks.',
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to create task',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -422,6 +451,7 @@ const Dashboard = () => {
             setSortOrder={setSortOrder}
             onCreateTask={handleCreateTask}
             selectedProject={selectedProject}
+            refreshLimitsTrigger={refreshLimitsTrigger}
           />
 
           {/* Projects Panel */}
@@ -446,6 +476,7 @@ const Dashboard = () => {
                   setSelectedProject(project);
                   setIsProjectDetailModalOpen(true);
                 }}
+                refreshLimitsTrigger={refreshLimitsTrigger}
               />
             </Box>
           )}
@@ -465,6 +496,7 @@ const Dashboard = () => {
               sortBy={sortBy}
               sortOrder={sortOrder}
               selectedProject={selectedProject}
+              refreshLimitsTrigger={refreshLimitsTrigger}
             />
           </Box>
         </Flex>

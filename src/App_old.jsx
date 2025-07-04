@@ -1321,15 +1321,25 @@ export default function TaskDashboard() {
           duration: 5000,
           isClosable: true,
         });
+      } else if (error.isLimitError) {
+        // Handle limit errors specifically
+        toast({
+          title: 'Task Limit Reached',
+          description: error.message || 'You have reached your task limit. Upgrade to Pro for unlimited tasks.',
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        });
       } else {
-      toast({
-        title: 'Error',
-        description: 'Failed to create task',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+        toast({
+          title: 'Error',
+          description: 'Failed to create task',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } finally {
       setIsCreatingTask(false);
     }
@@ -2175,7 +2185,7 @@ export default function TaskDashboard() {
                   <Box>
                     <AlertTitle>Projects Error!</AlertTitle>
                     <AlertDescription>
-                      {projectsError}. Please check if the backend server is running.
+                      {projectsError}
                     </AlertDescription>
                   </Box>
                 </Alert>
@@ -2284,7 +2294,7 @@ export default function TaskDashboard() {
                   <Box>
                     <AlertTitle>Projects Error!</AlertTitle>
                     <AlertDescription>
-                      {projectsError}. Please check if the backend server is running.
+                      {projectsError}
                     </AlertDescription>
                   </Box>
                 </Alert>

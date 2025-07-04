@@ -15,6 +15,40 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [hasAttemptedAutoLogin, setHasAttemptedAutoLogin] = useState(false);
+
+  // Development auto-login for testing
+  const autoLoginForDevelopment = async () => {
+    // Only in development mode, when not already authenticated, and auto-login hasn't been attempted yet
+    if (import.meta.env.DEV && !apiService.isAuthenticated() && !hasAttemptedAutoLogin) {
+      try {
+        console.log('🔄 Auto-login for development...');
+        const result = await apiService.login({
+          email: 'test@example.com',
+          password: 'TestPassword123!'
+        });
+
+        // Store tokens
+        if (result.token) {
+          localStorage.setItem(apiService.tokenKey, result.token);
+        }
+        if (result.refreshToken) {
+          localStorage.setItem(apiService.refreshTokenKey, result.refreshToken);
+        }
+
+        setIsAuthenticated(true);
+        setUser(result.user);
+        setHasAttemptedAutoLogin(true);
+        console.log('✅ Auto-login successful');
+        return true;
+      } catch (error) {
+        console.log('❌ Auto-login failed:', error.message);
+        setHasAttemptedAutoLogin(true);
+        return false;
+      }
+    }
+    return false;
+  };
 
   // Check authentication status on mount and when tokens change
   useEffect(() => {
@@ -27,8 +61,12 @@ export const AuthProvider = ({ children }) => {
         const hasRefreshToken = !!localStorage.getItem(apiService.refreshTokenKey);
 
         if (!hasToken && !hasRefreshToken) {
-          setIsAuthenticated(false);
-          setUser(null);
+          // Try auto-login for development only if not attempted yet
+          const autoLoginSuccess = await autoLoginForDevelopment();
+          if (!autoLoginSuccess) {
+            setIsAuthenticated(false);
+            setUser(null);
+          }
           return;
         }
 
@@ -112,7 +150,7 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('storage', handleStorageChange);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [hasAttemptedAutoLogin]);
 
   const login = async (credentials) => {
     try {
@@ -129,6 +167,7 @@ export const AuthProvider = ({ children }) => {
 
       setIsAuthenticated(true);
       setUser(result.user);
+      setHasAttemptedAutoLogin(false);
       return result;
     } catch (error) {
       throw error;
@@ -149,16 +188,18 @@ export const AuthProvider = ({ children }) => {
 
       setIsAuthenticated(true);
       setUser(result.user);
+      setHasAttemptedAutoLogin(false);
       return result;
     } catch (error) {
       throw error;
     }
   };
 
-  const logout = () => {
-    apiService.clearSession();
+  const logout = async () => {
+    await apiService.logout();
     setIsAuthenticated(false);
     setUser(null);
+    setHasAttemptedAutoLogin(false);
   };
 
   const value = {
@@ -169,6 +210,27 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
   };
+
+  // Development helper: expose login function globally for testing
+  if (import.meta.env.DEV) {
+    window.devLogin = async (email = 'test@example.com', password = 'TestPassword123!') => {
+      try {
+        console.log('🔄 Manual login for development...');
+        const result = await login({ email, password });
+        console.log('✅ Manual login successful');
+        return result;
+      } catch (error) {
+        console.error('❌ Manual login failed:', error);
+        throw error;
+      }
+    };
+
+    window.devLogout = async () => {
+      console.log('🔄 Manual logout for development...');
+      await logout();
+      console.log('✅ Manual logout successful');
+    };
+  }
 
   return (
     <AuthContext.Provider value={value}>

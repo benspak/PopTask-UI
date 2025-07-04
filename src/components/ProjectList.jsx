@@ -10,6 +10,7 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  AlertDescription,
   useColorModeValue,
   Modal,
   ModalOverlay,
@@ -28,6 +29,7 @@ import {
   Switch,
 } from '@chakra-ui/react';
 import { AddIcon, EditIcon, DeleteIcon, SettingsIcon } from '@chakra-ui/icons';
+import LimitsDisplay from './LimitsDisplay';
 
 const ProjectList = ({
   projects = [],
@@ -39,6 +41,7 @@ const ProjectList = ({
   onProjectUpdate,
   onProjectDelete,
   onProjectDetailOpen,
+  refreshLimitsTrigger = 0,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
@@ -79,13 +82,25 @@ const ProjectList = ({
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create project',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      // Handle limit errors specifically
+      if (error.isLimitError) {
+        toast({
+          title: 'Project Limit Reached',
+          description: error.message || 'You have reached your project limit. Upgrade to Pro for unlimited projects.',
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to create project',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -169,20 +184,22 @@ const ProjectList = ({
     );
   }
 
-  if (error) {
-    return (
-      <Box p={4}>
-        <Alert status="error">
-          <AlertIcon />
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
+  // Display error above the project list instead of replacing it
+  const errorAlert = error ? (
+    <Alert status="error" mb={4} borderRadius="md">
+      <AlertIcon />
+      <AlertDescription>
+        {error}
+      </AlertDescription>
+    </Alert>
+  ) : null;
 
   return (
     <>
       <VStack spacing={4} align="stretch">
+        {/* Error Alert - Display above project list */}
+        {errorAlert}
+
         {/* Header */}
         <HStack justify="space-between" align="center">
           <Text fontSize="lg" fontWeight="bold">
@@ -197,6 +214,9 @@ const ProjectList = ({
             New Project
           </Button>
         </HStack>
+
+        {/* Project Limits Display */}
+        <LimitsDisplay type="projects" refreshTrigger={refreshLimitsTrigger} />
 
         {/* Project List */}
         <VStack spacing={2} align="stretch">

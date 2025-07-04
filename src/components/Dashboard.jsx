@@ -58,6 +58,7 @@ import TaskDetailPanel from './TaskDetailPanel';
 import ProjectCreatePanel from './ProjectCreatePanel';
 import TaskCreatePanel from './TaskCreatePanel';
 import ProjectDetailPanel from './ProjectDetailPanel';
+import FeedbackModal from './FeedbackModal';
 
 export default function Dashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -70,6 +71,7 @@ export default function Dashboard() {
   const { isOpen: isMobileTaskCreateOpen, onOpen: openMobileTaskCreate, onClose: closeMobileTaskCreate } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isMobileTaskEditOpen, onOpen: openMobileTaskEdit, onClose: closeMobileTaskEdit } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isMobileTaskDetailOpen, onOpen: openMobileTaskDetail, onClose: closeMobileTaskDetail } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
   const { colorMode, toggleColorMode } = useColorMode();
   const { logout } = useAuth();
 
@@ -164,13 +166,12 @@ export default function Dashboard() {
   };
 
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
-  const [deferredPrompt, setDeferredPrompt] = React.useState(null);
-  const [showInstallPrompt, setShowInstallPrompt] = React.useState(false);
   const toast = useToast();
 
   const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
   const [shareDialogType, setShareDialogType] = React.useState(null);
   const [shareDialogItem, setShareDialogItem] = React.useState(null);
+  const [refreshLimitsTrigger, setRefreshLimitsTrigger] = React.useState(0);
 
   React.useEffect(() => {
     const path = window.location.pathname;
@@ -213,24 +214,6 @@ export default function Dashboard() {
   };
 
   React.useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallPrompt(true);
-    };
-
-    const handleAppInstalled = () => {
-      setShowInstallPrompt(false);
-      setDeferredPrompt(null);
-      toast({
-        title: 'App Installed!',
-        description: 'PopTask has been installed on your device.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    };
-
     const handleOnlineStatusChange = () => {
       setIsOnline(navigator.onLine);
       checkOnlineStatus();
@@ -257,8 +240,6 @@ export default function Dashboard() {
       });
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
     window.addEventListener('online', handleOnlineStatusChange);
     window.addEventListener('offline', handleOnlineStatusChange);
 
@@ -267,24 +248,13 @@ export default function Dashboard() {
     checkOnlineStatus();
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('online', handleOnlineStatusChange);
       window.removeEventListener('offline', handleOnlineStatusChange);
       OfflineNotifications.removeListener(handleOfflineNotification);
     };
   }, [toast]);
 
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setShowInstallPrompt(false);
-        setDeferredPrompt(null);
-      }
-    }
-  };
+
 
   const ensureThreeTags = (tags) => {
     if (!tags || !Array.isArray(tags)) return ['', '', ''];
@@ -600,13 +570,25 @@ export default function Dashboard() {
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update task:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update task. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      // Handle limit errors specifically
+      if (error.isLimitError) {
+        toast({
+          title: 'Task Limit Reached',
+          description: error.message || 'You have reached your task limit. Upgrade to Pro for unlimited tasks.',
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to update task. Please try again.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -673,6 +655,9 @@ export default function Dashboard() {
 
     try {
       await deleteTask(taskToDelete._id);
+
+      // Refresh limits display
+      setRefreshLimitsTrigger(prev => prev + 1);
 
       toast({
         title: 'Task Deleted',
@@ -789,13 +774,25 @@ export default function Dashboard() {
       setEditingProject(null);
     } catch (error) {
       console.error('Failed to update project:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update project. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      // Handle limit errors specifically
+      if (error.isLimitError) {
+        toast({
+          title: 'Project Limit Reached',
+          description: error.message || 'You have reached your project limit. Upgrade to Pro for unlimited projects.',
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to update project. Please try again.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -807,6 +804,9 @@ export default function Dashboard() {
 
     try {
       await deleteProject(projectToDelete._id);
+
+      // Refresh limits display
+      setRefreshLimitsTrigger(prev => prev + 1);
 
       toast({
         title: 'Project Deleted',
@@ -1093,30 +1093,8 @@ export default function Dashboard() {
 
   return (
     <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
-    {showInstallPrompt && (
-      <Alert status="info" variant="solid" position="fixed" top={0} left={0} right={0} zIndex={1000}>
-        <AlertIcon />
-        <Box flex="1">
-          <AlertTitle>Install PopTask</AlertTitle>
-          <AlertDescription>
-            Install PopTask for a better experience with offline access.
-          </AlertDescription>
-        </Box>
-        <Button colorScheme="blue" size="sm" onClick={handleInstallClick}>
-          Install
-        </Button>
-        <IconButton
-          icon={<CloseIcon />}
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowInstallPrompt(false)}
-          aria-label="Close"
-        />
-      </Alert>
-    )}
-
     {!isOnline && (
-      <Alert status="warning" variant="solid" position="fixed" top={showInstallPrompt ? 60 : 0} left={0} right={0} zIndex={999}>
+      <Alert status="warning" variant="solid" position="fixed" top={0} left={0} right={0} zIndex={999}>
         <AlertIcon />
         <Box flex="1">
           <AlertTitle>Offline Mode</AlertTitle>
@@ -1190,6 +1168,7 @@ export default function Dashboard() {
             setIsProjectDetailModalOpen(true);
           }}
           toggleCenter={toggleCenter}
+          refreshLimitsTrigger={refreshLimitsTrigger}
         />
 
         <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
@@ -1222,13 +1201,13 @@ export default function Dashboard() {
           isSidebarOpen={isSidebarOpen}
           isCenterOpen={isCenterOpen}
           isDetailOpen={isDetailOpen}
-          isFooterOpen={isFooterOpen}
+          isFooterOpen={isFeedbackModalOpen}
           selectedTask={selectedTask}
           toggleSidebar={toggleSidebar}
           toggleCenter={toggleCenter}
           handleAddTask={handleAddTask}
           toggleDetail={toggleDetail}
-          toggleFooter={toggleFooter}
+          toggleFooter={openFeedbackModal}
           handleMobileTaskEdit={handleMobileTaskEdit}
           isMobileTaskEditOpen={isMobileTaskEditOpen}
         />
@@ -1394,11 +1373,9 @@ export default function Dashboard() {
       </AlertDialogOverlay>
     </AlertDialog>
 
-    <FooterPromptPanel
-      isOpen={isFooterOpen}
-      onClose={toggleFooter}
-      onAddTask={handleAddTask}
-      onAddProject={handleAddProject}
+    <FeedbackModal
+      isOpen={isFeedbackModalOpen}
+      onClose={closeFeedbackModal}
     />
 
     {/* Project Detail Modal */}

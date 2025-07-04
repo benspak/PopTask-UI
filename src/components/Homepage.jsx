@@ -180,7 +180,7 @@ const Homepage = () => {
           </Heading>
           <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
             PopTask is the simplest way to organize tasks and get more done.
-            Teams save 10+ hours per week with our streamlined approach.
+            Teams save 5+ hours per week with our streamlined approach.
           </Text>
           <HStack spacing={4} pt={4}>
             <Button
@@ -275,7 +275,7 @@ const Homepage = () => {
                     Team Size
                   </Text>
                   <Text fontSize="3xl" color={accentColor} fontWeight="bold">
-                    10 people
+                    5 people
                   </Text>
                 </VStack>
                 <VStack spacing={4}>
@@ -283,7 +283,7 @@ const Homepage = () => {
                     Time Saved
                   </Text>
                   <Text fontSize="3xl" color="green.500" fontWeight="bold">
-                    10 hrs/week
+                    5 hrs/week
                   </Text>
                 </VStack>
                 <VStack spacing={4}>
@@ -291,12 +291,12 @@ const Homepage = () => {
                     Annual Savings
                   </Text>
                   <Text fontSize="3xl" color="green.500" fontWeight="bold">
-                    $156,000
+                    $78,000
                   </Text>
                 </VStack>
               </SimpleGrid>
               <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center" mt={6}>
-                Based on average hourly rate of $30 and 10 hours saved per week per employee
+                Based on average hourly rate of $30 and 5 hours saved per week per employee
               </Text>
             </Box>
           </VStack>
@@ -348,6 +348,10 @@ const Homepage = () => {
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
                         <Text fontSize="sm" color={textColor}>Up to 10 tasks</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Up to 3 projects</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
@@ -413,7 +417,7 @@ const Homepage = () => {
                       per month
                     </Text>
                     <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} fontWeight="medium">
-                      for teams of 10 or less
+                      for teams of 5 or less
                     </Text>
                   </VStack>
 
@@ -448,7 +452,7 @@ const Homepage = () => {
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Up to 10 team members</Text>
+                        <Text fontSize="sm" color={textColor}>Up to 5 team members</Text>
                       </HStack>
                     </VStack>
                   </VStack>

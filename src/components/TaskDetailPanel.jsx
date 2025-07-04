@@ -140,13 +140,25 @@ const TaskDetailPanel = ({
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update task',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      // Handle limit errors specifically
+      if (error.isLimitError) {
+        toast({
+          title: 'Task Limit Reached',
+          description: error.message || 'You have reached your task limit. Upgrade to Pro for unlimited tasks.',
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+          position: 'top',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to update task',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 

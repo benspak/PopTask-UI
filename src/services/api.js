@@ -171,9 +171,19 @@ class ApiService {
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
-        throw new Error(data.message || data.error || `Server error: ${response.status}`);
+
+        // Create a custom error object that preserves the backend error details
+        const error = new Error(data.message || data.error || `Server error: ${response.status}`);
+        error.status = response.status;
+        error.errorType = data.error;
+        error.message = data.message || data.error || `Server error: ${response.status}`;
+        error.isLimitError = data.error === 'Task limit reached' || data.error === 'Project limit reached';
+
+        throw error;
       } else {
-        throw new Error(`Server error: ${response.status}`);
+        const error = new Error(`Server error: ${response.status}`);
+        error.status = response.status;
+        throw error;
       }
     }
 
@@ -386,10 +396,10 @@ class ApiService {
   }
 
   // Share methods
-  async createTaskShareLink(taskId, allowedEmails = []) {
+  async createTaskShareLink(taskId, sharedUsernames = []) {
     return await this.request(`/tasks/${taskId}/share`, {
       method: 'POST',
-      body: JSON.stringify({ allowedEmails }),
+      body: JSON.stringify({ sharedUsernames }),
     });
   }
 
@@ -410,10 +420,10 @@ class ApiService {
     });
   }
 
-  async createProjectShareLink(projectId, allowedEmails = []) {
+  async createProjectShareLink(projectId, sharedUsernames = []) {
     return await this.request(`/projects/${projectId}/share`, {
       method: 'POST',
-      body: JSON.stringify({ allowedEmails }),
+      body: JSON.stringify({ sharedUsernames }),
     });
   }
 
@@ -458,6 +468,20 @@ class ApiService {
     });
   }
 
+  // Get task limits for current user
+  async getTaskLimits() {
+    return await this.request('/tasks/limits', {
+      method: 'GET',
+    });
+  }
+
+  // Get project limits for current user
+  async getProjectLimits() {
+    return await this.request('/projects/limits', {
+      method: 'GET',
+    });
+  }
+
   // Utility method to copy share URL to clipboard
   async copyToClipboard(text) {
     try {
@@ -473,6 +497,14 @@ class ApiService {
       document.body.removeChild(textArea);
       return true;
     }
+  }
+
+  // Feedback methods
+  async sendFeedback(feedbackData) {
+    return await this.request('/feedback', {
+      method: 'POST',
+      body: JSON.stringify(feedbackData),
+    });
   }
 }
 

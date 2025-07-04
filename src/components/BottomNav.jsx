@@ -87,16 +87,22 @@ export default function BottomNav({
             _hover={{ bg: 'gray.700' }}
           />
         )}
-        <IconButton
-          icon={<ChatIcon />}
-          aria-label="Toggle Footer Panel"
-          onClick={toggleFooter}
-          size={{ base: "md", md: "sm" }}
-          colorScheme={isFooterOpen ? "blue" : "gray"}
-          variant="solid"
-          borderRadius="full"
-          _hover={{ bg: 'gray.700' }}
-        />
+        <Tooltip
+          label="Send Feedback"
+          placement="top"
+          hasArrow
+        >
+          <IconButton
+            icon={<ChatIcon />}
+            aria-label="Send Feedback"
+            onClick={toggleFooter}
+            size={{ base: "md", md: "sm" }}
+            colorScheme={isFooterOpen ? "blue" : "gray"}
+            variant="solid"
+            borderRadius="full"
+            _hover={{ bg: 'gray.700' }}
+          />
+        </Tooltip>
       </Flex>
     </Flex>
   );

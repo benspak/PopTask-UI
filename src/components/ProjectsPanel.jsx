@@ -23,6 +23,7 @@ import {
   LinkIcon,
   SettingsIcon,
 } from '@chakra-ui/icons';
+import LimitsDisplay from './LimitsDisplay';
 
 const ProjectsPanel = ({
   isCenterOpen,
@@ -36,6 +37,7 @@ const ProjectsPanel = ({
   handleShareProject,
   handleProjectDetailOpen,
   toggleCenter,
+  refreshLimitsTrigger = 0,
 }) => (
   <>
     {/* Projects Section - Mobile pop-over */}
@@ -65,6 +67,11 @@ const ProjectsPanel = ({
             _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
           />
         </Flex>
+
+        {/* Project Limits Display */}
+        <Box mb={4}>
+          <LimitsDisplay type="projects" />
+        </Box>
         {projectsLoading ? (
           <Flex justify="center" align="center" p={4}>
             <Spinner size="sm" color="blue.500" />
@@ -189,20 +196,29 @@ const ProjectsPanel = ({
     <Collapse in={isCenterOpen} animateOpacity>
       <Box mb={2} display={{ base: 'none', md: 'block' }} p={8}>
         <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
-        {projectsLoading ? (
-          <Flex justify="center" align="center" p={4}>
-            <Spinner size="sm" color="blue.500" />
-          </Flex>
-        ) : projectsError ? (
+
+        {/* Project Limits Display */}
+        <Box mb={3}>
+          <LimitsDisplay type="projects" refreshTrigger={refreshLimitsTrigger} />
+        </Box>
+
+        {/* Error Alert - Display above project list */}
+        {projectsError && (
           <Alert status="error" mb={4}>
             <AlertIcon />
             <Box>
               <AlertTitle>Projects Error!</AlertTitle>
               <AlertDescription>
-                {projectsError}. Please check if the backend server is running.
+                {projectsError}
               </AlertDescription>
             </Box>
           </Alert>
+        )}
+
+        {projectsLoading ? (
+          <Flex justify="center" align="center" p={4}>
+            <Spinner size="sm" color="blue.500" />
+          </Flex>
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={3}>
             {projects.map((project) => (

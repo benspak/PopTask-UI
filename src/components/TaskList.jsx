@@ -10,6 +10,7 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  AlertDescription,
   useColorModeValue,
   Flex,
   Checkbox,
@@ -20,6 +21,7 @@ import {
   LinkIcon,
   AddIcon
 } from '@chakra-ui/icons';
+import LimitsDisplay from './LimitsDisplay';
 
 const TaskList = ({
   tasks = [],
@@ -43,6 +45,7 @@ const TaskList = ({
   onClearDayFilter,
   onClearProjectFilter,
   onClearTagFilter,
+  refreshLimitsTrigger = 0,
 }) => {
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -158,75 +161,85 @@ const TaskList = ({
     );
   }
 
-  if (error) {
-    return (
-      <Box p={4}>
-        <Alert status="error">
-          <AlertIcon />
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
+  // Display error above the task list instead of replacing it
+  const errorAlert = error ? (
+    <Alert status="error" mb={4} borderRadius="md">
+      <AlertIcon />
+      <AlertDescription>
+        {error}
+      </AlertDescription>
+    </Alert>
+  ) : null;
 
   if (filteredAndSortedTasks.length === 0) {
     return (
-      <Box p={8} textAlign="center">
-        <Text color="gray.500" fontSize="lg">
-          {isFilteredByDay
-            ? `No tasks on ${selectedDay}s`
-            : selectedProject
-            ? `No tasks in project "${selectedProject?.name || 'Unknown'}"`
-            : selectedTag
-            ? `No tasks with tag "${selectedTag}"`
-            : searchTerm || statusFilter !== 'all'
-            ? 'No tasks match your filters'
-            : 'No tasks yet'}
-        </Text>
-        {isFilteredByDay && (
-          <Button
-            mt={4}
-            size="sm"
-            colorScheme="blue"
-            variant="outline"
-            onClick={onClearDayFilter}
-          >
-            Show All Tasks
-          </Button>
-        )}
-        {selectedProject && !isFilteredByDay && (
-          <Button
-            mt={4}
-            size="sm"
-            colorScheme="green"
-            variant="outline"
-            onClick={onClearProjectFilter}
-          >
-            Show All Tasks
-          </Button>
-        )}
-        {selectedTag && !isFilteredByDay && !selectedProject && (
-          <Button
-            mt={4}
-            size="sm"
-            colorScheme="purple"
-            variant="outline"
-            onClick={onClearTagFilter}
-          >
-            Show All Tasks
-          </Button>
-        )}
-        {!selectedProject && !isFilteredByDay && !selectedTag && (
-          <Text color="gray.400" fontSize="sm" mt={2}>
-            Select a project to see its tasks
+      <Box p={4}>
+        {errorAlert}
+        <Box p={8} textAlign="center">
+          <Text color="gray.500" fontSize="lg">
+            {isFilteredByDay
+              ? `No tasks on ${selectedDay}s`
+              : selectedProject
+              ? `No tasks in project "${selectedProject?.name || 'Unknown'}"`
+              : selectedTag
+              ? `No tasks with tag "${selectedTag}"`
+              : searchTerm || statusFilter !== 'all'
+              ? 'No tasks match your filters'
+              : 'No tasks yet'}
           </Text>
-        )}
+          {isFilteredByDay && (
+            <Button
+              mt={4}
+              size="sm"
+              colorScheme="blue"
+              variant="outline"
+              onClick={onClearDayFilter}
+            >
+              Show All Tasks
+            </Button>
+          )}
+          {selectedProject && !isFilteredByDay && (
+            <Button
+              mt={4}
+              size="sm"
+              colorScheme="green"
+              variant="outline"
+              onClick={onClearProjectFilter}
+            >
+              Show All Tasks
+            </Button>
+          )}
+          {selectedTag && !isFilteredByDay && !selectedProject && (
+            <Button
+              mt={4}
+              size="sm"
+              colorScheme="purple"
+              variant="outline"
+              onClick={onClearTagFilter}
+            >
+              Show All Tasks
+            </Button>
+          )}
+          {!selectedProject && !isFilteredByDay && !selectedTag && (
+            <Text color="gray.400" fontSize="sm" mt={2}>
+              Select a project to see its tasks
+            </Text>
+          )}
+        </Box>
       </Box>
     );
   }
 
     return (
     <Box h="full" overflowY="auto">
+      {/* Error Alert - Display above task list */}
+      {errorAlert}
+
+      {/* Task Limits Display */}
+      <Box p={4} pb={2}>
+        <LimitsDisplay type="tasks" refreshTrigger={refreshLimitsTrigger} />
+      </Box>
+
       {/* Day Filter Indicator */}
       {isFilteredByDay && (
         <Box mb={4} p={3} bg="blue.50" borderRadius="md" border="1px" borderColor="blue.200">
@@ -390,7 +403,7 @@ const TaskList = ({
                           {formatTime(task.timeTracking.totalTime)}
                         </Badge>
                       )}
-                      {task.timeTracking?.isActive && (
+                      {task.timeTracking?.isRunning && (
                         <Badge colorScheme="green" variant="solid" fontSize="xs">
                           Live
                         </Badge>
