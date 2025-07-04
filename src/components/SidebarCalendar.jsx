@@ -61,7 +61,7 @@ const SidebarCalendar = ({
         <Heading size="md" mb={4} display={{ base: 'none', md: 'block' }}>Workload</Heading>
         <VStack align="start" spacing={4}>
           <Box w="full">
-            <Text fontSize="sm" mb={1} color="gray.400">This Week</Text>
+            <Text fontSize="sm" mb={1} color="gray.400">Days</Text>
             <VStack align="stretch" spacing={1} w="full">
               {Object.keys(dayTasks).map((day) => (
                 <Box key={day} w="full">
@@ -85,42 +85,50 @@ const SidebarCalendar = ({
                   </Flex>
                   <Collapse in={expandedDays[day]} animateOpacity>
                     <VStack align="start" spacing={1} mt={1} ml={4} w="full">
-                      {dayTasks[day].map((task, index) => (
-                        <Box key={index} w="full">
-                          <Flex align="center" w="full">
-                            <Checkbox
-                              isChecked={task.completed}
-                              onChange={() => toggleTaskCompleted(task.title, 'week')}
-                              colorScheme="green"
-                              size="sm"
-                              mr={2}
-                            />
+                      {dayTasks[day].length > 0 ? (
+                        dayTasks[day].map((task, index) => (
+                          <Box key={index} w="full">
+                            <Flex align="center" w="full">
+                              <Checkbox
+                                isChecked={task.completed}
+                                onChange={() => toggleTaskCompleted(task.title, 'week')}
+                                colorScheme="green"
+                                size="sm"
+                                mr={2}
+                              />
+                              <Text
+                                fontSize="sm"
+                                color={task.completed ? "gray.500" : "gray.300"}
+                                cursor="pointer"
+                                p={1}
+                                flex={1}
+                                _hover={{ color: 'white' }}
+                                onClick={() => handleWeeklyTaskClick(task)}
+                                textDecoration={task.completed ? "line-through" : "none"}
+                              >
+                                {task.title}
+                              </Text>
+                              {task.fileAttachments && task.fileAttachments.length > 0 && (
+                                renderFileAttachmentIndicator(task.fileAttachments)
+                              )}
+                            </Flex>
                             <Text
-                              fontSize="sm"
-                              color={task.completed ? "gray.500" : "gray.300"}
-                              cursor="pointer"
-                              p={1}
-                              flex={1}
-                              _hover={{ color: 'white' }}
-                              onClick={() => handleWeeklyTaskClick(task)}
-                              textDecoration={task.completed ? "line-through" : "none"}
+                              fontSize="xs"
+                              color="gray.500"
+                              ml={6}
+                              mb={1}
                             >
-                              {task.title}
+                              Due: {task.dueDate}
                             </Text>
-                            {task.fileAttachments && task.fileAttachments.length > 0 && (
-                              renderFileAttachmentIndicator(task.fileAttachments)
-                            )}
-                          </Flex>
-                          <Text
-                            fontSize="xs"
-                            color="gray.500"
-                            ml={6}
-                            mb={1}
-                          >
-                            Due: {task.dueDate}
+                          </Box>
+                        ))
+                      ) : (
+                        <Box p={2} w="full">
+                          <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                            No Tasks This Day
                           </Text>
                         </Box>
-                      ))}
+                      )}
                     </VStack>
                   </Collapse>
                 </Box>

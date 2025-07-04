@@ -1,7 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
 import { registerSW } from 'virtual:pwa-register';
+import { AuthProvider } from './contexts/AuthContext';
 import App from './App.jsx';
 
 // Create theme with dark mode as default
@@ -31,8 +33,8 @@ if (import.meta.env.DEV) {
       });
     }
 
-    // Clear localStorage and sessionStorage
-    localStorage.clear();
+    // Note: Removed localStorage.clear() to preserve authentication tokens
+    // Only clear sessionStorage for development
     sessionStorage.clear();
   }
 }
@@ -55,10 +57,14 @@ const updateSW = registerSW({
 });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  <>
     <ColorModeScript initialColorMode="dark" />
     <ChakraProvider theme={theme}>
-      <App />
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
     </ChakraProvider>
-  </React.StrictMode>
+  </>
 );

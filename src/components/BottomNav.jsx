@@ -13,7 +13,9 @@ export default function BottomNav({
   toggleCenter,
   handleAddTask,
   toggleDetail,
-  toggleFooter
+  toggleFooter,
+  handleMobileTaskEdit,
+  isMobileTaskEditOpen
 }) {
   return (
     <Flex
@@ -77,9 +79,9 @@ export default function BottomNav({
           <IconButton
             icon={<EditIcon />}
             aria-label="Toggle Detail Panel"
-            onClick={toggleDetail}
+            onClick={handleMobileTaskEdit || toggleDetail}
             size={{ base: "md", md: "sm" }}
-            colorScheme={isDetailOpen ? "blue" : "gray"}
+            colorScheme={(isDetailOpen || isMobileTaskEditOpen) ? "blue" : "gray"}
             variant="solid"
             borderRadius="full"
             _hover={{ bg: 'gray.700' }}

@@ -1,0 +1,1400 @@
+import React from 'react';
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Input,
+  Textarea,
+  Select,
+  VStack,
+  HStack,
+  IconButton,
+  useColorMode,
+  useToast,
+  Collapse,
+  Spinner,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Badge,
+  Divider,
+  Image,
+  Link,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure,
+  useBreakpointValue,
+  Checkbox,
+  Tag,
+  SimpleGrid,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Avatar,
+  Tooltip,
+} from '@chakra-ui/react';
+import { ChevronDownIcon, ChevronUpIcon, AddIcon, EditIcon, ChatIcon, DownloadIcon, DeleteIcon, WarningIcon, CalendarIcon, StarIcon, CheckCircleIcon, SunIcon, MoonIcon, InfoIcon, SettingsIcon, AttachmentIcon, CloseIcon, HamburgerIcon, LinkIcon } from '@chakra-ui/icons';
+import { useAuth } from '../contexts/AuthContext';
+import { useTasks } from '../hooks/useTasks';
+import { useProjects } from '../hooks/useProjects';
+import apiService, { OfflineNotifications } from '../services/api';
+import SharedView from './SharedView';
+import ShareDialog from './ShareDialog';
+import BottomNav from './BottomNav';
+import MobileBackdropOverlay from './MobileBackdropOverlay';
+import FooterPromptPanel from './FooterPromptPanel';
+import TaskList from './TaskList';
+import ProjectsPanel from './ProjectsPanel';
+import SidebarCalendar from './SidebarCalendar';
+import TaskDetailPanel from './TaskDetailPanel';
+import ProjectCreatePanel from './ProjectCreatePanel';
+import TaskCreatePanel from './TaskCreatePanel';
+
+export default function Dashboard() {
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const { isOpen: isSidebarOpen, onToggle: toggleSidebar } = useDisclosure({ defaultIsOpen: !isMobile });
+  const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: !isMobile });
+  const { isOpen: isProjectCreateOpen, onOpen: openProjectCreate, onClose: closeProjectCreate } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isTaskCreateOpen, onOpen: openTaskCreate, onClose: closeTaskCreate } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isMobileTaskCreateOpen, onOpen: openMobileTaskCreate, onClose: closeMobileTaskCreate } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isMobileTaskEditOpen, onOpen: openMobileTaskEdit, onClose: closeMobileTaskEdit } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isMobileTaskDetailOpen, onOpen: openMobileTaskDetail, onClose: closeMobileTaskDetail } = useDisclosure({ defaultIsOpen: false });
+  const { colorMode, toggleColorMode } = useColorMode();
+  const { logout } = useAuth();
+
+  const {
+    tasks: backendTasks,
+    loading: tasksLoading,
+    error: tasksError,
+    isOffline: tasksOffline,
+    loadTasks,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleTaskCompletion,
+    syncOfflineData
+  } = useTasks();
+
+  const {
+    projects,
+    loading: projectsLoading,
+    error: projectsError,
+    isOffline: projectsOffline,
+    loadProjects,
+    createProject,
+    updateProject,
+    deleteProject,
+  } = useProjects();
+
+  const [allBackendTasks, setAllBackendTasks] = React.useState([]);
+
+  const [sharedContent, setSharedContent] = React.useState(null);
+
+  // Calendar state
+  const [expandedDays, setExpandedDays] = React.useState({});
+
+  React.useEffect(() => {
+    if (!sharedContent) {
+      loadTasks();
+      loadProjects();
+    }
+  }, [loadTasks, loadProjects, sharedContent]);
+
+  React.useEffect(() => {
+    if (!sharedContent) {
+      console.log('🔍 DEBUG: Projects loaded:', Array.isArray(projects) ? projects.length : 0);
+      console.log('🔍 DEBUG: Online status:', navigator.onLine);
+    }
+  }, [projects, sharedContent]);
+
+  React.useEffect(() => {
+    if (!sharedContent) {
+      setAllBackendTasks(Array.isArray(backendTasks) ? backendTasks : []);
+    }
+  }, [backendTasks, sharedContent]);
+
+  const transformBackendTasksToLocalFormat = React.useCallback(() => {
+    if (!Array.isArray(backendTasks) || backendTasks.length === 0) return {};
+
+    const transformed = {};
+    (Array.isArray(backendTasks) ? backendTasks : []).forEach(task => {
+      transformed[task.title] = {
+        description: task.description,
+        expanded: false,
+        dueDate: task.dueDate,
+        project: task.project,
+        tags: task.tags,
+        completed: task.completed,
+        _id: task._id,
+        fileAttachments: task.fileAttachments || []
+      };
+    });
+    return transformed;
+  }, [backendTasks]);
+
+  const [localTaskData, setLocalTaskData] = React.useState({});
+
+  React.useEffect(() => {
+    setLocalTaskData(transformBackendTasksToLocalFormat());
+  }, [transformBackendTasksToLocalFormat]);
+
+  const taskData = localTaskData;
+
+  const checkOnlineStatus = async () => {
+    try {
+      const isCurrentlyOnline = await apiService.checkServerConnection();
+      setIsOnline(isCurrentlyOnline);
+    } catch (error) {
+      console.error('Failed to check online status:', error);
+      setIsOnline(false);
+    }
+  };
+
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+  const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = React.useState(false);
+  const toast = useToast();
+
+  const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
+  const [shareDialogType, setShareDialogType] = React.useState(null);
+  const [shareDialogItem, setShareDialogItem] = React.useState(null);
+
+  React.useEffect(() => {
+    const path = window.location.pathname;
+    const sharedMatch = path.match(/^\/shared\/(task|project)\/([a-f0-9]{32})$/);
+
+    if (sharedMatch) {
+      const [, type, token] = sharedMatch;
+      setSharedContent({ type, token });
+    } else {
+      setSharedContent(null);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const sharedMatch = path.match(/^\/shared\/(task|project)\/([a-f0-9]{32})$/);
+
+      if (sharedMatch) {
+        const [, type, token] = sharedMatch;
+        setSharedContent({ type, token });
+      } else {
+        setSharedContent(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToShared = (type, token) => {
+    const path = `/shared/${type}/${token}`;
+    window.history.pushState({}, '', path);
+    setSharedContent({ type, token });
+  };
+
+  const navigateToMain = () => {
+    window.history.pushState({}, '', '/dashboard');
+    setSharedContent(null);
+  };
+
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallPrompt(true);
+    };
+
+    const handleAppInstalled = () => {
+      setShowInstallPrompt(false);
+      setDeferredPrompt(null);
+      toast({
+        title: 'App Installed!',
+        description: 'PopTask has been installed on your device.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    };
+
+    const handleOnlineStatusChange = () => {
+      setIsOnline(navigator.onLine);
+      checkOnlineStatus();
+    };
+
+    const handleOfflineNotification = (type, data) => {
+      const messages = {
+        'task-created': 'Task created offline. Will sync when online.',
+        'task-updated': 'Task updated offline. Will sync when online.',
+        'task-deleted': 'Task deleted offline. Will sync when online.',
+        'project-created': 'Project created offline. Will sync when online.',
+        'project-updated': 'Project updated offline. Will sync when online.',
+        'project-deleted': 'Project deleted offline. Will sync when online.',
+      };
+
+      const message = messages[type] || 'Action performed offline. Will sync when online.';
+
+      toast({
+        title: 'Offline Mode',
+        description: message,
+        status: 'info',
+        duration: 4000,
+        isClosable: true,
+      });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('online', handleOnlineStatusChange);
+    window.addEventListener('offline', handleOnlineStatusChange);
+
+    OfflineNotifications.addListener(handleOfflineNotification);
+
+    checkOnlineStatus();
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('online', handleOnlineStatusChange);
+      window.removeEventListener('offline', handleOnlineStatusChange);
+      OfflineNotifications.removeListener(handleOfflineNotification);
+    };
+  }, [toast]);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setShowInstallPrompt(false);
+        setDeferredPrompt(null);
+      }
+    }
+  };
+
+  const ensureThreeTags = (tags) => {
+    if (!tags || !Array.isArray(tags)) return ['', '', ''];
+
+    const paddedTags = [...tags];
+    while (paddedTags.length < 3) {
+      paddedTags.push('');
+    }
+    return paddedTags.slice(0, 3);
+  };
+
+  const toMST = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    return new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
+  };
+
+  const getAllTasksForSearch = () => {
+    const allTasks = [];
+
+    if (Array.isArray(backendTasks)) {
+      backendTasks.forEach(task => {
+        allTasks.push({
+          ...task,
+          source: 'backend',
+          searchText: `${task.title} ${task.description} ${task.tags?.join(' ') || ''} ${task.project || ''}`.toLowerCase()
+        });
+      });
+    }
+
+    return allTasks;
+  };
+
+  const [selectedDays, setSelectedDays] = React.useState(new Set());
+  const [calendarTasks, setCalendarTasks] = React.useState({});
+
+  const toggleDay = (day) => {
+    const newSelectedDays = new Set(selectedDays);
+    if (newSelectedDays.has(day)) {
+      newSelectedDays.delete(day);
+    } else {
+      newSelectedDays.add(day);
+    }
+    setSelectedDays(newSelectedDays);
+  };
+
+  React.useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape') {
+        if (isDetailOpen) {
+          toggleDetail();
+        }
+        if (isFooterOpen) {
+          toggleFooter();
+        }
+        if (isSidebarOpen && isMobile) {
+          toggleSidebar();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    return () => document.removeEventListener('keydown', handleEscKey);
+  }, [isDetailOpen, isFooterOpen, isSidebarOpen, isMobile, toggleDetail, toggleFooter, toggleSidebar]);
+
+  const [selectedTask, setSelectedTask] = React.useState(null);
+  const [isEditing, setIsEditing] = React.useState(false);
+
+  const handleTaskClick = (taskName) => {
+    const task = taskData[taskName];
+    if (task) {
+      setSelectedTask({
+        title: taskName,
+        ...task
+      });
+      setIsEditing(false);
+      if (!isDetailOpen) {
+        toggleDetail();
+      }
+    }
+  };
+
+  const handleTaskSelect = (task) => {
+    setSelectedTask(task);
+    setIsEditing(false);
+    if (isMobile) {
+      openMobileTaskDetail();
+    } else {
+      if (!isDetailOpen) {
+        toggleDetail();
+      }
+    }
+  };
+
+  const handleWeeklyTaskClick = (task) => {
+    setSelectedTask({
+      title: task.title,
+      description: task.description,
+      expanded: false,
+      dueDate: task.dueDate,
+      project: task.project,
+      tags: task.tags,
+      completed: task.completed,
+      _id: task._id,
+      fileAttachments: task.fileAttachments || []
+    });
+    setIsEditing(false);
+    if (isMobile) {
+      openMobileTaskDetail();
+    } else {
+      if (!isDetailOpen) {
+        toggleDetail();
+      }
+    }
+  };
+
+  const handleFilteredTaskClick = (task) => {
+    setSelectedTask({
+      title: task.title,
+      description: task.description,
+      expanded: false,
+      dueDate: task.dueDate,
+      project: task.project,
+      tags: task.tags,
+      completed: task.completed,
+      _id: task._id,
+      fileAttachments: task.fileAttachments || []
+    });
+    setIsEditing(false);
+    if (isMobile) {
+      openMobileTaskDetail();
+    } else {
+      if (!isDetailOpen) {
+        toggleDetail();
+      }
+    }
+  };
+
+  // Utility function to get day of week without timezone issues
+  const getDayOfWeek = (dateString) => {
+    if (!dateString) return '';
+    // Split the date string and take only the date part (YYYY-MM-DD)
+    const dateOnly = dateString.split('T')[0];
+    const [year, month, day] = dateOnly.split('-');
+    // Create date in local timezone by using the date components
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toLocaleDateString('en-US', { weekday: 'long' });
+  };
+
+  const handleDayClick = (day) => {
+    // Set day filtering state
+    setIsFilteredByDay(true);
+    setSelectedDay(day);
+
+    // Clear other filters
+    setSelectedProject(null);
+    setSelectedTag(null);
+
+    // Filter tasks by the selected day of the week
+    const filteredTasks = Array.isArray(backendTasks) ? backendTasks.filter(task => {
+      if (!task.dueDate) return false;
+      const taskDayOfWeek = getDayOfWeek(task.dueDate);
+      return taskDayOfWeek === day;
+    }) : [];
+
+    // Set the filtered tasks to be displayed in the main task list
+    setFilteredTasks(filteredTasks);
+
+    // If there are tasks for this day, select the first one and open detail panel
+    if (filteredTasks.length > 0) {
+      setSelectedTask(filteredTasks[0]);
+      if (isMobile) {
+        openMobileTaskDetail();
+      } else {
+        if (!isDetailOpen) {
+          toggleDetail();
+        }
+      }
+    } else {
+      // Clear selected task if no tasks for this day
+      setSelectedTask(null);
+      if (isDetailOpen) {
+        toggleDetail();
+      }
+    }
+  };
+
+    // Calendar helper functions
+  const dayTasks = () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const tasksByDay = {};
+
+    days.forEach(day => {
+      tasksByDay[day] = Array.isArray(backendTasks) ? backendTasks.filter(task => {
+        if (!task.dueDate) return false;
+        const taskDayOfWeek = getDayOfWeek(task.dueDate);
+        return taskDayOfWeek === day;
+      }) : [];
+    });
+
+    return tasksByDay;
+  };
+
+  const [selectedProject, setSelectedProject] = React.useState(null);
+  const [filteredTasks, setFilteredTasks] = React.useState([]);
+  const [isFilteredByDay, setIsFilteredByDay] = React.useState(false);
+  const [selectedDay, setSelectedDay] = React.useState(null);
+
+  const handleProjectClick = (project) => {
+    setSelectedProject(project);
+    setIsFilteredByDay(false);
+    setSelectedDay(null);
+
+    const projectTasks = Array.isArray(backendTasks) ? backendTasks.filter(task =>
+      task.project === project.name
+    ) : [];
+
+    setFilteredTasks(projectTasks);
+
+    if (!isCenterOpen) {
+      toggleCenter();
+    }
+  };
+
+    const handleProjectFilter = (projectName) => {
+    setSelectedProject(projectName);
+    setIsFilteredByDay(false);
+    setSelectedDay(null);
+
+    // Filter tasks by project name
+    const projectTasks = Array.isArray(backendTasks) ? backendTasks.filter(task =>
+      task.project === projectName
+    ) : [];
+
+    // Always set filtered tasks, even if empty, to show "no tasks" message
+    setFilteredTasks(projectTasks);
+  };
+
+  const [selectedTag, setSelectedTag] = React.useState(null);
+
+  const handleTagClick = (tag) => {
+    setSelectedTag(tag);
+    setIsFilteredByDay(false);
+    setSelectedDay(null);
+    // Filter tasks by the selected tag
+    const tasksWithTag = backendTasks.filter(task =>
+      task.tags && task.tags.includes(tag)
+    );
+    setFilteredTasks(tasksWithTag);
+  };
+
+  const clearTagFilter = () => {
+    setSelectedTag(null);
+    setFilteredTasks([]);
+  };
+
+  const resetToAllTasks = () => {
+    setSelectedProject(null);
+    setSelectedTag(null);
+    setIsFilteredByDay(false);
+    setSelectedDay(null);
+    setFilteredTasks([]);
+  };
+
+  const clearDayFilter = () => {
+    setIsFilteredByDay(false);
+    setSelectedDay(null);
+    setFilteredTasks([]);
+  };
+
+  const clearProjectFilter = () => {
+    setSelectedProject(null);
+    setFilteredTasks([]);
+  };
+
+  const onUpdateTask = async () => {
+    if (!selectedTask) return;
+
+    try {
+      const updatedTask = {
+        title: selectedTask.title,
+        description: selectedTask.description,
+        dueDate: selectedTask.dueDate,
+        project: selectedTask.project,
+        tags: selectedTask.tags,
+        completed: selectedTask.completed,
+        fileAttachments: selectedTask.fileAttachments || []
+      };
+
+      if (selectedTask._id) {
+        const result = await updateTask(selectedTask._id, updatedTask);
+        // Update the selected task with the returned data
+        setSelectedTask(result);
+        toast({
+          title: 'Task Updated',
+          description: 'Task has been updated successfully.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        const result = await createTask(updatedTask);
+        setSelectedTask(result);
+        toast({
+          title: 'Task Created',
+          description: 'Task has been created successfully.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      // Don't close the detail panel or clear selected task - keep it open to show updated data
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update task. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchResults, setSearchResults] = React.useState([]);
+
+  const handleSearch = (searchValue) => {
+    setSearchQuery(searchValue);
+  };
+
+  const getFilteredTasksBySearch = (tasks) => {
+    if (!searchQuery.trim()) return tasks;
+
+    const query = searchQuery.toLowerCase();
+    return tasks.filter(task => {
+      const searchText = `${task.title} ${task.description} ${task.tags?.join(' ') || ''} ${task.project || ''}`.toLowerCase();
+      return searchText.includes(query);
+    });
+  };
+
+  const sortTasksByPriority = (tasks) => {
+    return tasks.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+
+      if (a.dueDate && b.dueDate) {
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      } else if (a.dueDate) {
+        return -1;
+      } else if (b.dueDate) {
+        return 1;
+      }
+
+      return a.title.localeCompare(b.title);
+    });
+  };
+
+  const getCurrentDay = () => {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', { weekday: 'long' });
+  };
+
+  const getDueDateCategory = (dueDate) => {
+    if (!dueDate) return 'no-due-date';
+
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return 'overdue';
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return 'tomorrow';
+    if (diffDays <= 7) return 'this-week';
+    return 'future';
+  };
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [taskToDelete, setTaskToDelete] = React.useState(null);
+
+  const onDeleteTask = async () => {
+    if (!taskToDelete) return;
+
+    try {
+      await deleteTask(taskToDelete._id);
+
+      toast({
+        title: 'Task Deleted',
+        description: 'Task has been deleted successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      setIsDeleteDialogOpen(false);
+      setTaskToDelete(null);
+      if (isDetailOpen) {
+        toggleDetail();
+      }
+      setSelectedTask(null);
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete task. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const toggleTaskCompleted = async (taskName, source = 'today') => {
+    const task = taskData[taskName];
+    if (!task || !task._id) return;
+
+    try {
+      await toggleTaskCompletion(task._id, !task.completed);
+
+      toast({
+        title: task.completed ? 'Task Reopened' : 'Task Completed',
+        description: task.completed ? 'Task has been reopened.' : 'Task has been completed!',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Failed to toggle task completion:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update task status. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleAddTask = () => {
+    if (isMobile) {
+      openMobileTaskCreate();
+    } else {
+      if (!isTaskCreateOpen) {
+        openTaskCreate();
+      }
+    }
+  };
+
+  const handleMobileTaskEdit = () => {
+    if (selectedTask) {
+      openMobileTaskEdit();
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      toast({
+        title: 'Logout Error',
+        description: 'Failed to logout. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const [editingProject, setEditingProject] = React.useState(null);
+
+  const onUpdateProject = async () => {
+    if (!editingProject) return;
+
+    try {
+      const updatedProject = {
+        name: editingProject.name,
+        description: editingProject.description,
+        color: editingProject.color
+      };
+
+      await updateProject(editingProject._id, updatedProject);
+
+      toast({
+        title: 'Project Updated',
+        description: 'Project has been updated successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      setEditingProject(null);
+    } catch (error) {
+      console.error('Failed to update project:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update project. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const [isDeleteProjectDialogOpen, setIsDeleteProjectDialogOpen] = React.useState(false);
+  const [projectToDelete, setProjectToDelete] = React.useState(null);
+
+  const onDeleteProject = async () => {
+    if (!projectToDelete) return;
+
+    try {
+      await deleteProject(projectToDelete._id);
+
+      toast({
+        title: 'Project Deleted',
+        description: 'Project has been deleted successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      setIsDeleteProjectDialogOpen(false);
+      setProjectToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete project. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleAddProject = () => {
+    openProjectCreate();
+  };
+
+  const [uploadingFiles, setUploadingFiles] = React.useState(false);
+
+  const handleFileUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    setUploadingFiles(true);
+
+    try {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+
+      if (selectedTask && selectedTask._id) {
+        formData.append('taskId', selectedTask._id);
+      }
+
+      const response = await apiService.uploadFiles(formData);
+
+      toast({
+        title: 'Files Uploaded',
+        description: `${files.length} file(s) uploaded successfully.`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      if (selectedTask && selectedTask._id) {
+        loadTasks();
+      }
+    } catch (error) {
+      console.error('File upload failed:', error);
+      toast({
+        title: 'Upload Failed',
+        description: 'Failed to upload files. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setUploadingFiles(false);
+    }
+  };
+
+  const handleFileDelete = async (filename) => {
+    if (!selectedTask || !selectedTask._id) return;
+
+    try {
+      await apiService.deleteFile(selectedTask._id, filename);
+
+      toast({
+        title: 'File Deleted',
+        description: 'File has been deleted successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      loadTasks();
+    } catch (error) {
+      console.error('File deletion failed:', error);
+      toast({
+        title: 'Deletion Failed',
+        description: 'Failed to delete file. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const confirmFileDelete = async () => {
+    if (!selectedTask || !selectedTask._id) return;
+
+    try {
+      await apiService.deleteFile(selectedTask._id, selectedTask.fileToDelete);
+
+      toast({
+        title: 'File Deleted',
+        description: 'File has been deleted successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      loadTasks();
+    } catch (error) {
+      console.error('File deletion failed:', error);
+      toast({
+        title: 'Deletion Failed',
+        description: 'Failed to delete file. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const getFileIcon = (mimetype) => {
+    if (mimetype.startsWith('image/')) return '🖼️';
+    if (mimetype.startsWith('video/')) return '🎥';
+    if (mimetype.startsWith('audio/')) return '🎵';
+    if (mimetype.includes('pdf')) return '📄';
+    if (mimetype.includes('word') || mimetype.includes('document')) return '📄';
+    if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return '📊';
+    if (mimetype.includes('powerpoint') || mimetype.includes('presentation')) return '📊';
+    if (mimetype.includes('zip') || mimetype.includes('archive')) return '📦';
+    return '📎';
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const loadTaskFiles = async (taskId) => {
+    try {
+      const files = await apiService.getTaskFiles(taskId);
+      return files;
+    } catch (error) {
+      console.error('Failed to load task files:', error);
+      return [];
+    }
+  };
+
+  const renderFileAttachmentIndicator = (fileAttachments) => {
+    if (!fileAttachments || fileAttachments.length === 0) return null;
+
+    return (
+      <HStack spacing={1}>
+        <AttachmentIcon size="sm" color="gray.400" />
+        <Text fontSize="xs" color="gray.400">
+          {fileAttachments.length} file{fileAttachments.length !== 1 ? 's' : ''}
+        </Text>
+      </HStack>
+    );
+  };
+
+  const prepareTagsForDisplay = (tags, fileAttachments, taskTitle = null) => {
+    const displayTags = ensureThreeTags(tags || []);
+
+    return displayTags.map((tag, index) => ({
+      text: tag,
+      color: tag ? 'blue' : 'gray',
+      hasFiles: fileAttachments && fileAttachments.length > 0 && index === 0
+    }));
+  };
+
+  const handleShareTask = (task) => {
+    setShareDialogType('task');
+    setShareDialogItem(task);
+    setIsShareDialogOpen(true);
+  };
+
+  const handleShareProject = (project) => {
+    setShareDialogType('project');
+    setShareDialogItem(project);
+    setIsShareDialogOpen(true);
+  };
+
+  const handleShareDialogClose = () => {
+    setIsShareDialogOpen(false);
+    setShareDialogType(null);
+    setShareDialogItem(null);
+  };
+
+  const handleShareCreated = async (shareData) => {
+    toast({
+      title: 'Share Link Created',
+      description: 'Share link has been created successfully.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+
+    // Refresh the task data to include the new sharing information
+    if (shareDialogType === 'task' && shareDialogItem?._id) {
+      try {
+        // Reload the specific task to get updated sharing data
+        const updatedTask = await apiService.getTask(shareDialogItem._id);
+
+        // Update the task in the backend tasks array
+        setAllBackendTasks(prevTasks =>
+          prevTasks.map(task =>
+            task._id === shareDialogItem._id ? updatedTask.data : task
+          )
+        );
+
+        // If this task is currently selected, update the selected task
+        if (selectedTask && selectedTask._id === shareDialogItem._id) {
+          setSelectedTask(updatedTask.data);
+        }
+      } catch (error) {
+        console.error('Failed to refresh task data after sharing:', error);
+        // Fallback: reload all tasks
+        loadTasks();
+      }
+    }
+
+    handleShareDialogClose();
+  };
+
+  const testSharing = async () => {
+    try {
+      const testTask = {
+        title: 'Test Task',
+        description: 'This is a test task for sharing functionality.',
+        dueDate: new Date().toISOString(),
+        project: 'Test Project',
+        tags: ['test', 'sharing'],
+        completed: false
+      };
+
+      const shareResult = await apiService.createShare('task', testTask);
+      console.log('Share created:', shareResult);
+
+      toast({
+        title: 'Test Share Created',
+        description: 'Test share link has been created.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Test sharing failed:', error);
+      toast({
+        title: 'Test Failed',
+        description: 'Failed to create test share.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setEditingProject(null);
+    setIsEditing(false);
+    if (isDetailOpen) {
+      toggleDetail();
+    }
+    setSelectedTask(null);
+  };
+
+  if (sharedContent) {
+    return (
+      <SharedView
+        type={sharedContent.type}
+        token={sharedContent.token}
+        onBack={navigateToMain}
+      />
+    );
+  }
+
+  return (
+    <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
+    {showInstallPrompt && (
+      <Alert status="info" variant="solid" position="fixed" top={0} left={0} right={0} zIndex={1000}>
+        <AlertIcon />
+        <Box flex="1">
+          <AlertTitle>Install PopTask</AlertTitle>
+          <AlertDescription>
+            Install PopTask for a better experience with offline access.
+          </AlertDescription>
+        </Box>
+        <Button colorScheme="blue" size="sm" onClick={handleInstallClick}>
+          Install
+        </Button>
+        <IconButton
+          icon={<CloseIcon />}
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowInstallPrompt(false)}
+          aria-label="Close"
+        />
+      </Alert>
+    )}
+
+    {!isOnline && (
+      <Alert status="warning" variant="solid" position="fixed" top={showInstallPrompt ? 60 : 0} left={0} right={0} zIndex={999}>
+        <AlertIcon />
+        <Box flex="1">
+          <AlertTitle>Offline Mode</AlertTitle>
+          <AlertDescription>
+            You're currently offline. Changes will be synced when you're back online.
+          </AlertDescription>
+        </Box>
+      </Alert>
+    )}
+
+    <Flex h="100vh" overflow="hidden">
+      <SidebarCalendar
+        isSidebarOpen={isSidebarOpen}
+        isCenterOpen={isCenterOpen}
+        colorMode={colorMode}
+        dayTasks={dayTasks()}
+        expandedDays={expandedDays}
+        getCurrentDay={getCurrentDay}
+        toggleSidebar={toggleSidebar}
+        handleDayClick={handleDayClick}
+        handleWeeklyTaskClick={handleWeeklyTaskClick}
+        toggleTaskCompleted={toggleTaskCompleted}
+        renderFileAttachmentIndicator={renderFileAttachmentIndicator}
+      />
+
+      <Flex flex="1" direction="column">
+        <Box
+          bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+          borderBottom="1px"
+          borderColor={colorMode === 'dark' ? 'gray.700' : 'gray.200'}
+          p={4}
+        >
+          <Flex justify="space-between" align="center">
+            <HStack spacing={4}>
+              <Heading size="md" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
+                PopTask
+              </Heading>
+            </HStack>
+
+            <HStack spacing={2}>
+              <IconButton
+                icon={colorMode === 'dark' ? <SunIcon /> : <MoonIcon />}
+                variant="ghost"
+                onClick={toggleColorMode}
+                aria-label="Toggle color mode"
+              />
+              <Button
+                colorScheme="red"
+                size="sm"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </HStack>
+          </Flex>
+        </Box>
+
+        {/* Projects Panel */}
+        <ProjectsPanel
+          isCenterOpen={isCenterOpen}
+          colorMode={colorMode}
+          projectsLoading={projectsLoading}
+          projectsError={projectsError}
+          projects={projects}
+          handleProjectFilter={handleProjectFilter}
+          handleAddProject={handleAddProject}
+          handleProjectClick={handleProjectClick}
+          handleShareProject={handleShareProject}
+          toggleCenter={toggleCenter}
+        />
+
+        <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
+          <TaskList
+            tasks={isFilteredByDay ? filteredTasks : (selectedProject ? filteredTasks : (selectedTag ? filteredTasks : backendTasks))}
+            loading={tasksLoading}
+            error={tasksError}
+            selectedTask={selectedTask}
+            onTaskSelect={handleTaskSelect}
+            onTaskUpdate={updateTask}
+            onTaskDelete={deleteTask}
+            onShareTask={handleShareTask}
+            onTagClick={handleTagClick}
+            searchTerm={searchQuery}
+            statusFilter="all"
+            sortBy="createdAt"
+            sortOrder="desc"
+            selectedProject={selectedProject}
+            selectedTag={selectedTag}
+            selectedDay={selectedDay}
+            isFilteredByDay={isFilteredByDay}
+            isFilteredByTag={selectedTag !== null}
+            onClearDayFilter={clearDayFilter}
+            onClearProjectFilter={clearProjectFilter}
+            onClearTagFilter={clearTagFilter}
+          />
+        </Box>
+
+        <BottomNav
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
+          isDetailOpen={isDetailOpen}
+          isFooterOpen={isFooterOpen}
+          selectedTask={selectedTask}
+          toggleSidebar={toggleSidebar}
+          toggleCenter={toggleCenter}
+          handleAddTask={handleAddTask}
+          toggleDetail={toggleDetail}
+          toggleFooter={toggleFooter}
+          handleMobileTaskEdit={handleMobileTaskEdit}
+          isMobileTaskEditOpen={isMobileTaskEditOpen}
+        />
+      </Flex>
+
+      {/* Desktop Task Detail Panel */}
+      <Collapse in={isDetailOpen && !isMobile} animateOpacity>
+        <Box
+          w="400px"
+          bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+          borderLeft="1px"
+          borderColor={colorMode === 'dark' ? 'gray.700' : 'gray.200'}
+          overflowY="auto"
+          mb="120px"
+        >
+          <TaskDetailPanel
+            task={selectedTask}
+            projects={projects}
+            onTaskUpdate={updateTask}
+            onTaskDelete={deleteTask}
+            onClose={toggleDetail}
+            onTagClick={handleTagClick}
+          />
+        </Box>
+      </Collapse>
+    </Flex>
+
+    <MobileBackdropOverlay
+      isOpen={isSidebarOpen && isMobile}
+      onClose={toggleSidebar}
+    />
+
+    <ShareDialog
+      isOpen={isShareDialogOpen}
+      onClose={handleShareDialogClose}
+      type={shareDialogType}
+      item={shareDialogItem}
+      onShareCreated={handleShareCreated}
+    />
+
+    <ProjectCreatePanel
+      isOpen={isProjectCreateOpen}
+      onClose={closeProjectCreate}
+      onCreateProject={createProject}
+      loading={projectsLoading}
+    />
+
+    <TaskCreatePanel
+      isOpen={isTaskCreateOpen}
+      onClose={closeTaskCreate}
+      onCreateTask={createTask}
+      projects={projects}
+      loading={tasksLoading}
+    />
+
+    {/* Mobile Task Create Panel */}
+    {isMobileTaskCreateOpen && (
+      <Box
+        position="fixed"
+        top="60px"
+        left={0}
+        right={0}
+        bottom={0}
+        zIndex={80}
+        bg={colorMode === 'light' ? 'white' : 'gray.800'}
+        p={4}
+        overflowY="auto"
+        boxShadow="lg"
+      >
+        <Flex justify="space-between" align="center" mb={4}>
+          <Heading size="md" color={colorMode === 'light' ? 'gray.800' : 'white'}>Create New Task</Heading>
+          <IconButton
+            icon={<CloseIcon />}
+            aria-label="Close task creation"
+            size="sm"
+            variant="ghost"
+            onClick={closeMobileTaskCreate}
+            color={colorMode === 'light' ? 'gray.600' : 'gray.400'}
+            _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+          />
+        </Flex>
+        <TaskCreatePanel
+          isOpen={true}
+          onClose={closeMobileTaskCreate}
+          onCreateTask={createTask}
+          projects={projects}
+          loading={tasksLoading}
+        />
+      </Box>
+    )}
+
+    {/* Mobile Task Edit Panel */}
+    {isMobileTaskEditOpen && selectedTask && (
+      <Box
+        position="fixed"
+        top="60px"
+        left={0}
+        right={0}
+        bottom={0}
+        zIndex={80}
+        bg={colorMode === 'light' ? 'white' : 'gray.800'}
+        p={4}
+        overflowY="auto"
+        boxShadow="lg"
+      >
+
+        <TaskDetailPanel
+          task={selectedTask}
+          projects={projects}
+          onTaskUpdate={updateTask}
+          onTaskDelete={deleteTask}
+          onClose={closeMobileTaskEdit}
+          onTagClick={handleTagClick}
+        />
+      </Box>
+    )}
+
+    {/* Mobile Task Detail Panel */}
+    {isMobileTaskDetailOpen && selectedTask && (
+      <Box
+        position="fixed"
+        top="60px"
+        left={0}
+        right={0}
+        bottom={0}
+        zIndex={80}
+        bg={colorMode === 'light' ? 'white' : 'gray.800'}
+        p={4}
+        overflowY="auto"
+        boxShadow="lg"
+      >
+
+        <TaskDetailPanel
+          task={selectedTask}
+          projects={projects}
+          onTaskUpdate={updateTask}
+          onTaskDelete={deleteTask}
+          onClose={closeMobileTaskDetail}
+          onTagClick={handleTagClick}
+        />
+      </Box>
+    )}
+
+    <AlertDialog
+      isOpen={isDeleteDialogOpen}
+      onClose={() => setIsDeleteDialogOpen(false)}
+    >
+      <AlertDialogOverlay>
+        <AlertDialogContent>
+          <AlertDialogHeader>Delete Task</AlertDialogHeader>
+          <AlertDialogBody>
+            Are you sure you want to delete "{taskToDelete?.title}"? This action cannot be undone.
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <Button onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button colorScheme="red" ml={3} onClick={onDeleteTask}>
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogOverlay>
+    </AlertDialog>
+
+    <FooterPromptPanel
+      isOpen={isFooterOpen}
+      onClose={toggleFooter}
+      onAddTask={handleAddTask}
+      onAddProject={handleAddProject}
+    />
+  </Box>
+);
+}

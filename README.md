@@ -1,8 +1,16 @@
-# Task Dashboard Frontend
+# PopTask Frontend
 
-A modern, responsive Progressive Web App (PWA) for task management built with React, Chakra UI, and Vite.
+A modern, responsive Progressive Web App (PWA) for task management with user authentication, built with React, Chakra UI, and Vite.
 
 ## ✨ Features
+
+### 🔐 Authentication & User Management
+- **User Registration** - Secure registration with email verification
+- **User Login** - JWT-based authentication with refresh tokens
+- **Password Reset** - Secure password reset via email
+- **Email Verification** - Required email verification for new accounts
+- **Account Management** - User profile editing and password changes
+- **Session Management** - Automatic token refresh and logout
 
 ### 🚀 PWA Capabilities
 - **Offline Support** - Works without internet connection
@@ -19,6 +27,7 @@ A modern, responsive Progressive Web App (PWA) for task management built with Re
 - **Task Completion Tracking** - Checkbox-based completion status
 - **Inline Editing** - Edit task titles and descriptions directly
 - **File Attachments** - Upload and manage files with thumbnails
+- **Task Sharing** - Share tasks with public links
 - **Responsive Design** - Works seamlessly on desktop and mobile
 
 ### 🎨 UI/UX Features
@@ -26,6 +35,9 @@ A modern, responsive Progressive Web App (PWA) for task management built with Re
 - **Collapsible Panels** - Customizable layout with collapsible sections
 - **Search Functionality** - Quick task search and filtering
 - **Real-time Updates** - Instant UI updates on data changes
+- **Mobile-first Design** - Optimized for mobile devices
+- **Loading States** - Smooth loading indicators
+- **Error Handling** - User-friendly error messages
 - **Keyboard Shortcuts** - (Coming soon)
 - **Drag & Drop** - (Coming soon)
 
@@ -38,7 +50,9 @@ A modern, responsive Progressive Web App (PWA) for task management built with Re
 - **Service Worker**: Workbox
 - **State Management**: React Context + Custom Hooks
 - **HTTP Client**: Fetch API with custom service layer
+- **Routing**: React Router DOM
 - **Icons**: Canvas-generated PNG icons
+- **Testing**: Vitest + Testing Library
 
 ## 📋 Prerequisites
 
@@ -62,11 +76,11 @@ cp env.example .env
 VITE_API_URL=                    # Backend API URL (empty for relative URLs)
 
 # App Configuration
-VITE_APP_TITLE=Task Dashboard
+VITE_APP_TITLE=PopTask
 VITE_APP_DESCRIPTION=A modern task management application
 
 # PWA Configuration
-VITE_PWA_NAME=Task Dashboard
+VITE_PWA_NAME=PopTask
 VITE_PWA_SHORT_NAME=Tasks
 VITE_PWA_THEME_COLOR=#3182CE
 VITE_PWA_BACKGROUND_COLOR=#1A202C
@@ -123,11 +137,20 @@ npm test
 # Run tests with coverage
 npm run test:coverage
 
+# Run E2E tests
+npm run test:e2e
+
 # Lint code
 npm run lint
 
 # Format code
 npm run format
+
+# Type checking
+npm run type-check
+
+# Bundle analysis
+npm run analyze
 ```
 
 ## 🐳 Docker Deployment
@@ -135,13 +158,13 @@ npm run format
 ### Build and Run
 ```bash
 # Build the image
-docker build -t task-dashboard-frontend .
+docker build -t poptask-frontend .
 
 # Run with nginx
 docker run -d \
-  --name task-dashboard-frontend \
+  --name poptask-frontend \
   -p 80:80 \
-  task-dashboard-frontend
+  poptask-frontend
 ```
 
 ### Docker Compose
@@ -195,143 +218,71 @@ aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --path
 server {
     listen 80;
     server_name yourdomain.com;
-    root /var/www/task-dashboard/dist;
+    root /var/www/poptask/dist;
     index index.html;
-
-    # Gzip compression
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header X-Content-Type-Options "nosniff" always;
 
     # Handle client-side routing
     location / {
         try_files $uri $uri/ /index.html;
-
-        # Cache static assets
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
     }
 
-    # Proxy API requests to backend
-    location /api/ {
-        proxy_pass http://localhost:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
     }
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
 }
 ```
 
-## 📁 Project Structure
-
-```
-task-dashboard-vite-chakra/
-├── public/
-│   ├── icons/           # PWA icons (generated)
-│   ├── manifest.json    # Web app manifest
-│   └── sw.js           # Service worker
-├── src/
-│   ├── App.jsx         # Main application component
-│   ├── main.jsx        # Application entry point
-│   ├── components/     # React components
-│   │   ├── TaskList.jsx
-│   │   ├── TaskForm.jsx
-│   │   ├── ProjectFilter.jsx
-│   │   └── FileUpload.jsx
-│   ├── hooks/          # Custom React hooks
-│   │   ├── useTasks.js
-│   │   └── useProjects.js
-│   ├── services/       # API and utility services
-│   │   └── api.js
-│   └── assets/         # Static assets
-├── scripts/
-│   └── generate-icons.js # Icon generation script
-├── vite.config.js      # Vite configuration with PWA
-├── package.json        # Dependencies and scripts
-└── env.example         # Environment variables template
-```
-
-## 🔧 Configuration
-
-### PWA Settings
-The PWA configuration is handled in `vite.config.js`:
-
-- **Manifest**: App metadata, icons, and shortcuts
-- **Service Worker**: Caching strategies and offline functionality
-- **Icons**: Multiple sizes for different devices and contexts
-
-### Customization
-- Modify `public/manifest.json` for app metadata
-- Update `scripts/generate-icons.js` for custom icons
-- Adjust caching strategies in `vite.config.js`
-- Customize theme in Chakra UI configuration
-
 ## 📱 PWA Features
 
-### Offline Functionality
-- The app caches essential resources for offline use
-- Tasks can be created and edited while offline
-- Changes sync automatically when connection is restored
-- Service worker handles caching strategies
+### Service Worker
+- **Offline Caching** - Cache essential resources for offline use
+- **Background Sync** - Sync data when connection is restored
+- **Push Notifications** - (Coming soon)
 
-### Installation Benefits
-- **Desktop**: App-like experience with dedicated window
-- **Mobile**: Native app feel with home screen access
-- **Updates**: Automatic updates when new versions are available
-- **Performance**: Optimized loading and caching
-
-### Performance Optimizations
-- **Code Splitting**: Automatic route-based code splitting
-- **Tree Shaking**: Unused code elimination
-- **Asset Optimization**: Compressed images and fonts
-- **Caching**: Aggressive caching for static assets
-
-## 🔒 Security
-
-### Implemented Security
-- **Content Security Policy** - XSS protection
-- **HTTPS Enforcement** - Secure connections in production
-- **Input Sanitization** - XSS prevention
-- **CORS Configuration** - Cross-origin request handling
-
-### Production Security Checklist
-- [x] Use HTTPS in production
-- [x] Implement CSP headers
-- [x] Sanitize user inputs
-- [x] Use environment variables
-- [x] Regular dependency updates
-- [ ] Add rate limiting
-- [ ] Implement authentication
-- [ ] Add security monitoring
-
-## 📊 Browser Support
-
-- **Chrome**: Full PWA support (recommended)
-- **Firefox**: Full PWA support
-- **Safari**: Limited PWA support (iOS 11.3+)
-- **Edge**: Full PWA support
-- **Mobile Browsers**: Full PWA support
+### Manifest Configuration
+```json
+{
+  "name": "PopTask",
+  "short_name": "Tasks",
+  "description": "A modern task management application",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1A202C",
+  "theme_color": "#3182CE",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
 
 ## 🧪 Testing
 
 ### Unit Tests
 ```bash
-# Run tests
+# Run unit tests
 npm test
-
-# Run tests with coverage
-npm run test:coverage
 
 # Run tests in watch mode
 npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
 ### E2E Tests
@@ -339,114 +290,149 @@ npm run test:watch
 # Run E2E tests
 npm run test:e2e
 
-# Run E2E tests in headless mode
+# Run E2E tests headless
 npm run test:e2e:headless
 ```
 
-### Manual Testing
-- Test PWA installation on different devices
-- Verify offline functionality
-- Check file upload features
-- Test responsive design on various screen sizes
+### Test Coverage
+- Component testing with React Testing Library
+- Hook testing with custom test utilities
+- API service testing with MSW
+- E2E testing with Playwright
 
-## 📈 Performance
+## 📁 Project Structure
 
-### Lighthouse Scores
-- **Performance**: 95+
-- **Accessibility**: 100
-- **Best Practices**: 100
-- **SEO**: 100
-- **PWA**: 100
-
-### Optimization Techniques
-- **Lazy Loading**: Components and routes
-- **Image Optimization**: WebP format with fallbacks
-- **Bundle Splitting**: Vendor and app code separation
-- **Tree Shaking**: Remove unused code
-- **Service Worker**: Intelligent caching
-
-## 🔄 Updates & Maintenance
-
-### Regular Maintenance
-1. **Dependencies**: `npm audit fix`
-2. **PWA Assets**: Regenerate icons when needed
-3. **Performance**: Monitor Lighthouse scores
-4. **Security**: Regular dependency updates
-
-### Version Updates
-```bash
-# Update dependencies
-npm update
-
-# Check for security vulnerabilities
-npm audit
-
-# Update to latest versions
-npm-check-updates -u
-npm install
 ```
+src/
+├── components/           # Reusable UI components
+│   ├── Auth.jsx         # Authentication components
+│   ├── AuthGuard.jsx    # Route protection
+│   ├── Dashboard.jsx    # Main dashboard
+│   ├── TaskList.jsx     # Task list component
+│   ├── ProjectList.jsx  # Project list component
+│   ├── SearchAndFilters.jsx # Search and filter UI
+│   ├── ShareDialog.jsx  # Task sharing dialog
+│   ├── TaskDetailPanel.jsx # Task detail view
+│   └── ...
+├── views/               # Page components
+│   ├── Login.jsx        # Login page
+│   ├── Register.jsx     # Registration page
+│   ├── ForgotPassword.jsx # Password reset page
+│   └── Dashboard.jsx    # Main dashboard page
+├── contexts/            # React contexts
+│   └── AuthContext.jsx  # Authentication context
+├── hooks/               # Custom React hooks
+│   ├── useTasks.js      # Task management hooks
+│   └── useProjects.js   # Project management hooks
+├── services/            # API service layer
+│   └── api.js           # HTTP client and API calls
+├── assets/              # Static assets
+├── App.jsx              # Main app component
+└── main.jsx             # App entry point
+```
+
+## 🔧 Development Tools
+
+### Code Quality
+- **ESLint** - Code linting and style enforcement
+- **Prettier** - Code formatting
+- **TypeScript** - Type checking (optional)
+
+### Build Tools
+- **Vite** - Fast build tool and dev server
+- **Vite PWA Plugin** - PWA generation
+- **Bundle Analyzer** - Bundle size analysis
+
+### Testing Tools
+- **Vitest** - Unit testing framework
+- **React Testing Library** - Component testing
+- **Playwright** - E2E testing
+- **MSW** - API mocking
+
+## 🚀 Performance Optimization
+
+### Bundle Optimization
+- **Code Splitting** - Automatic route-based code splitting
+- **Tree Shaking** - Remove unused code
+- **Lazy Loading** - Load components on demand
+- **Bundle Analysis** - Monitor bundle size
+
+### Runtime Optimization
+- **React.memo** - Prevent unnecessary re-renders
+- **useMemo/useCallback** - Optimize expensive operations
+- **Virtual Scrolling** - (Coming soon)
+- **Image Optimization** - Automatic image optimization
+
+## 🔒 Security
+
+### Frontend Security
+- **HTTPS Only** - Secure connections in production
+- **Content Security Policy** - XSS protection
+- **Input Validation** - Client-side validation
+- **Secure Storage** - JWT token storage
+- **CORS Handling** - Proper CORS configuration
+
+### Authentication Flow
+1. User enters credentials
+2. Frontend validates input
+3. API call to backend
+4. JWT tokens stored securely
+5. Automatic token refresh
+6. Secure logout with token cleanup
+
+## 📊 Analytics & Monitoring
+
+### Performance Monitoring
+- **Core Web Vitals** - Monitor loading performance
+- **Error Tracking** - Catch and report errors
+- **User Analytics** - Track user behavior (optional)
+
+### Health Checks
+- **API Connectivity** - Monitor backend connection
+- **Service Worker** - Check PWA functionality
+- **Offline Status** - Monitor offline capabilities
 
 ## 🆘 Troubleshooting
 
 ### Common Issues
 
-#### PWA Not Installing
-- Ensure HTTPS in production
-- Check manifest.json configuration
-- Verify service worker registration
-- Test on supported browsers
-
-#### API Connection Issues
-- Verify backend server is running
-- Check CORS configuration
-- Ensure correct API URL in environment
-- Check network connectivity
-
 #### Build Failures
-- Clear node_modules and reinstall
-- Check Node.js version compatibility
-- Verify all dependencies are installed
-- Check for syntax errors in code
-
-### Debug Mode
 ```bash
-# Enable debug logging
-npm run dev -- --debug
-
-# Check environment variables
-node -e "console.log(import.meta.env)"
-
-# Inspect service worker
-# Open DevTools > Application > Service Workers
+# Clear cache and reinstall
+rm -rf node_modules package-lock.json
+npm install
 ```
 
-## 📄 License
+#### PWA Not Working
+- Check service worker registration
+- Verify manifest.json configuration
+- Test in incognito mode
 
-MIT License - see LICENSE file for details
+#### Authentication Issues
+- Check JWT token expiration
+- Verify API endpoint configuration
+- Clear browser storage
+
+#### Performance Issues
+- Run bundle analysis: `npm run analyze`
+- Check for memory leaks
+- Optimize images and assets
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+2. Create a feature branch
 3. Make your changes
 4. Add tests for new functionality
 5. Ensure all tests pass
 6. Submit a pull request
 
-### Development Guidelines
-- Follow ESLint configuration
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
-- Test on multiple browsers
+## 📄 License
 
-## 📞 Support
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-- **Issues**: Create GitHub issue
-- **Documentation**: Check README files
-- **Discussions**: Use GitHub Discussions
-- **Email**: [Your contact email]
+## 🆘 Support
 
----
-
-**Made with ❤️ for productive task management**
+- Check the main [README.md](../README.md) for project overview
+- Review [QUICK_START.md](../QUICK_START.md) for setup help
+- Create an issue on GitHub for bugs or feature requests

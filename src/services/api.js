@@ -127,6 +127,7 @@ class ApiService {
   // Simple request method
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +136,36 @@ class ApiService {
       ...options,
     };
 
-    const response = await fetch(url, config);
+    // Add authorization header if token exists
+    const token = localStorage.getItem(this.tokenKey);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Remove Content-Type for FormData requests
+    if (options.body instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
+    let response = await fetch(url, config);
+
+    // If we get a 401 and we have a refresh token, try to refresh
+    if (response.status === 401 && token && localStorage.getItem(this.refreshTokenKey)) {
+      try {
+        const refreshResult = await this.refreshToken();
+
+        // Update the token in the request
+        if (refreshResult.token) {
+          config.headers.Authorization = `Bearer ${refreshResult.token}`;
+          // Retry the original request with the new token
+          response = await fetch(url, config);
+        }
+      } catch (refreshError) {
+        // If refresh fails, clear session and throw original error
+        this.clearSession();
+        throw new Error('Authentication failed. Please login again.');
+      }
+    }
 
     if (!response.ok) {
       const contentType = response.headers.get('content-type');
@@ -149,10 +179,102 @@ class ApiService {
 
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return await response.json();
+      const result = await response.json();
+      return result;
     } else {
       return { success: true };
     }
+  }
+
+  // Authentication methods
+  async login(credentials) {
+    return await this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async register(userData) {
+    return await this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async validateToken() {
+    console.log('🔍 Validating token...');
+    const result = await this.request('/auth/validate');
+    console.log('✅ Token validation successful:', result);
+    return result;
+  }
+
+  async refreshToken() {
+    console.log('🔄 Refreshing token...');
+    const refreshToken = localStorage.getItem(this.refreshTokenKey);
+    if (!refreshToken) {
+      console.log('❌ No refresh token available');
+      throw new Error('No refresh token available');
+    }
+
+    const result = await this.request('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    });
+    console.log('✅ Token refresh successful:', result);
+    return result;
+  }
+
+  async logout() {
+    try {
+      await this.request('/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Logout request failed:', error);
+    } finally {
+      this.clearSession();
+    }
+  }
+
+  async forgotPassword(email) {
+    return await this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(token, newPassword) {
+    return await this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword }),
+    });
+  }
+
+  async verifyEmail(token) {
+    return await this.request('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  // Authentication state management
+  isAuthenticated() {
+    return !!localStorage.getItem(this.tokenKey);
+  }
+
+  clearSession() {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.refreshTokenKey);
+    localStorage.removeItem('userData');
+  }
+
+  // Token storage keys
+  get tokenKey() {
+    return 'popTask_accessToken';
+  }
+
+  get refreshTokenKey() {
+    return 'popTask_refreshToken';
   }
 
   // Task API methods
@@ -221,8 +343,16 @@ class ApiService {
     const formData = new FormData();
     formData.append('file', file);
 
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = {};
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${this.baseURL}/uploads/task/${taskId}`, {
       method: 'POST',
+      headers,
       body: formData,
     });
 

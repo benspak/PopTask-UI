@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Box,
   VStack,
@@ -27,7 +28,8 @@ import {
 import { ExternalLinkIcon, CopyIcon, CheckIcon, EditIcon, ViewIcon } from '@chakra-ui/icons';
 import apiService from '../services/api';
 
-const SharedView = ({ type, token }) => {
+const SharedView = () => {
+  const { type, token } = useParams();
   const { colorMode } = useColorMode();
   const toast = useToast();
   const [data, setData] = useState(null);
@@ -36,6 +38,8 @@ const SharedView = ({ type, token }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
+
+  console.log('SharedView params:', { type, token });
 
   useEffect(() => {
     loadSharedData();
@@ -56,8 +60,18 @@ const SharedView = ({ type, token }) => {
       console.log('Shared data response:', response);
 
       if (response && response.data) {
-        setData(response.data);
-        setEditData(response.data[type]);
+        // The API returns { task: {...}, sharePermission: "...", shareStats: {...} }
+        // or { project: {...}, sharePermission: "...", shareStats: {...} }
+        const itemData = response.data[type]; // response.data.task or response.data.project
+        const sharePermission = response.data.sharePermission;
+        const shareStats = response.data.shareStats;
+
+        setData({
+          [type]: itemData,
+          sharePermission: sharePermission,
+          shareStats: shareStats
+        });
+        setEditData(itemData);
       } else {
         throw new Error('Invalid response format from server');
       }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   VStack,
@@ -23,10 +23,11 @@ import {
   Text as ChakraText,
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
-import apiService from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
-const Register = ({ setIsAuthenticated, setUser, onSwitchToLogin }) => {
+const Register = ({ onSwitchToLogin }) => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -55,11 +56,11 @@ const Register = ({ setIsAuthenticated, setUser, onSwitchToLogin }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.firstName.trim()) {
+    if (!formData.firstName) {
       newErrors.firstName = 'First name is required';
     }
 
-    if (!formData.lastName.trim()) {
+    if (!formData.lastName) {
       newErrors.lastName = 'Last name is required';
     }
 
@@ -69,7 +70,7 @@ const Register = ({ setIsAuthenticated, setUser, onSwitchToLogin }) => {
       newErrors.email = 'Email is invalid';
     }
 
-    if (!formData.username.trim()) {
+    if (!formData.username) {
       newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
@@ -77,7 +78,7 @@ const Register = ({ setIsAuthenticated, setUser, onSwitchToLogin }) => {
       newErrors.username = 'Username can only contain letters, numbers, underscores, and hyphens';
     }
 
-    if (!formData.displayName.trim()) {
+    if (!formData.displayName) {
       newErrors.displayName = 'Display name is required';
     }
 
@@ -85,8 +86,12 @@ const Register = ({ setIsAuthenticated, setUser, onSwitchToLogin }) => {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 12) {
       newErrors.password = 'Password must be at least 12 characters';
-    } else if (!passwordRequirements.uppercase || !passwordRequirements.lowercase || !passwordRequirements.special) {
-      newErrors.password = 'Password must contain uppercase, lowercase, and special characters';
+    } else if (!passwordRequirements.uppercase) {
+      newErrors.password = 'Password must contain at least one uppercase letter';
+    } else if (!passwordRequirements.lowercase) {
+      newErrors.password = 'Password must contain at least one lowercase letter';
+    } else if (!passwordRequirements.special) {
+      newErrors.password = 'Password must contain at least one special character';
     }
 
     if (!formData.confirmPassword) {
@@ -117,118 +122,29 @@ const Register = ({ setIsAuthenticated, setUser, onSwitchToLogin }) => {
     setIsLoading(true);
 
     try {
-      const response = await apiService.register(formData);
+      const result = await register(formData);
 
-      // Check if registration was successful (201 status and has message)
-      if (response.message && response.message.includes('registered successfully')) {
-        // Store user data for email verification status
-        if (response.user) {
-          localStorage.setItem('userData', JSON.stringify(response.user));
+      toast({
+        title: 'Registration Successful!',
+        description: 'Please check your email to verify your account.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
 
-          // Update authentication state
-          setIsAuthenticated(true);
-          setUser(response.user);
-        }
-
-        toast({
-          title: 'Account Created Successfully!',
-          description: `${response.message} You can now access your dashboard!`,
-          status: 'success',
-          duration: 8000,
-          isClosable: true,
-        });
-
-        // Show email verification notice
-        setTimeout(() => {
-          toast({
-            title: 'Email Verification',
-            description: 'We\'ve sent a verification link to your email. Please check your inbox and click the link to verify your account.',
-            status: 'info',
-            duration: 10000,
-            isClosable: true,
-          });
-        }, 1000);
-
-        // Navigate to dashboard
-        navigate('/');
-      } else {
-        // Handle unexpected response format
-        toast({
-          title: 'Registration Issue',
-          description: response.message || 'There was an issue with your registration. Please try again.',
-          status: 'warning',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
+      // Navigate to dashboard
+      navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
-      const errorTitle = 'Registration Failed';
+      const errorMessage = error.message || 'Registration failed. Please try again.';
 
-      // Clear previous field errors
-      setErrors({});
-
-      // Check for specific field errors and set them on the form
-      if (errorMessage.includes('username is already taken') || errorMessage.includes('username already exists')) {
-        setErrors(prev => ({ ...prev, username: 'This username is already taken' }));
-        toast({
-          title: 'Username Already Exists',
-          description: 'An account with this username already exists. Please choose a different username.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } else if (errorMessage.includes('email already exists') || errorMessage.includes('email is already taken')) {
-        setErrors(prev => ({ ...prev, email: 'An account with this email already exists' }));
-        toast({
-          title: 'Account Already Exists',
-          description: 'An account with this email address already exists. Please sign in instead.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } else if (errorMessage.includes('validation failed')) {
-        // Handle validation errors
-        const validationErrors = error.response?.data?.errors;
-        if (validationErrors) {
-          Object.keys(validationErrors).forEach(field => {
-            setErrors(prev => ({ ...prev, [field]: validationErrors[field].message }));
-          });
-        }
-        toast({
-          title: 'Invalid Information',
-          description: 'Please check the form and correct any errors.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } else if (error.response?.status === 429) {
-        toast({
-          title: 'Too Many Attempts',
-          description: 'Too many registration attempts. Please wait a few minutes before trying again.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } else if (error.response?.status >= 500) {
-        toast({
-          title: 'Server Error',
-          description: 'Our servers are experiencing issues. Please try again later.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } else {
-        // Generic error handling
-        toast({
-          title: errorTitle,
-          description: errorMessage,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
+      toast({
+        title: 'Registration Failed',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -252,6 +168,11 @@ const Register = ({ setIsAuthenticated, setUser, onSwitchToLogin }) => {
       <Center>
         <VStack spacing={8} w="full">
           <VStack spacing={2}>
+            <HStack spacing={2} mb={4}>
+              <Link as={RouterLink} to="/" color="blue.500" fontSize="sm">
+                ← Back to Homepage
+              </Link>
+            </HStack>
             <Heading size="lg">Create Account</Heading>
             <Text color="gray.600" textAlign="center">
               Join PopTask to organize your tasks efficiently
@@ -262,109 +183,148 @@ const Register = ({ setIsAuthenticated, setUser, onSwitchToLogin }) => {
             <VStack spacing={4}>
               <HStack spacing={4} w="full">
                 <FormControl isInvalid={!!errors.firstName}>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel color="gray.300">First Name</FormLabel>
                   <Input
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
                     placeholder="First name"
+                    bg="gray.800"
+                    borderColor="gray.600"
+                    color="white"
+                    _placeholder={{ color: 'gray.400' }}
+                    _hover={{ borderColor: 'gray.500' }}
+                    _focus={{ borderColor: 'blue.400', boxShadow: 'none' }}
                   />
                   <FormErrorMessage>{errors.firstName}</FormErrorMessage>
                 </FormControl>
 
                 <FormControl isInvalid={!!errors.lastName}>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel color="gray.300">Last Name</FormLabel>
                   <Input
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
                     placeholder="Last name"
+                    bg="gray.800"
+                    borderColor="gray.600"
+                    color="white"
+                    _placeholder={{ color: 'gray.400' }}
+                    _hover={{ borderColor: 'gray.500' }}
+                    _focus={{ borderColor: 'blue.400', boxShadow: 'none' }}
                   />
                   <FormErrorMessage>{errors.lastName}</FormErrorMessage>
                 </FormControl>
               </HStack>
 
               <FormControl isInvalid={!!errors.email}>
-                <FormLabel>Email</FormLabel>
+                <FormLabel color="gray.300">Email</FormLabel>
                 <Input
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="Enter your email"
+                  bg="gray.800"
+                  borderColor="gray.600"
+                  color="white"
+                  _placeholder={{ color: 'gray.400' }}
+                  _hover={{ borderColor: 'gray.500' }}
+                  _focus={{ borderColor: 'blue.400', boxShadow: 'none' }}
                 />
                 <FormErrorMessage>{errors.email}</FormErrorMessage>
               </FormControl>
 
               <FormControl isInvalid={!!errors.username}>
-                <FormLabel>Username</FormLabel>
+                <FormLabel color="gray.300">Username</FormLabel>
                 <Input
                   value={formData.username}
-                  onChange={(e) => handleInputChange('username', e.target.value.toLowerCase())}
+                  onChange={(e) => handleInputChange('username', e.target.value)}
                   placeholder="Choose a username"
+                  bg="gray.800"
+                  borderColor="gray.600"
+                  color="white"
+                  _placeholder={{ color: 'gray.400' }}
+                  _hover={{ borderColor: 'gray.500' }}
+                  _focus={{ borderColor: 'blue.400', boxShadow: 'none' }}
                 />
                 <FormErrorMessage>{errors.username}</FormErrorMessage>
               </FormControl>
 
               <FormControl isInvalid={!!errors.displayName}>
-                <FormLabel>Display Name</FormLabel>
+                <FormLabel color="gray.300">Display Name</FormLabel>
                 <Input
                   value={formData.displayName}
                   onChange={(e) => handleInputChange('displayName', e.target.value)}
-                  placeholder="How should we call you?"
+                  placeholder="How should we display your name?"
+                  bg="gray.800"
+                  borderColor="gray.600"
+                  color="white"
+                  _placeholder={{ color: 'gray.400' }}
+                  _hover={{ borderColor: 'gray.500' }}
+                  _focus={{ borderColor: 'blue.400', boxShadow: 'none' }}
                 />
                 <FormErrorMessage>{errors.displayName}</FormErrorMessage>
               </FormControl>
 
               <FormControl isInvalid={!!errors.password}>
-                <FormLabel>Password</FormLabel>
+                <FormLabel color="gray.300">Password</FormLabel>
                 <InputGroup>
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     placeholder="Create a strong password"
+                    bg="gray.800"
+                    borderColor="gray.600"
+                    color="white"
+                    _placeholder={{ color: 'gray.400' }}
+                    _hover={{ borderColor: 'gray.500' }}
+                    _focus={{ borderColor: 'blue.400', boxShadow: 'none' }}
                   />
                   <InputRightElement>
                     <IconButton
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                       icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
-                      variant="ghost"
-                      size="sm"
                       onClick={() => setShowPassword(!showPassword)}
+                      variant="ghost"
+                      color="gray.400"
+                      _hover={{ color: 'white' }}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                     />
                   </InputRightElement>
                 </InputGroup>
-                <FormHelperText>
-                  <VStack align="start" spacing={1} mt={2}>
-                    <Progress
-                      value={passwordStrength * 25}
-                      size="sm"
-                      colorScheme={passwordStrength >= 3 ? "green" : passwordStrength >= 2 ? "yellow" : "red"}
-                      w="full"
-                    />
-                    <RequirementItem met={passwordRequirements.length} text="At least 12 characters" />
-                    <RequirementItem met={passwordRequirements.uppercase} text="One uppercase letter" />
-                    <RequirementItem met={passwordRequirements.lowercase} text="One lowercase letter" />
-                    <RequirementItem met={passwordRequirements.special} text="One special character" />
-                  </VStack>
+                <FormHelperText color="gray.400">
+                  Password strength: {passwordStrength}/4
                 </FormHelperText>
+                <Progress
+                  value={(passwordStrength / 4) * 100}
+                  size="sm"
+                  colorScheme={passwordStrength <= 1 ? 'red' : passwordStrength <= 2 ? 'orange' : passwordStrength <= 3 ? 'yellow' : 'green'}
+                  mt={2}
+                />
                 <FormErrorMessage>{errors.password}</FormErrorMessage>
               </FormControl>
 
               <FormControl isInvalid={!!errors.confirmPassword}>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel color="gray.300">Confirm Password</FormLabel>
                 <InputGroup>
                   <Input
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                     placeholder="Confirm your password"
+                    bg="gray.800"
+                    borderColor="gray.600"
+                    color="white"
+                    _placeholder={{ color: 'gray.400' }}
+                    _hover={{ borderColor: 'gray.500' }}
+                    _focus={{ borderColor: 'blue.400', boxShadow: 'none' }}
                   />
                   <InputRightElement>
                     <IconButton
-                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                       icon={showConfirmPassword ? <ViewOffIcon /> : <ViewIcon />}
-                      variant="ghost"
-                      size="sm"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      variant="ghost"
+                      color="gray.400"
+                      _hover={{ color: 'white' }}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                     />
                   </InputRightElement>
                 </InputGroup>

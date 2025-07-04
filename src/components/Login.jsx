@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   VStack,
@@ -19,12 +19,14 @@ import {
   InputGroup,
   InputRightElement,
   IconButton,
+  HStack,
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
-import apiService from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
-const Login = ({ setIsAuthenticated, setUser, onSwitchToRegister, onSwitchToForgotPassword }) => {
+const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -69,39 +71,22 @@ const Login = ({ setIsAuthenticated, setUser, onSwitchToRegister, onSwitchToForg
     setIsLoading(true);
 
     try {
-      const response = await apiService.login(formData);
+      // Use the login function from AuthContext
+      const response = await login(formData);
 
-      // Check if login was successful (has message and user data)
-      if (response.message && (response.message.includes('successful') || response.message === 'Login successful') && response.user) {
-        // Store user data for email verification status
-        localStorage.setItem('userData', JSON.stringify(response.user));
+      toast({
+        title: 'Login Successful!',
+        description: `Welcome back, ${response.user.firstName}!`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
 
-        // Update authentication state
-        setIsAuthenticated(true);
-        setUser(response.user);
-
-        toast({
-          title: 'Login Successful!',
-          description: `Welcome back, ${response.user.firstName}!`,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-
-        // Navigate to dashboard
-        navigate('/');
-      } else {
-        toast({
-          title: 'Login Failed',
-          description: response.message || 'Invalid credentials',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
+      // Navigate to dashboard
+      navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      const errorMessage = error.message || 'Login failed. Please try again.';
 
       toast({
         title: 'Login Failed',
@@ -120,6 +105,11 @@ const Login = ({ setIsAuthenticated, setUser, onSwitchToRegister, onSwitchToForg
       <Center>
         <VStack spacing={8} w="full">
           <VStack spacing={2}>
+            <HStack spacing={2} mb={4}>
+              <Link as={RouterLink} to="/" color="blue.500" fontSize="sm">
+                ← Back to Homepage
+              </Link>
+            </HStack>
             <Heading size="lg">Welcome Back</Heading>
             <Text color="gray.600" textAlign="center">
               Sign in to your PopTask account

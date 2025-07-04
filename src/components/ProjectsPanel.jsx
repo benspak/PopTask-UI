@@ -170,7 +170,7 @@ const ProjectsPanel = ({
 
     {/* Projects Section - Desktop view (above tasks) */}
     <Collapse in={isCenterOpen} animateOpacity>
-      <Box mb={2} display={{ base: 'none', md: 'block' }}>
+      <Box mb={2} display={{ base: 'none', md: 'block' }} p={8}>
         <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
         {projectsLoading ? (
           <Flex justify="center" align="center" p={4}>

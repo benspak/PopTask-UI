@@ -35,6 +35,16 @@ const MainTaskList = ({
   dayTasks,
   handleShareTask,
 }) => {
+  // Utility function to format dates without timezone issues
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    // Split the date string and take only the date part (YYYY-MM-DD)
+    const dateOnly = dateString.split('T')[0];
+    const [year, month, day] = dateOnly.split('-');
+    // Create date in local timezone by using the date components
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
+  };
+
   return (
     <VStack align="stretch" spacing={3}>
       {(() => {
@@ -136,7 +146,7 @@ const MainTaskList = ({
                           {/* Task metadata */}
                           <VStack align="start" spacing={1}>
                             <HStack spacing={4} fontSize="xs" color="gray.400">
-                              <Text>Due: {taskInfo.dueDate}</Text>
+                              <Text>Due: {formatDate(taskInfo.dueDate)}</Text>
                               <Text>Project: {taskInfo.project}</Text>
                             </HStack>
                             <HStack spacing={1}>
@@ -251,7 +261,7 @@ const MainTaskList = ({
                             {/* Task metadata */}
                             <VStack align="start" spacing={1}>
                               <HStack spacing={4} fontSize="xs" color="gray.400">
-                                <Text>Due: {task.dueDate}</Text>
+                                <Text>Due: {formatDate(task.dueDate)}</Text>
                                 <Text>Project: {task.project}</Text>
                               </HStack>
                               <HStack spacing={1}>

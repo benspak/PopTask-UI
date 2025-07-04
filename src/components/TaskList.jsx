@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   VStack,
@@ -16,10 +16,8 @@ import {
   Tooltip,
 } from '@chakra-ui/react';
 import {
-  ChevronRightIcon,
   AttachmentIcon,
-  EditIcon,
-  DeleteIcon,
+  LinkIcon,
   AddIcon
 } from '@chakra-ui/icons';
 
@@ -31,18 +29,35 @@ const TaskList = ({
   onTaskSelect,
   onTaskUpdate,
   onTaskDelete,
+  onShareTask,
+  onTagClick,
   searchTerm = '',
   statusFilter = 'all',
   sortBy = 'createdAt',
   sortOrder = 'desc',
   selectedProject,
+  selectedTag,
+  selectedDay,
+  isFilteredByDay = false,
+  isFilteredByTag = false,
+  onClearDayFilter,
+  onClearProjectFilter,
+  onClearTagFilter,
 }) => {
-  const [expandedTasks, setExpandedTasks] = useState({});
-
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
   const selectedBg = useColorModeValue('blue.50', 'blue.900');
+
+  // Utility function to format dates without timezone issues
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    // Split the date string and take only the date part (YYYY-MM-DD)
+    const dateOnly = dateString.split('T')[0];
+    const [year, month, day] = dateOnly.split('-');
+    // Create date in local timezone by using the date components
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
+  };
 
   // Filter and sort tasks
   const filteredAndSortedTasks = useMemo(() => {
@@ -96,8 +111,24 @@ const TaskList = ({
   }, [tasks, searchTerm, statusFilter, sortBy, sortOrder]);
 
   const handleTaskClick = (task) => {
+    console.log('TaskList handleTaskClick called with task:', task);
+    console.log('TaskList task details:', {
+      id: task._id,
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      project: task.project,
+      tags: task.tags,
+      completed: task.completed,
+      priority: task.priority
+    });
+    console.log('TaskList onTaskSelect function exists:', !!onTaskSelect);
+
     if (onTaskSelect) {
+      console.log('TaskList calling onTaskSelect with task:', task);
       onTaskSelect(task);
+    } else {
+      console.log('TaskList onTaskSelect is not provided');
     }
   };
 
@@ -111,13 +142,6 @@ const TaskList = ({
     if (onTaskDelete) {
       await onTaskDelete(taskId);
     }
-  };
-
-  const toggleExpanded = (taskId) => {
-    setExpandedTasks(prev => ({
-      ...prev,
-      [taskId]: !prev[taskId]
-    }));
   };
 
   const getStatusColor = (completed) => {
@@ -148,11 +172,50 @@ const TaskList = ({
     return (
       <Box p={8} textAlign="center">
         <Text color="gray.500" fontSize="lg">
-          {searchTerm || statusFilter !== 'all'
+          {isFilteredByDay
+            ? `No tasks on ${selectedDay}s`
+            : selectedProject
+            ? `No tasks in project "${selectedProject}"`
+            : selectedTag
+            ? `No tasks with tag "${selectedTag}"`
+            : searchTerm || statusFilter !== 'all'
             ? 'No tasks match your filters'
             : 'No tasks yet'}
         </Text>
-        {!selectedProject && (
+        {isFilteredByDay && (
+          <Button
+            mt={4}
+            size="sm"
+            colorScheme="blue"
+            variant="outline"
+            onClick={onClearDayFilter}
+          >
+            Show All Tasks
+          </Button>
+        )}
+        {selectedProject && !isFilteredByDay && (
+          <Button
+            mt={4}
+            size="sm"
+            colorScheme="green"
+            variant="outline"
+            onClick={onClearProjectFilter}
+          >
+            Show All Tasks
+          </Button>
+        )}
+        {selectedTag && !isFilteredByDay && !selectedProject && (
+          <Button
+            mt={4}
+            size="sm"
+            colorScheme="purple"
+            variant="outline"
+            onClick={onClearTagFilter}
+          >
+            Show All Tasks
+          </Button>
+        )}
+        {!selectedProject && !isFilteredByDay && !selectedTag && (
           <Text color="gray.400" fontSize="sm" mt={2}>
             Select a project to see its tasks
           </Text>
@@ -161,12 +224,83 @@ const TaskList = ({
     );
   }
 
-  return (
+    return (
     <Box h="full" overflowY="auto">
+      {/* Day Filter Indicator */}
+      {isFilteredByDay && (
+        <Box mb={4} p={3} bg="blue.50" borderRadius="md" border="1px" borderColor="blue.200">
+          <HStack justify="space-between" align="center">
+            <HStack spacing={2}>
+              <Text fontSize="sm" fontWeight="medium" color="blue.800">
+                📅 Filtered by {selectedDay}s
+              </Text>
+              <Badge colorScheme="blue" size="sm">
+                {filteredAndSortedTasks.length} task{filteredAndSortedTasks.length !== 1 ? 's' : ''}
+              </Badge>
+            </HStack>
+            <Button
+              size="sm"
+              variant="ghost"
+              colorScheme="blue"
+              onClick={onClearDayFilter}
+            >
+              Clear Filter
+            </Button>
+          </HStack>
+        </Box>
+      )}
+
+      {/* Project Filter Indicator */}
+      {selectedProject && !isFilteredByDay && (
+        <Box mb={4} p={3} bg="gray.700" borderRadius="md" border="1px" borderColor="gray.600">
+          <HStack justify="space-between" align="center">
+            <HStack spacing={2}>
+              <Text fontSize="sm" fontWeight="medium" color="white">
+                📁 Filtered by project: {selectedProject}
+              </Text>
+              <Badge colorScheme="green" variant="solid" size="sm">
+                {filteredAndSortedTasks.length} task{filteredAndSortedTasks.length !== 1 ? 's' : ''}
+              </Badge>
+            </HStack>
+            <Button
+              size="sm"
+              variant="solid"
+              colorScheme="green"
+              onClick={onClearProjectFilter}
+            >
+              Clear Filter
+            </Button>
+          </HStack>
+        </Box>
+      )}
+
+      {/* Tag Filter Indicator */}
+      {selectedTag && !isFilteredByDay && !selectedProject && (
+        <Box mb={4} p={3} bg="gray.700" borderRadius="md" border="1px" borderColor="gray.600">
+          <HStack justify="space-between" align="center">
+            <HStack spacing={2}>
+              <Text fontSize="sm" fontWeight="medium" color="white">
+                🏷️ Filtered by tag: #{selectedTag}
+              </Text>
+              <Badge colorScheme="green" variant="solid" size="sm">
+                {filteredAndSortedTasks.length} task{filteredAndSortedTasks.length !== 1 ? 's' : ''}
+              </Badge>
+            </HStack>
+            <Button
+              size="sm"
+              variant="solid"
+              colorScheme="green"
+              onClick={onClearTagFilter}
+            >
+              Clear Filter
+            </Button>
+          </HStack>
+        </Box>
+      )}
+
       <VStack spacing={2} p={4} align="stretch">
         {filteredAndSortedTasks.map((task) => {
           const isSelected = selectedTask?._id === task._id;
-          const isExpanded = expandedTasks[task._id];
 
           return (
             <Box
@@ -204,22 +338,49 @@ const TaskList = ({
                       </Text>
                     </HStack>
 
-                    {task.description && (
-                      <Text fontSize="sm" color="gray.600" noOfLines={1}>
-                        {task.description}
-                      </Text>
-                    )}
-
                     <HStack spacing={2} fontSize="sm" color="gray.500">
                       {task.dueDate && (
-                        <Text>Due: {new Date(task.dueDate).toLocaleDateString()}</Text>
+                        <Text>Due: {formatDate(task.dueDate)}</Text>
                       )}
                       {task.project && (
-                        <Badge size="sm" colorScheme="blue" variant="subtle">
+                        <Badge
+                          size="sm"
+                          colorScheme="blue"
+                          variant="subtle"
+                          px={3}
+                          py={1}
+                          borderRadius="md"
+                        >
                           {task.project}
                         </Badge>
                       )}
                     </HStack>
+
+                    {/* Tags */}
+                    {task.tags && task.tags.length > 0 && (
+                      <HStack spacing={1} flexWrap="wrap">
+                        {task.tags.map((tag, index) => (
+                          <Badge
+                            key={index}
+                            size="sm"
+                            colorScheme="gray"
+                            variant="outline"
+                            px={2}
+                            py={0.5}
+                            borderRadius="sm"
+                            fontSize="xs"
+                            cursor="pointer"
+                            _hover={{ bg: "gray.100" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTagClick(tag);
+                            }}
+                          >
+                            #{tag}
+                          </Badge>
+                        ))}
+                      </HStack>
+                    )}
                   </VStack>
 
                   <HStack spacing={1}>
@@ -231,78 +392,27 @@ const TaskList = ({
                           icon={<AttachmentIcon />}
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleExpanded(task._id);
                           }}
                         />
                       </Tooltip>
                     )}
 
-
-
-                    <Tooltip label="Edit Task">
+                    <Tooltip label="Share Task">
                       <IconButton
                         size="sm"
                         variant="ghost"
-                        icon={<EditIcon />}
+                        icon={<LinkIcon />}
+                        colorScheme="green"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // TODO: Implement edit functionality
+                          if (onShareTask) {
+                            onShareTask(task);
+                          }
                         }}
                       />
                     </Tooltip>
-
-                    <Tooltip label="Delete Task">
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        icon={<DeleteIcon />}
-                        colorScheme="red"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTask(task._id);
-                        }}
-                      />
-                    </Tooltip>
-
-                    {(task.description || (task.fileAttachments && task.fileAttachments.length > 0)) && (
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        icon={<ChevronRightIcon />}
-                        transform={isExpanded ? 'rotate(90deg)' : 'none'}
-                        transition="transform 0.2s"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleExpanded(task._id);
-                        }}
-                      />
-                    )}
                   </HStack>
                 </HStack>
-
-                {/* Expanded Content */}
-                {isExpanded && (
-                  <Box p={3} pt={0} borderTop="1px" borderColor={borderColor}>
-                    {task.description && (
-                      <Text fontSize="sm" color="gray.600" mb={3}>
-                        {task.description}
-                      </Text>
-                    )}
-
-                    {task.fileAttachments && task.fileAttachments.length > 0 && (
-                      <VStack align="start" spacing={2}>
-                        <Text fontSize="sm" fontWeight="medium">
-                          Attachments:
-                        </Text>
-                        {task.fileAttachments.map((file, index) => (
-                          <Text key={index} fontSize="sm" color="blue.500">
-                            {file.name}
-                          </Text>
-                        ))}
-                      </VStack>
-                    )}
-                  </Box>
-                )}
               </VStack>
             </Box>
           );
