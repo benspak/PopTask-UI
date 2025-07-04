@@ -110,8 +110,9 @@ const SharedView = () => {
 
       // Handle the response structure properly
       if (response && response.data) {
-        // For shared content, the response might be the item directly or wrapped
-        const updatedItem = response.data[type] || response.data;
+        // The backend returns { success: true, data: updatedItem, message: '...' }
+        // So response.data is the updated item directly
+        const updatedItem = response.data;
         setData({ [type]: updatedItem, sharePermission: data.sharePermission, shareStats: data.shareStats });
         setEditData(updatedItem);
       }

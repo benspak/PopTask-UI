@@ -61,8 +61,11 @@ const TaskDetailPanel = ({
   projects = [],
   onTaskUpdate,
   onTaskDelete,
+  onLeaveTask,
   onClose,
   onTagClick,
+  onShareTask,
+  isShared = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState({});
@@ -185,6 +188,29 @@ const TaskDetailPanel = ({
     onDialogClose();
   };
 
+  const handleLeaveTask = async () => {
+    try {
+      await onLeaveTask(task._id);
+      onClose();
+      toast({
+        title: 'Success',
+        description: 'Successfully left the shared task',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to leave task',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+    onDialogClose();
+  };
+
   const getStatusColor = (completed) => {
     return completed ? 'green' : 'blue';
   };
@@ -252,7 +278,7 @@ const TaskDetailPanel = ({
       borderColor={borderColor}
       overflowY="auto"
     >
-      {/* Delete Confirmation Dialog */}
+      {/* Delete/Leave Confirmation Dialog */}
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
@@ -261,17 +287,24 @@ const TaskDetailPanel = ({
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Task
+              {isShared ? 'Leave Task' : 'Delete Task'}
             </AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure you want to delete this task? This action cannot be undone.
+              {isShared
+                ? 'Are you sure you want to leave this shared task? You will no longer have access to edit it.'
+                : 'Are you sure you want to delete this task? This action cannot be undone.'
+              }
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onDialogClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={handleDelete} ml={3}>
-                Delete
+              <Button
+                colorScheme={isShared ? "orange" : "red"}
+                onClick={isShared ? handleLeaveTask : handleDelete}
+                ml={3}
+              >
+                {isShared ? 'Leave' : 'Delete'}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

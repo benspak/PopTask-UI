@@ -70,6 +70,7 @@ const LimitsDisplay = ({ type = 'tasks', showNotification = true, refreshTrigger
   const isAtLimit = limits.current >= limits.limit;
   const isUnlimited = limits.unlimited;
   const remaining = limits.remaining;
+  const isProUser = limits.userType === 'pro' || limits.unlimited;
 
   return (
     <Box>
@@ -102,7 +103,7 @@ const LimitsDisplay = ({ type = 'tasks', showNotification = true, refreshTrigger
         )}
       </HStack>
 
-      {/* Limit Reached Notification */}
+      {/* Limit Reached Notification - Only show for basic users */}
       {showNotification && isAtLimit && !isUnlimited && (
         <Alert status="warning" size="sm" borderRadius="md" mb={3}>
           <AlertIcon />

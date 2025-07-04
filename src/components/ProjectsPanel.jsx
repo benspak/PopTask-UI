@@ -129,34 +129,8 @@ const ProjectsPanel = ({
                       }}
                     />
                   </Tooltip>
-                  <Tooltip label="Share project">
-                    <IconButton
-                      icon={<LinkIcon />}
-                      aria-label="Share project"
-                      size="xs"
-                      colorScheme="green"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShareProject(project);
-                      }}
-                    />
-                  </Tooltip>
                 </HStack>
-                <IconButton
-                  icon={<HamburgerIcon />}
-                  aria-label="Edit project"
-                  size="xs"
-                  position="absolute"
-                  top={2}
-                  right={2}
-                  colorScheme="blue"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleProjectClick(project);
-                  }}
-                />
+
                 <IconButton
                   icon={<StarIcon />}
                   aria-label="Filter by project"
@@ -259,19 +233,6 @@ const ProjectsPanel = ({
                         if (handleProjectDetailOpen) {
                           handleProjectDetailOpen(project);
                         }
-                      }}
-                    />
-                  </Tooltip>
-                  <Tooltip label="Share project">
-                    <IconButton
-                      icon={<LinkIcon />}
-                      aria-label="Share project"
-                      size="xs"
-                      colorScheme="green"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShareProject(project);
                       }}
                     />
                   </Tooltip>

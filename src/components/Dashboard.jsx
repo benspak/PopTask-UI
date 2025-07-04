@@ -63,10 +63,34 @@ import SharedContentPanel from './SharedContentPanel';
 
 export default function Dashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const { isOpen: isSidebarOpen, onToggle: toggleSidebar } = useDisclosure({ defaultIsOpen: !isMobile });
+
+  // Initialize sidebar state from localStorage
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
+
+  // Initialize center panel state from localStorage
+  const [isCenterOpen, setIsCenterOpen] = useState(() => {
+    const saved = localStorage.getItem('centerOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
+
   const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isCenterOpen, onToggle: toggleCenter } = useDisclosure({ defaultIsOpen: !isMobile });
+
+  // Toggle functions with localStorage persistence
+  const toggleSidebar = () => {
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    localStorage.setItem('sidebarOpen', JSON.stringify(newState));
+  };
+
+  const toggleCenter = () => {
+    const newState = !isCenterOpen;
+    setIsCenterOpen(newState);
+    localStorage.setItem('centerOpen', JSON.stringify(newState));
+  };
   const { isOpen: isProjectCreateOpen, onOpen: openProjectCreate, onClose: closeProjectCreate } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isTaskCreateOpen, onOpen: openTaskCreate, onClose: closeTaskCreate } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isMobileTaskCreateOpen, onOpen: openMobileTaskCreate, onClose: closeMobileTaskCreate } = useDisclosure({ defaultIsOpen: false });
@@ -74,7 +98,7 @@ export default function Dashboard() {
   const { isOpen: isMobileTaskDetailOpen, onOpen: openMobileTaskDetail, onClose: closeMobileTaskDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
   const { colorMode, toggleColorMode } = useColorMode();
-  const { logout } = useAuth();
+  const { logout, refreshUser, user } = useAuth();
 
   const {
     tasks: backendTasks,
@@ -84,6 +108,8 @@ export default function Dashboard() {
     error: tasksError,
     sharedError: sharedTasksError,
     loadTasks,
+    loadSharedTasks,
+    refreshSharedTasks,
     createTask,
     updateTask,
     deleteTask,
@@ -99,6 +125,8 @@ export default function Dashboard() {
     error: projectsError,
     sharedError: sharedProjectsError,
     loadProjects,
+    loadSharedProjects,
+    refreshSharedProjects,
     createProject,
     updateProject,
     deleteProject,
@@ -113,7 +141,12 @@ export default function Dashboard() {
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [isProjectDetailModalOpen, setIsProjectDetailModalOpen] = useState(false);
-  const [isSharedContentExpanded, setIsSharedContentExpanded] = useState(true);
+
+  // Initialize shared content expanded state from localStorage
+  const [isSharedContentExpanded, setIsSharedContentExpanded] = useState(() => {
+    const saved = localStorage.getItem('sharedContentExpanded');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
   React.useEffect(() => {
     if (!sharedContent) {
@@ -121,6 +154,18 @@ export default function Dashboard() {
       loadProjects();
     }
   }, [loadTasks, loadProjects, sharedContent]);
+
+  // Periodic refresh of shared content (every 5 minutes)
+  React.useEffect(() => {
+    if (!sharedContent) {
+      const interval = setInterval(() => {
+        refreshSharedTasks(false); // Don't show notifications for automatic refresh
+        refreshSharedProjects(false);
+      }, 5 * 60 * 1000); // 5 minutes
+
+      return () => clearInterval(interval);
+    }
+  }, [refreshSharedTasks, refreshSharedProjects, sharedContent]);
 
   React.useEffect(() => {
     if (!sharedContent) {
@@ -260,7 +305,49 @@ export default function Dashboard() {
     };
   }, [toast]);
 
+  // Handle payment success
+  React.useEffect(() => {
+    const handlePaymentSuccess = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const success = urlParams.get('success');
+      const sessionId = urlParams.get('session_id');
 
+      if (success === 'true' && sessionId) {
+        try {
+          // Verify the payment session
+          const result = await apiService.verifyPaymentSession(sessionId);
+
+          if (result.success) {
+            toast({
+              title: 'Payment Successful!',
+              description: 'Welcome to PopTask Pro! You now have unlimited tasks and projects.',
+              status: 'success',
+              duration: 8000,
+              isClosable: true,
+            });
+
+            // Refresh user context to get updated user type
+            await refreshUser();
+
+            // Clean up URL parameters
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+          }
+        } catch (error) {
+          console.error('Payment verification error:', error);
+          toast({
+            title: 'Payment Verification Error',
+            description: 'There was an issue verifying your payment. Please contact support if you were charged.',
+            status: 'error',
+            duration: 8000,
+            isClosable: true,
+          });
+        }
+      }
+    };
+
+    handlePaymentSuccess();
+  }, [toast, refreshUser]);
 
   const ensureThreeTags = (tags) => {
     if (!tags || !Array.isArray(tags)) return ['', '', ''];
@@ -429,22 +516,10 @@ export default function Dashboard() {
     // Set the filtered tasks to be displayed in the main task list
     setFilteredTasks(filteredTasks);
 
-    // If there are tasks for this day, select the first one and open detail panel
-    if (filteredTasks.length > 0) {
-      setSelectedTask(filteredTasks[0]);
-      if (isMobile) {
-        openMobileTaskDetail();
-      } else {
-        if (!isDetailOpen) {
-          toggleDetail();
-        }
-      }
-    } else {
-      // Clear selected task if no tasks for this day
-      setSelectedTask(null);
-      if (isDetailOpen) {
-        toggleDetail();
-      }
+    // Clear selected task when clicking on a day - don't automatically open detail panel
+    setSelectedTask(null);
+    if (isDetailOpen) {
+      toggleDetail();
     }
   };
 
@@ -691,6 +766,58 @@ export default function Dashboard() {
     }
   };
 
+  const onLeaveTask = async (taskId) => {
+    try {
+      await apiService.leaveSharedTask(taskId);
+
+      // Refresh tasks
+      loadTasks();
+
+      toast({
+        title: 'Success',
+        description: 'Successfully left the shared task.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Failed to leave task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to leave task. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const onLeaveProject = async (projectId) => {
+    try {
+      await apiService.leaveSharedProject(projectId);
+
+      // Refresh projects
+      loadProjects();
+
+      toast({
+        title: 'Success',
+        description: 'Successfully left the shared project.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Failed to leave project:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to leave project. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
   const toggleTaskCompleted = async (taskName, source = 'today') => {
     const task = taskData[taskName];
     if (!task || !task._id) return;
@@ -755,52 +882,7 @@ export default function Dashboard() {
     }
   };
 
-  const [editingProject, setEditingProject] = React.useState(null);
 
-  const onUpdateProject = async () => {
-    if (!editingProject) return;
-
-    try {
-      const updatedProject = {
-        name: editingProject.name,
-        description: editingProject.description,
-        color: editingProject.color
-      };
-
-      await updateProject(editingProject._id, updatedProject);
-
-      toast({
-        title: 'Project Updated',
-        description: 'Project has been updated successfully.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-
-      setEditingProject(null);
-    } catch (error) {
-      console.error('Failed to update project:', error);
-      // Handle limit errors specifically
-      if (error.isLimitError) {
-        toast({
-          title: 'Project Limit Reached',
-          description: error.message || 'You have reached your project limit. Upgrade to Pro for unlimited projects.',
-          status: 'warning',
-          duration: 8000,
-          isClosable: true,
-          position: 'top',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to update project. Please try again.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    }
-  };
 
   const [isDeleteProjectDialogOpen, setIsDeleteProjectDialogOpen] = React.useState(false);
   const [projectToDelete, setProjectToDelete] = React.useState(null);
@@ -1015,7 +1097,63 @@ export default function Dashboard() {
   };
 
   const toggleSharedContentExpanded = () => {
-    setIsSharedContentExpanded(!isSharedContentExpanded);
+    const newExpandedState = !isSharedContentExpanded;
+    setIsSharedContentExpanded(newExpandedState);
+    localStorage.setItem('sharedContentExpanded', JSON.stringify(newExpandedState));
+  };
+
+    const refreshSharedContent = async () => {
+    try {
+      const [tasksResult, projectsResult] = await Promise.all([
+        refreshSharedTasks(true),
+        refreshSharedProjects(true)
+      ]);
+
+      // Show notifications for changes
+      if (tasksResult && tasksResult.previousCount !== tasksResult.newCount) {
+        const change = tasksResult.newCount > tasksResult.previousCount ? 'added' : 'removed';
+        const count = Math.abs(tasksResult.newCount - tasksResult.previousCount);
+        toast({
+          title: 'Shared Tasks Updated',
+          description: `${count} shared task${count !== 1 ? 's' : ''} ${change}.`,
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      if (projectsResult && projectsResult.previousCount !== projectsResult.newCount) {
+        const change = projectsResult.newCount > projectsResult.previousCount ? 'added' : 'removed';
+        const count = Math.abs(projectsResult.newCount - projectsResult.previousCount);
+        toast({
+          title: 'Shared Projects Updated',
+          description: `${count} shared project${count !== 1 ? 's' : ''} ${change}.`,
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      // If no changes detected, show general success message
+      if (!tasksResult && !projectsResult) {
+        toast({
+          title: 'Shared Content Refreshed',
+          description: 'Shared content has been updated.',
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to refresh shared content:', error);
+      toast({
+        title: 'Refresh Failed',
+        description: 'Failed to refresh shared content. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleShareDialogClose = () => {
@@ -1093,7 +1231,6 @@ export default function Dashboard() {
   };
 
   const handleCancel = () => {
-    setEditingProject(null);
     setIsEditing(false);
     if (isDetailOpen) {
       toggleDetail();
@@ -1204,6 +1341,7 @@ export default function Dashboard() {
             onToggleExpanded={toggleSharedContentExpanded}
             onTaskClick={handleSharedTaskClick}
             onProjectClick={handleSharedProjectClick}
+            onRefresh={refreshSharedContent}
           />
 
           <TaskList
@@ -1262,8 +1400,10 @@ export default function Dashboard() {
             projects={projects}
             onTaskUpdate={updateTask}
             onTaskDelete={deleteTask}
+            onLeaveTask={onLeaveTask}
             onClose={toggleDetail}
             onTagClick={handleTagClick}
+            isShared={selectedTask?.isSharedWithMe || false}
           />
         </Box>
       </Collapse>
@@ -1355,8 +1495,10 @@ export default function Dashboard() {
           projects={projects}
           onTaskUpdate={updateTask}
           onTaskDelete={deleteTask}
+          onLeaveTask={onLeaveTask}
           onClose={closeMobileTaskEdit}
           onTagClick={handleTagClick}
+          isShared={selectedTask?.isSharedWithMe || false}
         />
       </Box>
     )}
@@ -1381,8 +1523,10 @@ export default function Dashboard() {
           projects={projects}
           onTaskUpdate={updateTask}
           onTaskDelete={deleteTask}
+          onLeaveTask={onLeaveTask}
           onClose={closeMobileTaskDetail}
           onTagClick={handleTagClick}
+          isShared={selectedTask?.isSharedWithMe || false}
         />
       </Box>
     )}
@@ -1419,11 +1563,13 @@ export default function Dashboard() {
       <ProjectDetailPanel
         project={selectedProject}
         tasks={backendTasks}
-        onProjectUpdate={onUpdateProject}
+        onProjectUpdate={updateProject}
         onProjectDelete={onDeleteProject}
+        onLeaveProject={onLeaveProject}
         onClose={() => setIsProjectDetailModalOpen(false)}
         onShareProject={handleShareProject}
         isOpen={isProjectDetailModalOpen}
+        isShared={selectedProject?.isSharedWithMe || false}
       />
     )}
   </Box>

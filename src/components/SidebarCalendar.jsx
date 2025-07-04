@@ -134,73 +134,7 @@ const SidebarCalendar = ({
               ))}
             </VStack>
           </Box>
-          <Box>
-            <Text fontSize="sm" mb={2} color="gray.400">Sponsors</Text>
-            <VStack align="start" spacing={2}>
-              {/* First 2 sponsors - visible on all screen sizes */}
-              <Box>
-                <Text
-                  fontSize="sm"
-                  color="blue.300"
-                  cursor="pointer"
-                  _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                  onClick={() => window.open('https://www.notion.so', '_blank')}
-                >
-                  Notion
-                </Text>
-                <Text fontSize="xs" color="gray.500">All-in-one workspace for notes & docs</Text>
-              </Box>
-              <Box>
-                <Text
-                  fontSize="sm"
-                  color="blue.300"
-                  cursor="pointer"
-                  _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                  onClick={() => window.open('https://www.atlassian.com', '_blank')}
-                >
-                  Atlassian
-                </Text>
-                <Text fontSize="xs" color="gray.500">Project management & team collaboration</Text>
-              </Box>
-              {/* Remaining 3 sponsors - hidden on mobile, visible on desktop */}
-              <Box display={{ base: 'none', md: 'block' }}>
-                <Text
-                  fontSize="sm"
-                  color="blue.300"
-                  cursor="pointer"
-                  _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                  onClick={() => window.open('https://www.asana.com', '_blank')}
-                >
-                  Asana
-                </Text>
-                <Text fontSize="xs" color="gray.500">Work management for teams</Text>
-              </Box>
-              <Box display={{ base: 'none', md: 'block' }}>
-                <Text
-                  fontSize="sm"
-                  color="blue.300"
-                  cursor="pointer"
-                  _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                  onClick={() => window.open('https://www.trello.com', '_blank')}
-                >
-                  Trello
-                </Text>
-                <Text fontSize="xs" color="gray.500">Visual project management boards</Text>
-              </Box>
-              <Box display={{ base: 'none', md: 'block' }}>
-                <Text
-                  fontSize="sm"
-                  color="blue.300"
-                  cursor="pointer"
-                  _hover={{ color: 'blue.200', textDecoration: 'underline' }}
-                  onClick={() => window.open('https://www.monday.com', '_blank')}
-                >
-                  Monday.com
-                </Text>
-                <Text fontSize="xs" color="gray.500">Work operating system for teams</Text>
-              </Box>
-            </VStack>
-          </Box>
+
         </VStack>
       </Box>
     )

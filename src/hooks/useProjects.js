@@ -39,12 +39,10 @@ export const useProjects = () => {
 
   const loadSharedProjects = useCallback(async () => {
     try {
-      console.log('🔄 Loading shared projects...');
       setSharedLoading(true);
       setSharedError(null);
 
       const response = await apiService.getSharedProjects();
-      console.log('✅ Shared projects response:', response);
       setSharedProjects(response.data || []);
 
       // Check online status
@@ -66,6 +64,26 @@ export const useProjects = () => {
     }
   }, []);
 
+  const refreshSharedProjects = useCallback(async (showNotification = false) => {
+    try {
+      const response = await apiService.getSharedProjects();
+      const previousCount = sharedProjects.length;
+      const newCount = response.data?.length || 0;
+
+      setSharedProjects(response.data || []);
+
+      // Show notification if requested and there are changes
+      if (showNotification && previousCount !== newCount) {
+        // This will be handled by the Dashboard component
+        return { previousCount, newCount };
+      }
+    } catch (err) {
+      console.error('Error refreshing shared projects:', err);
+      // Don't set error state for refresh operations to avoid disrupting UI
+      return null;
+    }
+  }, [sharedProjects.length]);
+
   const createProject = useCallback(async (projectData) => {
     try {
       setError(null);
@@ -85,24 +103,32 @@ export const useProjects = () => {
       setProjects(prev => prev.map(project =>
         project._id === id ? response.data : project
       ));
+
+      // Refresh shared projects to reflect any changes
+      await refreshSharedProjects();
+
       return response.data;
     } catch (err) {
       setError('Failed to update project. Please try again.');
       throw err;
     }
-  }, []);
+  }, [refreshSharedProjects]);
 
   const deleteProject = useCallback(async (id) => {
     try {
       setError(null);
       await apiService.deleteProject(id);
       setProjects(prev => prev.filter(project => project._id !== id));
+
+      // Refresh shared projects to reflect any changes
+      await refreshSharedProjects();
+
       return { success: true };
     } catch (err) {
       setError('Failed to delete project. Please try again.');
       throw err;
     }
-  }, []);
+  }, [refreshSharedProjects]);
 
   // Initial data load
   useEffect(() => {
@@ -120,6 +146,7 @@ export const useProjects = () => {
     isOffline,
     loadProjects,
     loadSharedProjects,
+    refreshSharedProjects,
     createProject,
     updateProject,
     deleteProject,

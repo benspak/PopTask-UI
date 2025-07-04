@@ -40,10 +40,13 @@ const ProjectList = ({
   onProjectCreate,
   onProjectUpdate,
   onProjectDelete,
+  onLeaveProject,
   onProjectDetailOpen,
   refreshLimitsTrigger = 0,
+  isOpen,
+  isShared = false,
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isModalOpen, onOpen, onClose: onModalClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [newProject, setNewProject] = useState({
@@ -140,20 +143,35 @@ const ProjectList = ({
   };
 
   const handleDeleteProject = async (projectId) => {
-    if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+    const message = isShared
+      ? 'Are you sure you want to leave this shared project? You will no longer have access to edit it.'
+      : 'Are you sure you want to delete this project? This action cannot be undone.';
+
+    if (window.confirm(message)) {
       try {
-        await onProjectDelete(projectId);
-        toast({
-          title: 'Success',
-          description: 'Project deleted successfully',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
+        if (isShared) {
+          await onLeaveProject(projectId);
+          toast({
+            title: 'Success',
+            description: 'Successfully left the shared project',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        } else {
+          await onProjectDelete(projectId);
+          toast({
+            title: 'Success',
+            description: 'Project deleted successfully',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
       } catch (error) {
         toast({
           title: 'Error',
-          description: 'Failed to delete project',
+          description: isShared ? 'Failed to leave project' : 'Failed to delete project',
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -284,17 +302,32 @@ const ProjectList = ({
                         }}
                         title="Quick Edit"
                       />
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        icon={<DeleteIcon />}
-                        colorScheme="red"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteProject(project._id);
-                        }}
-                        title="Delete Project"
-                      />
+                      {/* Show delete or leave button based on ownership */}
+                      {isShared ? (
+                        <IconButton
+                          size="sm"
+                          variant="ghost"
+                          icon={<DeleteIcon />}
+                          colorScheme="orange"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProject(project._id);
+                          }}
+                          title="Leave Project"
+                        />
+                      ) : (
+                        <IconButton
+                          size="sm"
+                          variant="ghost"
+                          icon={<DeleteIcon />}
+                          colorScheme="red"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProject(project._id);
+                          }}
+                          title="Delete Project"
+                        />
+                      )}
                     </HStack>
                   </HStack>
                 </Box>

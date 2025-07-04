@@ -31,6 +31,60 @@ const Changelog = () => {
 
   const changelogData = [
     {
+      version: '2.3.0',
+      date: 'April 27, 2025',
+      title: 'Collaboration & Time Tracking Release',
+      description: 'Advanced collaboration features and comprehensive time tracking system',
+      type: 'major',
+      changes: [
+        {
+          type: 'feature',
+          items: [
+            'Shared content panel for viewing tasks and projects shared with you',
+            'Username-based sharing system replacing email-based sharing',
+            'Real-time shared content updates with refresh functionality',
+            'Comprehensive time tracking with start/stop timer for individual tasks',
+            'Session tracking with detailed history and statistics',
+            'Estimated time tracking with progress percentage calculation',
+            'Time statistics integration in task and project views',
+            'User limits system with Basic (10 tasks/3 projects) and Pro (unlimited) tiers',
+            'Limits display with upgrade prompts and remaining count indicators',
+            'Enhanced project management with color coding and statistics',
+            'Shared project task creation allowing team members to add tasks',
+            'Public share links for external access without authentication',
+            'Share expiration and view tracking for analytics',
+            'Feedback system for user suggestions and bug reports',
+            'Enhanced mobile responsiveness and touch interactions'
+          ]
+        },
+        {
+          type: 'improvement',
+          items: [
+            'Improved shared content performance with efficient database queries',
+            'Enhanced security with proper access control for shared content',
+            'Better error handling for time tracking operations',
+            'Streamlined user experience with collapsible shared content panel',
+            'Optimized database indexes for better query performance',
+            'Enhanced visual feedback for time tracking sessions',
+            'Improved limits display with contextual upgrade prompts',
+            'Better mobile navigation and responsive design'
+          ]
+        },
+        {
+          type: 'fix',
+          items: [
+            'Fixed shared content loading and display issues',
+            'Resolved time tracking session duration calculation bugs',
+            'Corrected user limits validation and enforcement',
+            'Fixed project statistics calculation errors',
+            'Resolved shared content refresh and update problems',
+            'Corrected mobile layout issues for shared content panel',
+            'Fixed time tracking display in task lists and detail views'
+          ]
+        }
+      ]
+    },
+    {
       version: '2.2.0',
       date: 'April 27, 2025',
       title: 'Production-Ready Release',

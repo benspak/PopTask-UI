@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Flex,
@@ -17,6 +17,7 @@ import {
   Link,
   IconButton,
   useToast,
+  Spinner,
 } from '@chakra-ui/react';
 import {
   CheckIcon,
@@ -31,11 +32,13 @@ import {
   MoonIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
+import apiService from '../services/api';
 
 const Homepage = () => {
   const { colorMode, toggleColorMode } = useColorMode();
-  const { login, register } = useAuth();
+  const { login, register, user } = useAuth();
   const toast = useToast();
+  const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
 
   const bgColor = useColorModeValue('white', 'gray.900');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -113,6 +116,41 @@ const Homepage = () => {
   const handleLogin = () => {
     // Navigate to login page
     window.location.href = '/login';
+  };
+
+  const handleGetProNow = async () => {
+    setIsCreatingPaymentLink(true);
+
+    try {
+      // If user is logged in, use their email, otherwise create anonymous link
+      const userEmail = user?.email || null;
+
+      const response = await apiService.createPaymentLink('subscription', userEmail);
+
+      if (response.success && response.url) {
+        // Redirect to Stripe checkout
+        window.location.href = response.url;
+      } else {
+        toast({
+          title: 'Payment Link Error',
+          description: response.message || 'Failed to create payment link',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Payment link creation error:', error);
+      toast({
+        title: 'Payment Error',
+        description: 'Failed to create payment link. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsCreatingPaymentLink(false);
+    }
   };
 
   return (
@@ -460,10 +498,12 @@ const Homepage = () => {
                   <Button
                     colorScheme="blue"
                     w="full"
-                    onClick={handleSignup}
-                    rightIcon={<ArrowForwardIcon />}
+                    onClick={handleGetProNow}
+                    rightIcon={isCreatingPaymentLink ? <Spinner size="sm" /> : <ArrowForwardIcon />}
+                    isLoading={isCreatingPaymentLink}
+                    loadingText="Creating..."
                   >
-                    Start Pro Trial
+                    Get Pro Now
                   </Button>
                 </VStack>
               </Box>

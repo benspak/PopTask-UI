@@ -165,6 +165,17 @@ export const AuthProvider = ({ children }) => {
     setHasAttemptedAutoLogin(false);
   };
 
+  const refreshUser = async () => {
+    try {
+      const result = await apiService.getCurrentUser();
+      if (result.user) {
+        setUser(result.user);
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+  };
+
   const value = {
     isAuthenticated,
     isLoading,
@@ -172,6 +183,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    refreshUser,
   };
 
   return (

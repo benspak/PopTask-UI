@@ -20,6 +20,7 @@ import {
   ExternalLinkIcon,
   ViewIcon,
   CheckIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 
 const SharedContentPanel = ({
@@ -33,6 +34,7 @@ const SharedContentPanel = ({
   onProjectClick,
   isExpanded = false,
   onToggleExpanded,
+  onRefresh,
 }) => {
   // All hooks must be called at the top level
   const bgColor = useColorModeValue('blue.50', 'blue.900');
@@ -99,13 +101,33 @@ const SharedContentPanel = ({
           <Badge colorScheme="blue" size="sm">
             {sharedTasks.length + sharedProjects.length}
           </Badge>
+          {isLoading && (
+            <Spinner size="xs" color={textColor} />
+          )}
         </HStack>
-        <IconButton
-          size="sm"
-          variant="ghost"
-          icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-          aria-label="Toggle shared content"
-        />
+        <HStack spacing={1}>
+          {onRefresh && (
+            <Tooltip label="Refresh shared content">
+              <IconButton
+                size="sm"
+                variant="ghost"
+                icon={<RepeatIcon />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRefresh();
+                }}
+                aria-label="Refresh shared content"
+                isLoading={isLoading}
+              />
+            </Tooltip>
+          )}
+          <IconButton
+            size="sm"
+            variant="ghost"
+            icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            aria-label="Toggle shared content"
+          />
+        </HStack>
       </HStack>
 
       {/* Content */}

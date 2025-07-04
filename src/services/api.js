@@ -216,6 +216,10 @@ class ApiService {
     return result;
   }
 
+  async getCurrentUser() {
+    return await this.request('/auth/me');
+  }
+
   async refreshToken() {
     const refreshToken = localStorage.getItem(this.refreshTokenKey);
     if (!refreshToken) {
@@ -352,6 +356,18 @@ class ApiService {
   async deleteProject(id) {
     return this.request(`/projects/${id}`, {
       method: 'DELETE'
+    });
+  }
+
+  async leaveSharedTask(id) {
+    return this.request(`/tasks/${id}/leave`, {
+      method: 'POST'
+    });
+  }
+
+  async leaveSharedProject(id) {
+    return this.request(`/projects/${id}/leave`, {
+      method: 'POST'
     });
   }
 
@@ -517,6 +533,23 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(feedbackData),
     });
+  }
+
+  // Payment API methods
+  async createPaymentLink(type = 'subscription', email = null) {
+    const payload = { type };
+    if (email) {
+      payload.email = email;
+    }
+
+    return await this.request('/payments/create-link', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async verifyPaymentSession(sessionId) {
+    return await this.request(`/payments/verify-session/${sessionId}`);
   }
 }
 

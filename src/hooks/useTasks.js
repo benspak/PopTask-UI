@@ -39,12 +39,10 @@ export const useTasks = () => {
 
   const loadSharedTasks = useCallback(async () => {
     try {
-      console.log('🔄 Loading shared tasks...');
       setSharedLoading(true);
       setSharedError(null);
 
       const response = await apiService.getSharedTasks();
-      console.log('✅ Shared tasks response:', response);
       setSharedTasks(response.data || []);
 
       // Check online status
@@ -66,6 +64,25 @@ export const useTasks = () => {
     }
   }, []);
 
+  const refreshSharedTasks = useCallback(async (showNotification = false) => {
+    try {
+      const response = await apiService.getSharedTasks();
+      const previousCount = sharedTasks.length;
+      const newCount = response.data?.length || 0;
+
+      setSharedTasks(response.data || []);
+
+      // Show notification if requested and there are changes
+      if (showNotification && previousCount !== newCount) {
+        // This will be handled by the Dashboard component
+        return { previousCount, newCount };
+      }
+    } catch (err) {
+      console.error('Error refreshing shared tasks:', err);
+      // Don't set error state for refresh operations to avoid disrupting UI
+    }
+  }, [sharedTasks.length]);
+
   const createTask = useCallback(async (taskData) => {
     try {
       setError(null);
@@ -85,24 +102,32 @@ export const useTasks = () => {
       setTasks(prev => prev.map(task =>
         task._id === id ? response.data : task
       ));
+
+      // Refresh shared tasks to reflect any changes
+      await refreshSharedTasks();
+
       return response.data;
     } catch (err) {
       setError('Failed to update task. Please try again.');
       throw err;
     }
-  }, []);
+  }, [refreshSharedTasks]);
 
   const deleteTask = useCallback(async (id) => {
     try {
       setError(null);
       await apiService.deleteTask(id);
       setTasks(prev => prev.filter(task => task._id !== id));
+
+      // Refresh shared tasks to reflect any changes
+      await refreshSharedTasks();
+
       return { success: true };
     } catch (err) {
       setError('Failed to delete task. Please try again.');
       throw err;
     }
-  }, []);
+  }, [refreshSharedTasks]);
 
   const toggleTaskCompletion = useCallback(async (id) => {
     try {
@@ -111,12 +136,16 @@ export const useTasks = () => {
       setTasks(prev => prev.map(task =>
         task._id === id ? response.data : task
       ));
+
+      // Refresh shared tasks to reflect any changes
+      await refreshSharedTasks();
+
       return response.data;
     } catch (err) {
       setError('Failed to update task completion. Please try again.');
       throw err;
     }
-  }, []);
+  }, [refreshSharedTasks]);
 
   // Initial data load
   useEffect(() => {
@@ -134,6 +163,7 @@ export const useTasks = () => {
     isOffline,
     loadTasks,
     loadSharedTasks,
+    refreshSharedTasks,
     createTask,
     updateTask,
     deleteTask,

@@ -52,9 +52,11 @@ const ProjectDetailPanel = ({
   tasks = [],
   onProjectUpdate,
   onProjectDelete,
+  onLeaveProject,
   onClose,
   onShareProject,
   isOpen,
+  isShared = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProject, setEditedProject] = useState({});
@@ -64,6 +66,8 @@ const ProjectDetailPanel = ({
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const statsBgColor = useColorModeValue('gray.50', 'gray.700');
+  const editFormBgColor = useColorModeValue('gray.50', 'gray.700');
 
   useEffect(() => {
     if (project) {
@@ -144,6 +148,29 @@ const ProjectDetailPanel = ({
     onDeleteClose();
   };
 
+  const handleLeaveProject = async () => {
+    try {
+      await onLeaveProject(project._id);
+      onClose();
+      toast({
+        title: 'Success',
+        description: 'Successfully left the shared project',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to leave project',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+    onDeleteClose();
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const dateOnly = dateString.split('T')[0];
@@ -193,7 +220,7 @@ const ProjectDetailPanel = ({
 
   return (
     <>
-      {/* Delete Confirmation Dialog */}
+      {/* Delete/Leave Confirmation Dialog */}
       <AlertDialog
         isOpen={isDeleteOpen}
         leastDestructiveRef={cancelRef}
@@ -202,17 +229,24 @@ const ProjectDetailPanel = ({
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Project
+              {isShared ? 'Leave Project' : 'Delete Project'}
             </AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure you want to delete this project? This action cannot be undone and will affect all tasks in this project.
+              {isShared
+                ? 'Are you sure you want to leave this shared project? You will no longer have access to edit it.'
+                : 'Are you sure you want to delete this project? This action cannot be undone and will affect all tasks in this project.'
+              }
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onDeleteClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={handleDelete} ml={3}>
-                Delete
+              <Button
+                colorScheme={isShared ? "orange" : "red"}
+                onClick={isShared ? handleLeaveProject : handleDelete}
+                ml={3}
+              >
+                {isShared ? 'Leave' : 'Delete'}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -231,7 +265,7 @@ const ProjectDetailPanel = ({
                 bg={project?.color || '#3182ce'}
                 borderRadius="md"
                 border="2px solid"
-                borderColor={useColorModeValue('gray.200', 'gray.600')}
+                borderColor={borderColor}
               />
               <Text>Project Details</Text>
             </HStack>
@@ -261,7 +295,7 @@ const ProjectDetailPanel = ({
                 </VStack>
 
                 {/* Project Statistics */}
-                <Box p={4} border="1px" borderColor={useColorModeValue('gray.200', 'gray.600')} borderRadius="md" bg={useColorModeValue('gray.50', 'gray.700')}>
+                <Box p={4} border="1px" borderColor={borderColor} borderRadius="md" bg={statsBgColor}>
                   <Text fontSize="md" fontWeight="semibold" mb={3}>Project Statistics</Text>
                   <SimpleGrid columns={2} spacing={4}>
                     <Stat>
@@ -288,7 +322,7 @@ const ProjectDetailPanel = ({
                 </Box>
 
                 {/* Project Information */}
-                <Box p={4} border="1px" borderColor={useColorModeValue('gray.200', 'gray.600')} borderRadius="md">
+                <Box p={4} border="1px" borderColor={borderColor} borderRadius="md">
                   <Text fontSize="md" fontWeight="semibold" mb={3} color="white">Project Information</Text>
                   <VStack spacing={3} align="stretch">
                     <HStack justify="space-between">
@@ -319,7 +353,7 @@ const ProjectDetailPanel = ({
 
                 {/* Sharing Information */}
                 {project.isShared && (
-                  <Box p={4} border="1px" borderColor={useColorModeValue('gray.200', 'gray.600')} borderRadius="md">
+                  <Box p={4} border="1px" borderColor={borderColor} borderRadius="md">
                     <Text fontSize="md" fontWeight="semibold" mb={3} color="white">Sharing</Text>
                     <VStack align="start" spacing={2}>
                       <HStack>
@@ -368,7 +402,7 @@ const ProjectDetailPanel = ({
 
                 {/* Edit Form */}
                 {isEditing && (
-                  <Box p={4} border="1px" borderColor={useColorModeValue('gray.200', 'gray.600')} borderRadius="md" bg={useColorModeValue('gray.50', 'gray.700')}>
+                  <Box p={4} border="1px" borderColor={borderColor} borderRadius="md" bg={editFormBgColor}>
                     <Text fontSize="md" fontWeight="semibold" mb={3}>Edit Project</Text>
                     <VStack spacing={4} align="stretch">
                       <Box>
@@ -423,23 +457,39 @@ const ProjectDetailPanel = ({
                   >
                     {isEditing ? 'Cancel Edit' : 'Edit Project'}
                   </Button>
-                  <Button
-                    leftIcon={<DeleteIcon />}
-                    colorScheme="red"
-                    variant="outline"
-                    onClick={onDeleteOpen}
-                    w="full"
-                  >
-                    Delete Project
-                  </Button>
-                  <Button
-                    leftIcon={<ExternalLinkIcon />}
-                    colorScheme="blue"
-                    onClick={() => onShareProject && onShareProject(project)}
-                    w="full"
-                  >
-                    Share Project
-                  </Button>
+                  {/* Show delete or leave button based on ownership */}
+                  {isShared ? (
+                    <Button
+                      leftIcon={<DeleteIcon />}
+                      colorScheme="orange"
+                      variant="outline"
+                      onClick={onDeleteOpen}
+                      w="full"
+                    >
+                      Leave Project
+                    </Button>
+                  ) : (
+                    <Button
+                      leftIcon={<DeleteIcon />}
+                      colorScheme="red"
+                      variant="outline"
+                      onClick={onDeleteOpen}
+                      w="full"
+                    >
+                      Delete Project
+                    </Button>
+                  )}
+                  {/* Only show share button if user owns the project */}
+                  {!project.isSharedWithMe && (
+                    <Button
+                      leftIcon={<ExternalLinkIcon />}
+                      colorScheme="blue"
+                      onClick={() => onShareProject && onShareProject(project)}
+                      w="full"
+                    >
+                      Share Project
+                    </Button>
+                  )}
                 </VStack>
 
                 {/* Desktop Actions */}
@@ -451,21 +501,36 @@ const ProjectDetailPanel = ({
                   >
                     {isEditing ? 'Cancel Edit' : 'Edit Project'}
                   </Button>
-                  <Button
-                    leftIcon={<DeleteIcon />}
-                    colorScheme="red"
-                    variant="outline"
-                    onClick={onDeleteOpen}
-                  >
-                    Delete Project
-                  </Button>
-                  <Button
-                    leftIcon={<ExternalLinkIcon />}
-                    colorScheme="blue"
-                    onClick={() => onShareProject && onShareProject(project)}
-                  >
-                    Share Project
-                  </Button>
+                  {/* Show delete or leave button based on ownership */}
+                  {isShared ? (
+                    <Button
+                      leftIcon={<DeleteIcon />}
+                      colorScheme="orange"
+                      variant="outline"
+                      onClick={onDeleteOpen}
+                    >
+                      Leave Project
+                    </Button>
+                  ) : (
+                    <Button
+                      leftIcon={<DeleteIcon />}
+                      colorScheme="red"
+                      variant="outline"
+                      onClick={onDeleteOpen}
+                    >
+                      Delete Project
+                    </Button>
+                  )}
+                  {/* Only show share button if user owns the project */}
+                  {!project.isSharedWithMe && (
+                    <Button
+                      leftIcon={<ExternalLinkIcon />}
+                      colorScheme="blue"
+                      onClick={() => onShareProject && onShareProject(project)}
+                    >
+                      Share Project
+                    </Button>
+                  )}
                 </HStack>
               </VStack>
             )}

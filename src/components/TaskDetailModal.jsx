@@ -58,6 +58,7 @@ const TaskDetailModal = ({
   projects = [],
   onTaskUpdate,
   onTaskDelete,
+  onLeaveTask,
   onClose,
   onShareTask,
   isOpen,
@@ -184,6 +185,29 @@ const TaskDetailModal = ({
     onDeleteClose();
   };
 
+  const handleLeaveTask = async () => {
+    try {
+      await onLeaveTask(task._id);
+      onClose();
+      toast({
+        title: 'Success',
+        description: 'Successfully left the shared task',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to leave task',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+    onDeleteClose();
+  };
+
   const getStatusColor = (completed) => {
     return completed ? 'green' : 'blue';
   };
@@ -226,7 +250,7 @@ const TaskDetailModal = ({
     const timeTracked = task.timeTracking?.totalTime || 0;
     const sessions = task.timeTracking?.sessions?.length || 0;
     const lastSession = task.timeTracking?.sessions?.[task.timeTracking.sessions.length - 1];
-    
+
     return {
       timeTracked,
       sessions,
@@ -256,7 +280,7 @@ const TaskDetailModal = ({
 
   return (
     <>
-      {/* Delete Confirmation Dialog */}
+      {/* Delete/Leave Confirmation Dialog */}
       <AlertDialog
         isOpen={isDeleteOpen}
         leastDestructiveRef={cancelRef}
@@ -265,17 +289,24 @@ const TaskDetailModal = ({
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Task
+              {isShared ? 'Leave Task' : 'Delete Task'}
             </AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure you want to delete this task? This action cannot be undone.
+              {isShared
+                ? 'Are you sure you want to leave this shared task? You will no longer have access to edit it.'
+                : 'Are you sure you want to delete this task? This action cannot be undone.'
+              }
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onDeleteClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={handleDelete} ml={3}>
-                Delete
+              <Button
+                colorScheme={isShared ? "orange" : "red"}
+                onClick={isShared ? handleLeaveTask : handleDelete}
+                ml={3}
+              >
+                {isShared ? 'Leave' : 'Delete'}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -599,7 +630,17 @@ const TaskDetailModal = ({
                   >
                     {isEditing ? 'Cancel Edit' : 'Edit Task'}
                   </Button>
-                  {!isShared && (
+                  {isShared ? (
+                    <Button
+                      leftIcon={<DeleteIcon />}
+                      colorScheme="orange"
+                      variant="outline"
+                      onClick={onDeleteOpen}
+                      w="full"
+                    >
+                      Leave Task
+                    </Button>
+                  ) : (
                     <Button
                       leftIcon={<DeleteIcon />}
                       colorScheme="red"
@@ -629,7 +670,16 @@ const TaskDetailModal = ({
                   >
                     {isEditing ? 'Cancel Edit' : 'Edit Task'}
                   </Button>
-                  {!isShared && (
+                  {isShared ? (
+                    <Button
+                      leftIcon={<DeleteIcon />}
+                      colorScheme="orange"
+                      variant="outline"
+                      onClick={onDeleteOpen}
+                    >
+                      Leave Task
+                    </Button>
+                  ) : (
                     <Button
                       leftIcon={<DeleteIcon />}
                       colorScheme="red"

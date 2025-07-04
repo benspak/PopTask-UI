@@ -1,21 +1,16 @@
 import React from 'react';
 import { Flex, IconButton, Tooltip } from '@chakra-ui/react';
-import { CalendarIcon, StarIcon, AddIcon, CloseIcon, EditIcon, ChatIcon } from '@chakra-ui/icons';
+import { CalendarIcon, StarIcon, AddIcon, CloseIcon, ChatIcon } from '@chakra-ui/icons';
 
 export default function BottomNav({
   isSidebarOpen,
   isCenterOpen,
   isAddMode,
-  isDetailOpen,
   isFooterOpen,
-  selectedTask,
   toggleSidebar,
   toggleCenter,
   handleAddTask,
-  toggleDetail,
-  toggleFooter,
-  handleMobileTaskEdit,
-  isMobileTaskEditOpen
+  toggleFooter
 }) {
   return (
     <Flex
@@ -75,18 +70,7 @@ export default function BottomNav({
             _hover={{ bg: isAddMode ? 'red.600' : 'green.600' }}
           />
         </Tooltip>
-        {selectedTask && (
-          <IconButton
-            icon={<EditIcon />}
-            aria-label="Toggle Detail Panel"
-            onClick={handleMobileTaskEdit || toggleDetail}
-            size={{ base: "md", md: "sm" }}
-            colorScheme={(isDetailOpen || isMobileTaskEditOpen) ? "blue" : "gray"}
-            variant="solid"
-            borderRadius="full"
-            _hover={{ bg: 'gray.700' }}
-          />
-        )}
+
         <Tooltip
           label="Send Feedback"
           placement="top"
