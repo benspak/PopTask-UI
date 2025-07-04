@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Flex,
@@ -57,6 +57,7 @@ import SidebarCalendar from './SidebarCalendar';
 import TaskDetailPanel from './TaskDetailPanel';
 import ProjectCreatePanel from './ProjectCreatePanel';
 import TaskCreatePanel from './TaskCreatePanel';
+import ProjectDetailPanel from './ProjectDetailPanel';
 
 export default function Dashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -103,6 +104,9 @@ export default function Dashboard() {
   // Calendar state
   const [expandedDays, setExpandedDays] = React.useState({});
 
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [isProjectDetailModalOpen, setIsProjectDetailModalOpen] = useState(false);
+
   React.useEffect(() => {
     if (!sharedContent) {
       loadTasks();
@@ -112,8 +116,7 @@ export default function Dashboard() {
 
   React.useEffect(() => {
     if (!sharedContent) {
-      console.log('🔍 DEBUG: Projects loaded:', Array.isArray(projects) ? projects.length : 0);
-      console.log('🔍 DEBUG: Online status:', navigator.onLine);
+      // Projects and online status tracking
     }
   }, [projects, sharedContent]);
 
@@ -485,7 +488,6 @@ export default function Dashboard() {
     return tasksByDay;
   };
 
-  const [selectedProject, setSelectedProject] = React.useState(null);
   const [filteredTasks, setFilteredTasks] = React.useState([]);
   const [isFilteredByDay, setIsFilteredByDay] = React.useState(false);
   const [selectedDay, setSelectedDay] = React.useState(null);
@@ -1050,7 +1052,6 @@ export default function Dashboard() {
       };
 
       const shareResult = await apiService.createShare('task', testTask);
-      console.log('Share created:', shareResult);
 
       toast({
         title: 'Test Share Created',
@@ -1184,6 +1185,10 @@ export default function Dashboard() {
           handleAddProject={handleAddProject}
           handleProjectClick={handleProjectClick}
           handleShareProject={handleShareProject}
+          handleProjectDetailOpen={(project) => {
+            setSelectedProject(project);
+            setIsProjectDetailModalOpen(true);
+          }}
           toggleCenter={toggleCenter}
         />
 
@@ -1395,6 +1400,19 @@ export default function Dashboard() {
       onAddTask={handleAddTask}
       onAddProject={handleAddProject}
     />
+
+    {/* Project Detail Modal */}
+    {selectedProject && (
+      <ProjectDetailPanel
+        project={selectedProject}
+        tasks={backendTasks}
+        onProjectUpdate={onUpdateProject}
+        onProjectDelete={onDeleteProject}
+        onClose={() => setIsProjectDetailModalOpen(false)}
+        onShareProject={handleShareProject}
+        isOpen={isProjectDetailModalOpen}
+      />
+    )}
   </Box>
 );
 }

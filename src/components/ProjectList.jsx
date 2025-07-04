@@ -27,7 +27,7 @@ import {
   FormHelperText,
   Switch,
 } from '@chakra-ui/react';
-import { AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
+import { AddIcon, EditIcon, DeleteIcon, SettingsIcon } from '@chakra-ui/icons';
 
 const ProjectList = ({
   projects = [],
@@ -38,6 +38,7 @@ const ProjectList = ({
   onProjectCreate,
   onProjectUpdate,
   onProjectDelete,
+  onProjectDetailOpen,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isEditMode, setIsEditMode] = useState(false);
@@ -244,11 +245,24 @@ const ProjectList = ({
                       <IconButton
                         size="sm"
                         variant="ghost"
+                        icon={<SettingsIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onProjectDetailOpen) {
+                            onProjectDetailOpen(project);
+                          }
+                        }}
+                        title="Project Details"
+                      />
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
                         icon={<EditIcon />}
                         onClick={(e) => {
                           e.stopPropagation();
                           openEditModal(project);
                         }}
+                        title="Quick Edit"
                       />
                       <IconButton
                         size="sm"
@@ -259,6 +273,7 @@ const ProjectList = ({
                           e.stopPropagation();
                           handleDeleteProject(project._id);
                         }}
+                        title="Delete Project"
                       />
                     </HStack>
                   </HStack>

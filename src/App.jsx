@@ -5,10 +5,12 @@ import AuthGuard from './components/AuthGuard';
 import Login from './views/Login';
 import Register from './views/Register';
 import ForgotPassword from './views/ForgotPassword';
+import ResetPassword from './views/ResetPassword';
 import EmailVerification from './components/EmailVerification';
 import Dashboard from './components/Dashboard';
 import SharedView from './components/SharedView';
 import Homepage from './components/Homepage';
+import Changelog from './components/Changelog';
 import { Spinner, Center, VStack, Text } from '@chakra-ui/react';
 
 export default function App() {
@@ -30,6 +32,7 @@ export default function App() {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Homepage />} />
+      <Route path="/changelog" element={<Changelog />} />
       <Route path="/login" element={
         isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
       } />
@@ -38,6 +41,9 @@ export default function App() {
       } />
       <Route path="/forgot-password" element={
         isAuthenticated ? <Navigate to="/dashboard" replace /> : <ForgotPassword />
+      } />
+      <Route path="/reset-password" element={
+        isAuthenticated ? <Navigate to="/dashboard" replace /> : <ResetPassword />
       } />
       <Route path="/verify-email" element={<EmailVerification />} />
 

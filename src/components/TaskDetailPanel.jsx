@@ -52,6 +52,9 @@ import {
   ViewIcon,
   AttachmentIcon,
 } from '@chakra-ui/icons';
+import TimeTrackingButton from './TimeTrackingButton';
+import TimeTrackingPanel from './TimeTrackingPanel';
+import apiService from '../services/api';
 
 const TaskDetailPanel = ({
   task,
@@ -208,6 +211,20 @@ const TaskDetailPanel = ({
   const getProjectDescription = (projectName) => {
     const project = projects.find(p => p.name === projectName);
     return project?.description || '';
+  };
+
+  // Handle time tracking updates by refreshing the task data
+  const handleTimeUpdate = async () => {
+    try {
+      // Get the updated task data from the server
+      const updatedTask = await apiService.getTask(task._id);
+      // Update the task in the parent component
+      if (onTaskUpdate && updatedTask.data) {
+        await onTaskUpdate(task._id, updatedTask.data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh task data after time tracking update:', error);
+    }
   };
 
   if (!task) return null;
@@ -615,6 +632,10 @@ const TaskDetailPanel = ({
                   </Stat>
                 )}
               </SimpleGrid>
+
+              {/* Time Tracking Section */}
+              <TimeTrackingButton task={task} onTimeUpdate={handleTimeUpdate} />
+              <TimeTrackingPanel task={task} onTimeUpdate={handleTimeUpdate} />
             </VStack>
           )}
         </VStack>

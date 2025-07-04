@@ -26,17 +26,23 @@ import {
   Spinner,
   IconButton,
   Tooltip,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  Wrap,
+  WrapItem,
 } from '@chakra-ui/react';
-import { CopyIcon, CheckIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { CopyIcon, CheckIcon, ExternalLinkIcon, AddIcon } from '@chakra-ui/icons';
 import apiService from '../services/api';
 
 const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
   const { colorMode } = useColorMode();
   const toast = useToast();
-  const [permission, setPermission] = useState('readonly');
   const [loading, setLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [allowedEmails, setAllowedEmails] = useState([]);
+  const [emailInput, setEmailInput] = useState('');
 
   const handleCreateShare = async () => {
     if (!item || !item._id) {
@@ -55,9 +61,9 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
 
       let response;
       if (type === 'task') {
-        response = await apiService.createTaskShareLink(item._id, permission);
+        response = await apiService.createTaskShareLink(item._id, allowedEmails);
       } else {
-        response = await apiService.createProjectShareLink(item._id, permission);
+        response = await apiService.createProjectShareLink(item._id, allowedEmails);
       }
 
       setShareUrl(response.data.shareUrl);
@@ -153,9 +159,29 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
 
   const handleClose = () => {
     setShareUrl('');
-    setPermission('readonly');
     setCopied(false);
+    setAllowedEmails([]);
+    setEmailInput('');
     onClose();
+  };
+
+  const addEmail = () => {
+    const email = emailInput.trim().toLowerCase();
+    if (email && !allowedEmails.includes(email)) {
+      setAllowedEmails([...allowedEmails, email]);
+      setEmailInput('');
+    }
+  };
+
+  const removeEmail = (emailToRemove) => {
+    setAllowedEmails(allowedEmails.filter(email => email !== emailToRemove));
+  };
+
+  const handleEmailKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addEmail();
+    }
   };
 
   const isCurrentlyShared = item && item.isShared && item.shareToken;
@@ -185,7 +211,7 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
               <Alert status="info">
                 <AlertIcon />
                 <AlertDescription>
-                  This {type} is currently shared with {item.sharePermission} permissions.
+                  This {type} is currently shared publicly. Anyone with the link can view it.
                 </AlertDescription>
               </Alert>
             )}
@@ -239,25 +265,47 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
               </Box>
             )}
 
-            {/* Permission Selection */}
+            {/* Email Access Control */}
             <Box>
               <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
-                Share Permission
+                Grant Edit Access to Specific Users
               </Text>
-              <Select
-                value={permission}
-                onChange={(e) => setPermission(e.target.value)}
-                disabled={loading}
-              >
-                <option value="readonly">Read-only</option>
-                <option value="editable">Editable</option>
-              </Select>
-              <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mt={1}>
-                {permission === 'readonly'
-                  ? 'Others can view but cannot edit this content'
-                  : 'Others can view and edit this content'
-                }
+              <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mb={2}>
+                Add email addresses to allow specific users to edit this {type} (optional)
               </Text>
+
+              {/* Email Input */}
+              <HStack mb={3}>
+                <Input
+                  placeholder="Enter email address"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  onKeyPress={handleEmailKeyPress}
+                  disabled={loading}
+                />
+                <Button
+                  size="sm"
+                  onClick={addEmail}
+                  disabled={!emailInput.trim() || loading}
+                  leftIcon={<AddIcon />}
+                >
+                  Add
+                </Button>
+              </HStack>
+
+              {/* Email Tags */}
+              {allowedEmails.length > 0 && (
+                <Wrap spacing={2}>
+                  {allowedEmails.map((email) => (
+                    <WrapItem key={email}>
+                      <Tag size="sm" colorScheme="blue" borderRadius="full">
+                        <TagLabel>{email}</TagLabel>
+                        <TagCloseButton onClick={() => removeEmail(email)} />
+                      </Tag>
+                    </WrapItem>
+                  ))}
+                </Wrap>
+              )}
             </Box>
 
             {/* Share URL Display */}
@@ -298,7 +346,7 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
                   </InputRightElement>
                 </InputGroup>
                 <Text fontSize="xs" color={colorMode === 'light' ? 'gray.500' : 'gray.400'} mt={1}>
-                  Share this link with others to give them access
+                  Share this link with others to give them view access. Only users with their email addresses added above can edit.
                 </Text>
               </Box>
             )}

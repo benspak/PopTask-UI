@@ -34,6 +34,7 @@ import SidebarCalendar from '../components/SidebarCalendar';
 import ProjectList from '../components/ProjectList';
 import TaskList from '../components/TaskList';
 import TaskDetailPanel from '../components/TaskDetailPanel';
+import ProjectDetailPanel from '../components/ProjectDetailPanel';
 import BottomNav from '../components/BottomNav';
 import SearchAndFilters from '../components/SearchAndFilters';
 import ShareDialog from '../components/ShareDialog';
@@ -46,7 +47,6 @@ import { useTasks } from '../hooks/useTasks';
 import apiService from '../services/api';
 
 const Dashboard = () => {
-  console.log('Dashboard component rendered');
 
   const { colorMode, toggleColorMode } = useColorMode();
   const toast = useToast();
@@ -57,6 +57,8 @@ const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCenterOpen, setIsCenterOpen] = useState(true);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isProjectDetailOpen, setIsProjectDetailOpen] = useState(false);
+  const [isProjectDetailModalOpen, setIsProjectDetailModalOpen] = useState(false);
   const [isFooterOpen, setIsFooterOpen] = useState(false);
   const [isAddMode, setIsAddMode] = useState(false);
   const [currentView, setCurrentView] = useState('all');
@@ -188,6 +190,7 @@ const Dashboard = () => {
     setSelectedProject(project);
     setSelectedTask(null);
     setIsDetailOpen(false);
+    setIsProjectDetailModalOpen(true);
   };
 
   const handleProjectCreate = async (projectData) => {
@@ -239,6 +242,8 @@ const Dashboard = () => {
         setSelectedProject(null);
         setSelectedTask(null);
         setIsDetailOpen(false);
+        setIsProjectDetailOpen(false);
+        setIsProjectDetailModalOpen(false);
       }
       toast({
         title: 'Success',
@@ -260,35 +265,10 @@ const Dashboard = () => {
 
   // Task handlers
   const handleTaskSelect = useCallback((task) => {
-    console.log('Dashboard handleTaskSelect received task:', task);
-    console.log('Dashboard handleTaskSelect task details:', {
-      id: task._id,
-      title: task.title,
-      description: task.description,
-      dueDate: task.dueDate,
-      project: task.project,
-      tags: task.tags,
-      completed: task.completed,
-      priority: task.priority
-    });
-    console.log('Dashboard handleTaskSelect - before state update:', {
-      currentSelectedTask: selectedTask,
-      currentIsDetailOpen: isDetailOpen
-    });
-
     setSelectedTask(task);
     setIsDetailOpen(true);
-
-    console.log('Dashboard handleTaskSelect - state updates triggered');
+    setIsProjectDetailOpen(false);
   }, [selectedTask, isDetailOpen]);
-
-  console.log('Dashboard handleTaskSelect function created:', typeof handleTaskSelect);
-
-  // Debug: Log tasks data
-  console.log('Dashboard tasks data:', {
-    tasksCount: tasks.length,
-    tasks: tasks.map(t => ({ id: t._id, title: t.title, project: t.project }))
-  });
 
   const handleTaskUpdate = async (taskId, taskData) => {
     try {
@@ -462,6 +442,10 @@ const Dashboard = () => {
                 onProjectCreate={handleProjectCreate}
                 onProjectUpdate={handleProjectUpdate}
                 onProjectDelete={handleProjectDelete}
+                onProjectDetailOpen={(project) => {
+                  setSelectedProject(project);
+                  setIsProjectDetailModalOpen(true);
+                }}
               />
             </Box>
           )}
@@ -486,14 +470,7 @@ const Dashboard = () => {
         </Flex>
 
         {/* Task Detail Panel */}
-        {(() => {
-          console.log('Dashboard render check:', {
-            isDetailOpen,
-            selectedTask: selectedTask ? 'exists' : 'null',
-            selectedTaskData: selectedTask
-          });
-
-          return isDetailOpen && selectedTask && (
+        {isDetailOpen && selectedTask && (
             <Box
               w={{ base: '100%', md: '400px' }}
               bg={colorMode === 'light' ? 'white' : 'gray.800'}
@@ -509,8 +486,9 @@ const Dashboard = () => {
                 onClose={() => setIsDetailOpen(false)}
               />
             </Box>
-          );
-        })()}
+          )}
+
+
       </Flex>
 
       {/* Bottom Navigation */}
@@ -624,6 +602,19 @@ const Dashboard = () => {
         item={shareItem}
         onShareCreated={handleShareCreated}
       />
+
+      {/* Project Detail Modal */}
+      {selectedProject && (
+        <ProjectDetailPanel
+          project={selectedProject}
+          tasks={tasks}
+          onProjectUpdate={handleProjectUpdate}
+          onProjectDelete={handleProjectDelete}
+          onClose={() => setIsProjectDetailModalOpen(false)}
+          onShareProject={(project) => handleShare(project, 'project')}
+          isOpen={isProjectDetailModalOpen}
+        />
+      )}
     </Box>
   );
 };

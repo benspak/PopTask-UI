@@ -202,17 +202,13 @@ class ApiService {
   }
 
   async validateToken() {
-    console.log('🔍 Validating token...');
     const result = await this.request('/auth/validate');
-    console.log('✅ Token validation successful:', result);
     return result;
   }
 
   async refreshToken() {
-    console.log('🔄 Refreshing token...');
     const refreshToken = localStorage.getItem(this.refreshTokenKey);
     if (!refreshToken) {
-      console.log('❌ No refresh token available');
       throw new Error('No refresh token available');
     }
 
@@ -220,7 +216,6 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     });
-    console.log('✅ Token refresh successful:', result);
     return result;
   }
 
@@ -391,10 +386,10 @@ class ApiService {
   }
 
   // Share methods
-  async createTaskShareLink(taskId, permission = 'readonly') {
+  async createTaskShareLink(taskId, allowedEmails = []) {
     return await this.request(`/tasks/${taskId}/share`, {
       method: 'POST',
-      body: JSON.stringify({ permission }),
+      body: JSON.stringify({ allowedEmails }),
     });
   }
 
@@ -415,10 +410,10 @@ class ApiService {
     });
   }
 
-  async createProjectShareLink(projectId, permission = 'readonly') {
+  async createProjectShareLink(projectId, allowedEmails = []) {
     return await this.request(`/projects/${projectId}/share`, {
       method: 'POST',
-      body: JSON.stringify({ permission }),
+      body: JSON.stringify({ allowedEmails }),
     });
   }
 
@@ -436,6 +431,30 @@ class ApiService {
   async disableProjectSharing(projectId) {
     return await this.request(`/projects/${projectId}/share`, {
       method: 'DELETE',
+    });
+  }
+
+  // Time tracking methods
+  async startTaskTimer(taskId) {
+    return await this.request(`/tasks/${taskId}/start-timer`, {
+      method: 'POST',
+    });
+  }
+
+  async stopTaskTimer(taskId) {
+    return await this.request(`/tasks/${taskId}/stop-timer`, {
+      method: 'POST',
+    });
+  }
+
+  async getTaskTimeSummary(taskId) {
+    return await this.request(`/tasks/${taskId}/time-summary`);
+  }
+
+  async updateTaskEstimatedTime(taskId, estimatedTime) {
+    return await this.request(`/tasks/${taskId}/estimated-time`, {
+      method: 'PUT',
+      body: JSON.stringify({ estimatedTime }),
     });
   }
 

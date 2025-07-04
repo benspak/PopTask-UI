@@ -59,6 +59,23 @@ const TaskList = ({
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
   };
 
+  // Utility function to format time in seconds to readable format
+  const formatTime = (seconds) => {
+    if (!seconds || seconds === 0) return '0s';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
+  };
+
   // Filter and sort tasks
   const filteredAndSortedTasks = useMemo(() => {
     let filtered = tasks;
@@ -111,24 +128,8 @@ const TaskList = ({
   }, [tasks, searchTerm, statusFilter, sortBy, sortOrder]);
 
   const handleTaskClick = (task) => {
-    console.log('TaskList handleTaskClick called with task:', task);
-    console.log('TaskList task details:', {
-      id: task._id,
-      title: task.title,
-      description: task.description,
-      dueDate: task.dueDate,
-      project: task.project,
-      tags: task.tags,
-      completed: task.completed,
-      priority: task.priority
-    });
-    console.log('TaskList onTaskSelect function exists:', !!onTaskSelect);
-
     if (onTaskSelect) {
-      console.log('TaskList calling onTaskSelect with task:', task);
       onTaskSelect(task);
-    } else {
-      console.log('TaskList onTaskSelect is not provided');
     }
   };
 
@@ -175,7 +176,7 @@ const TaskList = ({
           {isFilteredByDay
             ? `No tasks on ${selectedDay}s`
             : selectedProject
-            ? `No tasks in project "${selectedProject}"`
+            ? `No tasks in project "${selectedProject?.name || 'Unknown'}"`
             : selectedTag
             ? `No tasks with tag "${selectedTag}"`
             : searchTerm || statusFilter !== 'all'
@@ -256,7 +257,7 @@ const TaskList = ({
           <HStack justify="space-between" align="center">
             <HStack spacing={2}>
               <Text fontSize="sm" fontWeight="medium" color="white">
-                📁 Filtered by project: {selectedProject}
+                📁 Filtered by project: {selectedProject?.name || 'Unknown'}
               </Text>
               <Badge colorScheme="green" variant="solid" size="sm">
                 {filteredAndSortedTasks.length} task{filteredAndSortedTasks.length !== 1 ? 's' : ''}
@@ -381,6 +382,20 @@ const TaskList = ({
                         ))}
                       </HStack>
                     )}
+
+                    {/* Time Tracking Info */}
+                    <HStack spacing={2}>
+                      {task.timeTracking?.totalTime > 0 && (
+                        <Badge colorScheme="blue" variant="subtle" fontSize="xs">
+                          {formatTime(task.timeTracking.totalTime)}
+                        </Badge>
+                      )}
+                      {task.timeTracking?.isActive && (
+                        <Badge colorScheme="green" variant="solid" fontSize="xs">
+                          Live
+                        </Badge>
+                      )}
+                    </HStack>
                   </VStack>
 
                   <HStack spacing={1}>

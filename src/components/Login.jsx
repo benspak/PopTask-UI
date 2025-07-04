@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Box,
   VStack,
@@ -26,6 +26,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -35,6 +36,10 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const toast = useToast();
+
+  // Get the redirect URL from location state
+  const from = location.state?.from || '/dashboard';
+  const message = location.state?.message;
 
   const validateForm = () => {
     const newErrors = {};
@@ -82,8 +87,8 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
         isClosable: true,
       });
 
-      // Navigate to dashboard
-      navigate('/dashboard');
+      // Navigate to the original destination or dashboard
+      navigate(from);
     } catch (error) {
       console.error('Login error:', error);
       const errorMessage = error.message || 'Login failed. Please try again.';
@@ -114,6 +119,12 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
             <Text color="gray.600" textAlign="center">
               Sign in to your PopTask account
             </Text>
+            {message && (
+              <Alert status="info" borderRadius="md">
+                <AlertIcon />
+                <Text fontSize="sm">{message}</Text>
+              </Alert>
+            )}
           </VStack>
 
           <Box as="form" onSubmit={handleSubmit} w="full">

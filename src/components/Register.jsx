@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Box,
   VStack,
@@ -21,12 +21,15 @@ import {
   Progress,
   HStack,
   Text as ChakraText,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register = ({ onSwitchToLogin }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -42,6 +45,10 @@ const Register = ({ onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const toast = useToast();
+
+  // Get the redirect URL from location state
+  const from = location.state?.from || '/dashboard';
+  const message = location.state?.message;
 
   // Password strength indicators
   const passwordRequirements = {
@@ -132,8 +139,8 @@ const Register = ({ onSwitchToLogin }) => {
         isClosable: true,
       });
 
-      // Navigate to dashboard
-      navigate('/dashboard');
+      // Navigate to the original destination or dashboard
+      navigate(from);
     } catch (error) {
       console.error('Registration error:', error);
       const errorMessage = error.message || 'Registration failed. Please try again.';
@@ -177,6 +184,12 @@ const Register = ({ onSwitchToLogin }) => {
             <Text color="gray.600" textAlign="center">
               Join PopTask to organize your tasks efficiently
             </Text>
+            {message && (
+              <Alert status="info" borderRadius="md">
+                <AlertIcon />
+                <Text fontSize="sm">{message}</Text>
+              </Alert>
+            )}
           </VStack>
 
           <Box as="form" onSubmit={handleSubmit} w="full">

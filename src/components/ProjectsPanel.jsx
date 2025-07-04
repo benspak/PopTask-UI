@@ -21,6 +21,7 @@ import {
   HamburgerIcon,
   StarIcon,
   LinkIcon,
+  SettingsIcon,
 } from '@chakra-ui/icons';
 
 const ProjectsPanel = ({
@@ -33,6 +34,7 @@ const ProjectsPanel = ({
   handleAddProject,
   handleProjectClick,
   handleShareProject,
+  handleProjectDetailOpen,
   toggleCenter,
 }) => (
   <>
@@ -105,6 +107,21 @@ const ProjectsPanel = ({
                   </Badge>
                 )}
                 <HStack position="absolute" top={2} right={2} spacing={1}>
+                  <Tooltip label="Project Details">
+                    <IconButton
+                      icon={<SettingsIcon />}
+                      aria-label="Project Details"
+                      size="xs"
+                      colorScheme="blue"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (handleProjectDetailOpen) {
+                          handleProjectDetailOpen(project);
+                        }
+                      }}
+                    />
+                  </Tooltip>
                   <Tooltip label="Share project">
                     <IconButton
                       icon={<LinkIcon />}
@@ -214,6 +231,21 @@ const ProjectsPanel = ({
                   </Badge>
                 )}
                 <HStack position="absolute" top={2} right={2} spacing={1}>
+                  <Tooltip label="Project Details">
+                    <IconButton
+                      icon={<SettingsIcon />}
+                      aria-label="Project Details"
+                      size="xs"
+                      colorScheme="blue"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (handleProjectDetailOpen) {
+                          handleProjectDetailOpen(project);
+                        }
+                      }}
+                    />
+                  </Tooltip>
                   <Tooltip label="Share project">
                     <IconButton
                       icon={<LinkIcon />}

@@ -49,7 +49,6 @@ const updateSW = registerSW({
   },
   onOfflineReady() {
     // App ready to work offline
-    console.log('App is ready to work offline');
   },
   onRegisterError(error) {
     console.error('SW registration error:', error);

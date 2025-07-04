@@ -20,6 +20,7 @@ import {
 } from '@chakra-ui/react';
 import {
   CheckIcon,
+  CheckCircleIcon,
   TimeIcon,
   InfoIcon,
   AtSignIcon,
@@ -80,29 +81,29 @@ const Homepage = () => {
     }
   ];
 
-  const testimonials = [
-    {
-      name: 'Sarah Chen',
-      role: 'Product Manager',
-      company: 'TechFlow Inc.',
-      quote: 'PopTask saved our team 15 hours per week. The calendar view alone made our sprint planning 3x faster.',
-      savings: '$45,000/year'
-    },
-    {
-      name: 'Marcus Rodriguez',
-      role: 'Operations Director',
-      company: 'ScaleUp Solutions',
-      quote: 'We reduced project delays by 60% and our team is finally on the same page. Game changer.',
-      savings: '$78,000/year'
-    },
-    {
-      name: 'Emily Watson',
-      role: 'CEO',
-      company: 'StartupXYZ',
-      quote: 'The ROI was immediate. We\'re saving $2,400 per month in lost productivity. Best investment we made.',
-      savings: '$28,800/year'
-    }
-  ];
+  // const testimonials = [
+  //   {
+  //     name: 'Sarah Chen',
+  //     role: 'Product Manager',
+  //     company: 'TechFlow Inc.',
+  //     quote: 'PopTask saved our team 15 hours per week. The calendar view alone made our sprint planning 3x faster.',
+  //     savings: '$45,000/year'
+  //   },
+  //   {
+  //     name: 'Marcus Rodriguez',
+  //     role: 'Operations Director',
+  //     company: 'ScaleUp Solutions',
+  //     quote: 'We reduced project delays by 60% and our team is finally on the same page. Game changer.',
+  //     savings: '$78,000/year'
+  //   },
+  //   {
+  //     name: 'Emily Watson',
+  //     role: 'CEO',
+  //     company: 'StartupXYZ',
+  //     quote: 'The ROI was immediate. We\'re saving $2,400 per month in lost productivity. Best investment we made.',
+  //     savings: '$28,800/year'
+  //   }
+  // ];
 
   const handleSignup = () => {
     // Navigate to signup page
@@ -139,9 +140,12 @@ const Homepage = () => {
                 <Link href="#pricing" color={textColor} _hover={{ color: accentColor }}>
                   Pricing
                 </Link>
-                <Link href="#testimonials" color={textColor} _hover={{ color: accentColor }}>
-                  Success Stories
+                <Link href="/changelog" color={textColor} _hover={{ color: accentColor }}>
+                  Changelog
                 </Link>
+                {/* <Link href="#testimonials" color={textColor} _hover={{ color: accentColor }}>
+                  Success Stories
+                </Link> */}
               </HStack>
             </HStack>
             <HStack spacing={4}>
@@ -163,7 +167,7 @@ const Homepage = () => {
       <Container maxW="7xl" py={20}>
         <VStack spacing={8} textAlign="center">
           <Badge colorScheme="blue" px={4} py={2} borderRadius="full" fontSize="sm">
-            Save Time, Save Money
+            Simple • Fast • Effective
           </Badge>
           <Heading
             size="2xl"
@@ -171,12 +175,12 @@ const Homepage = () => {
             maxW="4xl"
             lineHeight="1.2"
           >
-            The Task Management App That
-            <Text as="span" color={accentColor}> Pays for Itself</Text>
+            Stop Wasting Time on
+            <Text as="span" color={accentColor}> Task Management</Text>
           </Heading>
           <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-            PopTask helps businesses save an average of 12 hours per week per employee.
-            That's $36,000+ in annual savings for a 10-person team.
+            PopTask is the simplest way to organize tasks and get more done.
+            Teams save 10+ hours per week with our streamlined approach.
           </Text>
           <HStack spacing={4} pt={4}>
             <Button
@@ -185,7 +189,7 @@ const Homepage = () => {
               onClick={handleSignup}
               rightIcon={<ArrowForwardIcon />}
             >
-              Start Saving Time Today
+              Get Started Free
             </Button>
           </HStack>
         </VStack>
@@ -197,10 +201,10 @@ const Homepage = () => {
           <VStack spacing={16}>
             <VStack spacing={4} textAlign="center">
               <Heading size="xl" color={textColor}>
-                Features That Drive Results
+                Everything You Need, Nothing You Don't
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-                Every feature is designed to save you time and money. Here's how PopTask delivers 10x ROI.
+                We built PopTask to do one thing really well: help you organize tasks and get more done.
               </Text>
             </VStack>
 
@@ -249,10 +253,10 @@ const Homepage = () => {
           <VStack spacing={12}>
             <VStack spacing={4} textAlign="center">
               <Heading size="xl" color={textColor}>
-                Calculate Your Savings
+                See the Impact
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')}>
-                See exactly how much PopTask can save your business
+                How much time could your team save?
               </Text>
             </VStack>
 
@@ -279,7 +283,7 @@ const Homepage = () => {
                     Time Saved
                   </Text>
                   <Text fontSize="3xl" color="green.500" fontWeight="bold">
-                    12 hrs/week
+                    10 hrs/week
                   </Text>
                 </VStack>
                 <VStack spacing={4}>
@@ -287,60 +291,188 @@ const Homepage = () => {
                     Annual Savings
                   </Text>
                   <Text fontSize="3xl" color="green.500" fontWeight="bold">
-                    $36,000
+                    $156,000
                   </Text>
                 </VStack>
               </SimpleGrid>
               <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center" mt={6}>
-                Based on average hourly rate of $60 and 12 hours saved per week per employee
+                Based on average hourly rate of $30 and 10 hours saved per week per employee
               </Text>
             </Box>
           </VStack>
         </Container>
       </Box>
 
-      {/* Testimonials Section */}
-      <Box id="testimonials" py={20} bg={cardBg}>
+      {/* Pricing Section */}
+      <Box id="pricing" py={20} bg={cardBg}>
         <Container maxW="7xl">
           <VStack spacing={16}>
             <VStack spacing={4} textAlign="center">
               <Heading size="xl" color={textColor}>
-                Real Results from Real Teams
+                Simple, Transparent Pricing
               </Heading>
-              <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')}>
-                See how other businesses are saving time and money with PopTask
+              <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
+                Start free, upgrade when you're ready. No hidden fees, no surprises.
               </Text>
             </VStack>
 
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8}>
-              {testimonials.map((testimonial, index) => (
-                <Box
-                  key={index}
-                  bg={bgColor}
-                  p={6}
-                  borderRadius="xl"
-                  border="1px"
-                  borderColor={useColorModeValue('gray.200', 'gray.700')}
-                >
-                  <VStack spacing={4} align="start">
-                    <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} fontStyle="italic">
-                      "{testimonial.quote}"
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} maxW="4xl" w="full">
+              {/* Free Plan */}
+              <Box
+                bg={bgColor}
+                p={8}
+                borderRadius="xl"
+                border="1px"
+                borderColor={useColorModeValue('gray.200', 'gray.700')}
+                textAlign="center"
+                position="relative"
+              >
+                <VStack spacing={6}>
+                  <VStack spacing={2}>
+                    <Text fontSize="lg" fontWeight="semibold" color={textColor}>
+                      Free
                     </Text>
-                    <VStack spacing={1} align="start" w="full">
-                      <Text fontWeight="bold" color={textColor}>
-                        {testimonial.name}
-                      </Text>
-                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                        {testimonial.role} at {testimonial.company}
-                      </Text>
-                      <Badge colorScheme="green" variant="solid">
-                        Saved {testimonial.savings}
-                      </Badge>
+                    <Text fontSize="3xl" fontWeight="bold" color={textColor}>
+                      $0
+                    </Text>
+                    <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                      Forever
+                    </Text>
+                  </VStack>
+
+                  <VStack spacing={4} align="start" w="full">
+                    <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                      Perfect for getting started
+                    </Text>
+                    <VStack spacing={3} align="start" w="full">
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Up to 10 tasks</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Basic task management</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Mobile responsive</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Email support</Text>
+                      </HStack>
                     </VStack>
                   </VStack>
-                </Box>
-              ))}
+
+                  <Button
+                    variant="outline"
+                    colorScheme="blue"
+                    w="full"
+                    onClick={handleSignup}
+                  >
+                    Get Started Free
+                  </Button>
+                </VStack>
+              </Box>
+
+              {/* Pro Plan */}
+              <Box
+                bg={bgColor}
+                p={8}
+                borderRadius="xl"
+                border="2px"
+                borderColor={accentColor}
+                textAlign="center"
+                position="relative"
+                _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
+                transition="all 0.3s"
+              >
+                <Badge
+                  colorScheme="blue"
+                  position="absolute"
+                  top={-3}
+                  left="50%"
+                  transform="translateX(-50%)"
+                  px={3}
+                  py={1}
+                  borderRadius="full"
+                  fontSize="sm"
+                >
+                  Most Popular
+                </Badge>
+
+                <VStack spacing={6}>
+                  <VStack spacing={2}>
+                    <Text fontSize="lg" fontWeight="semibold" color={textColor}>
+                      Pro
+                    </Text>
+                    <Text fontSize="3xl" fontWeight="bold" color={accentColor}>
+                      $50
+                    </Text>
+                    <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                      per month
+                    </Text>
+                    <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} fontWeight="medium">
+                      for teams of 10 or less
+                    </Text>
+                  </VStack>
+
+                  <VStack spacing={4} align="start" w="full">
+                    <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                      Everything you need for your team
+                    </Text>
+                    <VStack spacing={3} align="start" w="full">
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Unlimited tasks</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>All features included</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Project organization</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Priority support</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Team collaboration</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Advanced analytics</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Up to 10 team members</Text>
+                      </HStack>
+                    </VStack>
+                  </VStack>
+
+                  <Button
+                    colorScheme="blue"
+                    w="full"
+                    onClick={handleSignup}
+                    rightIcon={<ArrowForwardIcon />}
+                  >
+                    Start Pro Trial
+                  </Button>
+                </VStack>
+              </Box>
             </SimpleGrid>
+
+            <VStack spacing={4} textAlign="center">
+              <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                All plans include a 30 day moneyback guarantee. Cancel anytime.
+              </Text>
+              <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                Need a custom plan for your team? <Link color="blue.500" href="https://x.com/benvspak" isExternal>Contact us</Link>
+              </Text>
+            </VStack>
           </VStack>
         </Container>
       </Box>
@@ -350,11 +482,11 @@ const Homepage = () => {
         <Container maxW="7xl">
           <VStack spacing={8} textAlign="center">
             <Heading size="xl" color="white">
-              Ready to Start Saving?
+              Ready to Get More Done?
             </Heading>
             <Text fontSize="lg" color="blue.100" maxW="2xl">
-              Join thousands of businesses that are already saving time and money with PopTask.
-              Start your free trial today and see the difference.
+              Stop juggling tasks in your head. Get organized and focused with PopTask.
+              Start free and see the difference in minutes.
             </Text>
             <HStack spacing={4}>
               <Button
@@ -365,7 +497,7 @@ const Homepage = () => {
                 onClick={handleSignup}
                 rightIcon={<ArrowForwardIcon />}
               >
-                Start Free Trial
+                Start Free
               </Button>
               <Button
                 size="lg"
@@ -396,7 +528,7 @@ const Homepage = () => {
                 PopTask
               </Heading>
               <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
-                The task management app that pays for itself
+                Simple task management that actually works
               </Text>
             </VStack>
             <HStack spacing={6}>
@@ -406,9 +538,12 @@ const Homepage = () => {
               <Link href="#pricing" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
                 Pricing
               </Link>
-              <Link href="#testimonials" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
-                Success Stories
+              <Link href="/changelog" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
+                Changelog
               </Link>
+              {/* <Link href="#testimonials" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
+                Success Stories
+              </Link> */}
             </HStack>
           </Flex>
         </Container>
