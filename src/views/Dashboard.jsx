@@ -34,12 +34,15 @@ import SidebarCalendar from '../components/SidebarCalendar';
 import ProjectList from '../components/ProjectList';
 import TaskList from '../components/TaskList';
 import TaskDetailPanel from '../components/TaskDetailPanel';
+import TaskDetailModal from '../components/TaskDetailModal';
 import ProjectDetailPanel from '../components/ProjectDetailPanel';
 import BottomNav from '../components/BottomNav';
 import SearchAndFilters from '../components/SearchAndFilters';
 import ShareDialog from '../components/ShareDialog';
 import FooterPromptPanel from '../components/FooterPromptPanel';
 import MobileBackdropOverlay from '../components/MobileBackdropOverlay';
+import SharedContentPanel from '../components/SharedContentPanel';
+import DebugAuth from '../components/DebugAuth';
 
 // Import hooks and services
 import { useProjects } from '../hooks/useProjects';
@@ -59,6 +62,7 @@ const Dashboard = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isProjectDetailOpen, setIsProjectDetailOpen] = useState(false);
   const [isProjectDetailModalOpen, setIsProjectDetailModalOpen] = useState(false);
+  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
   const [isFooterOpen, setIsFooterOpen] = useState(false);
   const [isAddMode, setIsAddMode] = useState(false);
   const [currentView, setCurrentView] = useState('all');
@@ -73,12 +77,16 @@ const Dashboard = () => {
   const [shareItem, setShareItem] = useState(null);
   const [shareType, setShareType] = useState('task');
   const [refreshLimitsTrigger, setRefreshLimitsTrigger] = useState(0);
+  const [isSharedContentExpanded, setIsSharedContentExpanded] = useState(true);
 
   // Hooks
   const {
     projects,
+    sharedProjects,
     loading: projectsLoading,
+    sharedLoading: sharedProjectsLoading,
     error: projectsError,
+    sharedError: sharedProjectsError,
     createProject,
     updateProject,
     deleteProject,
@@ -86,12 +94,22 @@ const Dashboard = () => {
 
   const {
     tasks,
+    sharedTasks,
     loading: tasksLoading,
+    sharedLoading: sharedTasksLoading,
     error: tasksError,
+    sharedError: sharedTasksError,
     createTask,
     updateTask,
     deleteTask,
   } = useTasks(selectedProject?._id);
+
+  // Auto-expand shared content panel when content is loaded
+  useEffect(() => {
+    if ((sharedTasks.length > 0 || sharedProjects.length > 0) && !isSharedContentExpanded) {
+      setIsSharedContentExpanded(true);
+    }
+  }, [sharedTasks.length, sharedProjects.length, isSharedContentExpanded]);
 
   // Online/offline detection
   useEffect(() => {
@@ -383,6 +401,21 @@ const Dashboard = () => {
     }
   };
 
+  // Shared content handlers
+  const handleSharedTaskClick = (task) => {
+    setSelectedTask(task);
+    setIsTaskDetailModalOpen(true);
+  };
+
+  const handleSharedProjectClick = (project) => {
+    setSelectedProject(project);
+    setIsProjectDetailModalOpen(true);
+  };
+
+  const toggleSharedContentExpanded = () => {
+    setIsSharedContentExpanded(!isSharedContentExpanded);
+  };
+
   // Loading state
   if (projectsLoading || tasksLoading) {
     return (
@@ -397,6 +430,10 @@ const Dashboard = () => {
 
   return (
     <Box h="100vh" bg={colorMode === 'light' ? 'gray.50' : 'gray.900'}>
+      {/* CRITICAL DEBUG: Dashboard is rendering */}
+      <Box position="fixed" top="0" left="0" zIndex="9999" bg="red" color="white" p={2}>
+        <Text fontSize="sm">🚨 DASHBOARD IS RENDERING!</Text>
+      </Box>
       {/* Offline Alert */}
       {!isOnline && (
         <Alert status="warning" borderRadius={0}>
@@ -451,6 +488,8 @@ const Dashboard = () => {
             setSortOrder={setSortOrder}
             onCreateTask={handleCreateTask}
             selectedProject={selectedProject}
+            projects={projects}
+            sharedProjects={sharedProjects}
             refreshLimitsTrigger={refreshLimitsTrigger}
           />
 
@@ -482,7 +521,31 @@ const Dashboard = () => {
           )}
 
           {/* Task List */}
-          <Box flex={1} overflowY="auto">
+          <Box flex={1} overflowY="visible">
+            {/* Test Component - Always Visible */}
+            <Box p={4} bg="yellow.100" border="2px solid yellow" mb={4}>
+              <Text fontWeight="bold" color="yellow.800">
+                🧪 TEST: This should always be visible!
+              </Text>
+            </Box>
+
+            {/* Shared Content Panel */}
+            <SharedContentPanel
+              sharedTasks={sharedTasks}
+              sharedProjects={sharedProjects}
+              sharedTasksLoading={sharedTasksLoading}
+              sharedProjectsLoading={sharedProjectsLoading}
+              sharedTasksError={sharedTasksError}
+              sharedProjectsError={sharedProjectsError}
+              onTaskClick={handleSharedTaskClick}
+              onProjectClick={handleSharedProjectClick}
+              isExpanded={isSharedContentExpanded}
+              onToggleExpanded={toggleSharedContentExpanded}
+            />
+
+            {/* Debug Component */}
+            <DebugAuth />
+
             <TaskList
               tasks={tasks}
               loading={tasksLoading}
@@ -645,6 +708,20 @@ const Dashboard = () => {
           onClose={() => setIsProjectDetailModalOpen(false)}
           onShareProject={(project) => handleShare(project, 'project')}
           isOpen={isProjectDetailModalOpen}
+        />
+      )}
+
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          projects={projects}
+          onTaskUpdate={handleTaskUpdate}
+          onTaskDelete={handleTaskDelete}
+          onClose={() => setIsTaskDetailModalOpen(false)}
+          onShareTask={(task) => handleShare(task, 'task')}
+          isOpen={isTaskDetailModalOpen}
+          isShared={true}
         />
       )}
     </Box>

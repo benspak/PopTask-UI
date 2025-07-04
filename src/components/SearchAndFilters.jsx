@@ -35,6 +35,8 @@ const SearchAndFilters = ({
   setSortOrder,
   onCreateTask,
   selectedProject,
+  projects = [],
+  sharedProjects = [],
   refreshLimitsTrigger = 0,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -42,6 +44,7 @@ const SearchAndFilters = ({
     title: '',
     description: '',
     dueDate: '',
+    project: 'general',
   });
 
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -53,7 +56,7 @@ const SearchAndFilters = ({
     try {
       await onCreateTask({
         ...newTask,
-        projectId: selectedProject?._id,
+        project: newTask.project,
       });
 
       // Reset form
@@ -61,6 +64,7 @@ const SearchAndFilters = ({
         title: '',
         description: '',
         dueDate: '',
+        project: 'general',
       });
       onClose();
     } catch (error) {
@@ -192,6 +196,31 @@ const SearchAndFilters = ({
                   value={newTask.dueDate}
                   onChange={(e) => setNewTask(prev => ({ ...prev, dueDate: e.target.value }))}
                 />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Project</FormLabel>
+                <Select
+                  value={newTask.project}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, project: e.target.value }))}
+                >
+                  <optgroup label="My Projects">
+                    {projects.map((project) => (
+                      <option key={project._id || project.name} value={project.name}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {sharedProjects.length > 0 && (
+                    <optgroup label="Shared Projects">
+                      {sharedProjects.map((project) => (
+                        <option key={project._id || project.name} value={project.name}>
+                          📁 {project.name} (shared by {project.owner?.firstName || project.owner?.username || 'Unknown'})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </Select>
               </FormControl>
 
               <HStack spacing={4} w="full" justify="flex-end">

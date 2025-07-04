@@ -28,6 +28,7 @@ const TaskCreatePanel = ({
   onClose,
   onCreateTask,
   projects = [],
+  sharedProjects = [],
   loading = false,
 }) => {
   const [taskData, setTaskData] = useState({
@@ -235,14 +236,25 @@ const TaskCreatePanel = ({
               onChange={(e) => handleInputChange('project', e.target.value)}
               onKeyDown={handleKeyDown}
             >
-              {projects.map((project) => (
-                <option key={project._id || project.name} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
+              <optgroup label="My Projects">
+                {projects.map((project) => (
+                  <option key={project._id || project.name} value={project.name}>
+                    {project.name}
+                  </option>
+                ))}
+              </optgroup>
+              {sharedProjects.length > 0 && (
+                <optgroup label="Shared Projects">
+                  {sharedProjects.map((project) => (
+                    <option key={project._id || project.name} value={project.name}>
+                      📁 {project.name} (shared by {project.owner?.firstName || project.owner?.username || 'Unknown'})
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </Select>
             <FormHelperText>
-              Assign this task to a specific project
+              Assign this task to a specific project. You can create tasks in projects shared with you.
             </FormHelperText>
           </FormControl>
 

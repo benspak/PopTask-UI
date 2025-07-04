@@ -68,14 +68,12 @@
   "homepage": "https://github.com/yourusername/task-dashboard-frontend#readme",
   "keywords": [
     "task-management",
-    "pwa",
     "react",
     "chakra-ui",
     "vite",
-    "progressive-web-app",
     "file-upload",
     "responsive-design"
   ],
-  "author": "Your Name",
+  "author": "Ben Spak",
   "license": "MIT"
 }

@@ -3,8 +3,11 @@ import apiService from '../services/api';
 
 export const useTasks = () => {
   const [tasks, setTasks] = useState([]);
+  const [sharedTasks, setSharedTasks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sharedLoading, setSharedLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sharedError, setSharedError] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
 
   const loadTasks = useCallback(async (filters = {}) => {
@@ -31,6 +34,35 @@ export const useTasks = () => {
       setIsOffline(true);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const loadSharedTasks = useCallback(async () => {
+    try {
+      console.log('🔄 Loading shared tasks...');
+      setSharedLoading(true);
+      setSharedError(null);
+
+      const response = await apiService.getSharedTasks();
+      console.log('✅ Shared tasks response:', response);
+      setSharedTasks(response.data || []);
+
+      // Check online status
+      const isCurrentlyOnline = await apiService.checkServerConnection();
+      setIsOffline(!isCurrentlyOnline);
+
+      if (!isCurrentlyOnline) {
+        setSharedError('Working offline - please check your connection');
+      } else {
+        setSharedError(null);
+      }
+    } catch (err) {
+      console.error('❌ Error loading shared tasks:', err);
+      setSharedError('Failed to load shared tasks. Please check your connection.');
+      setSharedTasks([]);
+      setIsOffline(true);
+    } finally {
+      setSharedLoading(false);
     }
   }, []);
 
@@ -89,14 +121,19 @@ export const useTasks = () => {
   // Initial data load
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
+    loadSharedTasks();
+  }, [loadTasks, loadSharedTasks]);
 
   return {
     tasks,
+    sharedTasks,
     loading,
+    sharedLoading,
     error,
+    sharedError,
     isOffline,
     loadTasks,
+    loadSharedTasks,
     createTask,
     updateTask,
     deleteTask,

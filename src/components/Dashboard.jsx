@@ -59,6 +59,7 @@ import ProjectCreatePanel from './ProjectCreatePanel';
 import TaskCreatePanel from './TaskCreatePanel';
 import ProjectDetailPanel from './ProjectDetailPanel';
 import FeedbackModal from './FeedbackModal';
+import SharedContentPanel from './SharedContentPanel';
 
 export default function Dashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -77,9 +78,11 @@ export default function Dashboard() {
 
   const {
     tasks: backendTasks,
+    sharedTasks,
     loading: tasksLoading,
+    sharedLoading: sharedTasksLoading,
     error: tasksError,
-    isOffline: tasksOffline,
+    sharedError: sharedTasksError,
     loadTasks,
     createTask,
     updateTask,
@@ -90,9 +93,11 @@ export default function Dashboard() {
 
   const {
     projects,
+    sharedProjects,
     loading: projectsLoading,
+    sharedLoading: sharedProjectsLoading,
     error: projectsError,
-    isOffline: projectsOffline,
+    sharedError: sharedProjectsError,
     loadProjects,
     createProject,
     updateProject,
@@ -108,6 +113,7 @@ export default function Dashboard() {
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [isProjectDetailModalOpen, setIsProjectDetailModalOpen] = useState(false);
+  const [isSharedContentExpanded, setIsSharedContentExpanded] = useState(true);
 
   React.useEffect(() => {
     if (!sharedContent) {
@@ -998,6 +1004,20 @@ export default function Dashboard() {
     setIsShareDialogOpen(true);
   };
 
+  const handleSharedTaskClick = (task) => {
+    setSelectedTask(task);
+    setIsDetailOpen(true);
+  };
+
+  const handleSharedProjectClick = (project) => {
+    setSelectedProject(project);
+    setIsProjectDetailModalOpen(true);
+  };
+
+  const toggleSharedContentExpanded = () => {
+    setIsSharedContentExpanded(!isSharedContentExpanded);
+  };
+
   const handleShareDialogClose = () => {
     setIsShareDialogOpen(false);
     setShareDialogType(null);
@@ -1171,7 +1191,21 @@ export default function Dashboard() {
           refreshLimitsTrigger={refreshLimitsTrigger}
         />
 
-        <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
+                <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
+          {/* Shared Content Panel */}
+          <SharedContentPanel
+            sharedTasks={sharedTasks}
+            sharedProjects={sharedProjects}
+            sharedTasksLoading={sharedTasksLoading}
+            sharedProjectsLoading={sharedProjectsLoading}
+            sharedTasksError={sharedTasksError}
+            sharedProjectsError={sharedProjectsError}
+            isExpanded={isSharedContentExpanded}
+            onToggleExpanded={toggleSharedContentExpanded}
+            onTaskClick={handleSharedTaskClick}
+            onProjectClick={handleSharedProjectClick}
+          />
+
           <TaskList
             tasks={isFilteredByDay ? filteredTasks : (selectedProject ? filteredTasks : (selectedTag ? filteredTasks : backendTasks))}
             loading={tasksLoading}
@@ -1260,6 +1294,7 @@ export default function Dashboard() {
       onClose={closeTaskCreate}
       onCreateTask={createTask}
       projects={projects}
+      sharedProjects={sharedProjects}
       loading={tasksLoading}
     />
 
@@ -1294,6 +1329,7 @@ export default function Dashboard() {
           onClose={closeMobileTaskCreate}
           onCreateTask={createTask}
           projects={projects}
+          sharedProjects={sharedProjects}
           loading={tasksLoading}
         />
       </Box>

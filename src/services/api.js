@@ -285,61 +285,73 @@ class ApiService {
   // Task API methods
   async getTasks(filters = {}) {
     const queryString = this.buildQueryString(filters);
-    return await this.request(`/tasks${queryString}`);
+    return this.request(`/tasks${queryString}`);
+  }
+
+  async getSharedTasks() {
+    return this.request('/tasks/shared');
   }
 
   async createTask(taskData) {
-    return await this.request('/tasks', {
+    return this.request('/tasks', {
       method: 'POST',
-      body: JSON.stringify(taskData),
+      body: JSON.stringify(taskData)
     });
   }
 
   async updateTask(id, taskData) {
-    return await this.request(`/tasks/${id}`, {
+    return this.request(`/tasks/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(taskData),
+      body: JSON.stringify(taskData)
     });
   }
 
   async deleteTask(id) {
-    return await this.request(`/tasks/${id}`, {
-      method: 'DELETE',
+    return this.request(`/tasks/${id}`, {
+      method: 'DELETE'
     });
   }
 
   async toggleTaskCompletion(id) {
-    return await this.request(`/tasks/${id}/toggle`, {
-      method: 'PATCH',
+    return this.request(`/tasks/${id}/toggle`, {
+      method: 'PUT'
     });
   }
 
   async getTask(id) {
-    return await this.request(`/tasks/${id}`);
+    return this.request(`/tasks/${id}`);
   }
 
   // Project API methods
   async getProjects() {
-    return await this.request('/projects');
+    return this.request('/projects');
+  }
+
+  async getProject(id) {
+    return this.request(`/projects/${id}`);
+  }
+
+  async getSharedProjects() {
+    return this.request('/projects/shared');
   }
 
   async createProject(projectData) {
-    return await this.request('/projects', {
+    return this.request('/projects', {
       method: 'POST',
-      body: JSON.stringify(projectData),
+      body: JSON.stringify(projectData)
     });
   }
 
   async updateProject(id, projectData) {
-    return await this.request(`/projects/${id}`, {
+    return this.request(`/projects/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(projectData),
+      body: JSON.stringify(projectData)
     });
   }
 
   async deleteProject(id) {
-    return await this.request(`/projects/${id}`, {
-      method: 'DELETE',
+    return this.request(`/projects/${id}`, {
+      method: 'DELETE'
     });
   }
 

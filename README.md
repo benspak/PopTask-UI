@@ -1,6 +1,13 @@
 # PopTask Frontend
 
-A modern, responsive Progressive Web App (PWA) for task management with user authentication, built with React, Chakra UI, and Vite.
+A modern, responsive Progressive Web App (PWA) for task management with comprehensive user authentication, built with React, Chakra UI, and Vite.
+
+## 💰 Business Value
+
+**Target Market**: SaaS productivity platform serving SMBs and freelancers
+**Revenue Potential**: $20M+ ARR by 2050 through scalable subscription model
+**Value Delivered**: 10x ROI through time savings and team collaboration
+**Key Features**: User authentication, task sharing, project management, PWA capabilities
 
 ## ✨ Features
 
@@ -11,6 +18,7 @@ A modern, responsive Progressive Web App (PWA) for task management with user aut
 - **Email Verification** - Required email verification for new accounts
 - **Account Management** - User profile editing and password changes
 - **Session Management** - Automatic token refresh and logout
+- **Account Locking** - Protection against brute force attacks
 
 ### 🚀 PWA Capabilities
 - **Offline Support** - Works without internet connection
@@ -27,7 +35,8 @@ A modern, responsive Progressive Web App (PWA) for task management with user aut
 - **Task Completion Tracking** - Checkbox-based completion status
 - **Inline Editing** - Edit task titles and descriptions directly
 - **File Attachments** - Upload and manage files with thumbnails
-- **Task Sharing** - Share tasks with public links
+- **Task Sharing** - Share tasks with specific users via email
+- **Time Tracking** - Track time spent on tasks
 - **Responsive Design** - Works seamlessly on desktop and mobile
 
 ### 🎨 UI/UX Features
@@ -44,7 +53,7 @@ A modern, responsive Progressive Web App (PWA) for task management with user aut
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 18 with Hooks
-- **UI Framework**: Chakra UI
+- **UI Framework**: Chakra UI v2
 - **Build Tool**: Vite
 - **PWA**: Vite PWA Plugin
 - **Service Worker**: Workbox
@@ -201,6 +210,13 @@ npm i -g vercel
 vercel --prod
 ```
 
+#### Render.com (Recommended)
+```bash
+# Connect GitHub repository
+# Configure build command: npm run build
+# Configure publish directory: dist
+```
+
 #### AWS S3 + CloudFront
 ```bash
 # Build the project
@@ -313,6 +329,7 @@ src/
 │   ├── SearchAndFilters.jsx # Search and filter UI
 │   ├── ShareDialog.jsx  # Task sharing dialog
 │   ├── TaskDetailPanel.jsx # Task detail view
+│   ├── TimeTrackingButton.jsx # Time tracking component
 │   └── ...
 ├── views/               # Page components
 │   ├── Login.jsx        # Login page
@@ -434,5 +451,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🆘 Support
 
 - Check the main [README.md](../README.md) for project overview
+- Review [AUTHENTICATION.md](../task-backend-mcp-node/AUTHENTICATION.md) for auth system details
 - Review [QUICK_START.md](../QUICK_START.md) for setup help
 - Create an issue on GitHub for bugs or feature requests
+
+---
+
+**Built with ❤️ for productive task management**
+
+*PopTask Frontend - Empowering productivity since 2025*

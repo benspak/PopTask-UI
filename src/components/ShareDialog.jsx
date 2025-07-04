@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -43,6 +43,57 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
   const [copied, setCopied] = useState(false);
   const [sharedUsernames, setSharedUsernames] = useState([]);
   const [usernameInput, setUsernameInput] = useState('');
+
+  // Initialize state when item changes or modal opens
+  useEffect(() => {
+    const initializeShareData = async () => {
+      if (item && item._id) {
+        try {
+          // Fetch the latest item data to ensure we have up-to-date sharing information
+          let response;
+          if (type === 'task') {
+            response = await apiService.getTask(item._id);
+          } else {
+            response = await apiService.getProject(item._id);
+          }
+
+          const updatedItem = response.data;
+
+          // Initialize shared usernames from the updated item
+          const existingUsernames = updatedItem.sharedUsernames || [];
+          setSharedUsernames(existingUsernames);
+
+          // Initialize share URL if the item is already shared
+          if (updatedItem.isShared && updatedItem.shareToken) {
+            const baseUrl = window.location.origin;
+            const shareUrl = `${baseUrl}/shared/${type}/${updatedItem.shareToken}`;
+            setShareUrl(shareUrl);
+          } else {
+            setShareUrl('');
+          }
+        } catch (error) {
+          console.error('Failed to fetch latest item data:', error);
+          // Fallback to using the provided item data
+          const existingUsernames = item.sharedUsernames || [];
+          setSharedUsernames(existingUsernames);
+
+          if (item.isShared && item.shareToken) {
+            const baseUrl = window.location.origin;
+            const shareUrl = `${baseUrl}/shared/${type}/${item.shareToken}`;
+            setShareUrl(shareUrl);
+          } else {
+            setShareUrl('');
+          }
+        }
+      } else {
+        // Reset state when no item
+        setSharedUsernames([]);
+        setShareUrl('');
+      }
+    };
+
+    initializeShareData();
+  }, [item, type]);
 
   const handleCreateShare = async () => {
     if (!item || !item._id) {

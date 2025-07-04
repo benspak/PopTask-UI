@@ -414,7 +414,36 @@ const ProjectDetailPanel = ({
                 )}
 
                 {/* Actions */}
-                <HStack spacing={3} justify="flex-end">
+                <VStack spacing={3} align="stretch" display={{ base: 'flex', md: 'none' }}>
+                  <Button
+                    leftIcon={<EditIcon />}
+                    variant="outline"
+                    onClick={() => setIsEditing(!isEditing)}
+                    w="full"
+                  >
+                    {isEditing ? 'Cancel Edit' : 'Edit Project'}
+                  </Button>
+                  <Button
+                    leftIcon={<DeleteIcon />}
+                    colorScheme="red"
+                    variant="outline"
+                    onClick={onDeleteOpen}
+                    w="full"
+                  >
+                    Delete Project
+                  </Button>
+                  <Button
+                    leftIcon={<ExternalLinkIcon />}
+                    colorScheme="blue"
+                    onClick={() => onShareProject && onShareProject(project)}
+                    w="full"
+                  >
+                    Share Project
+                  </Button>
+                </VStack>
+
+                {/* Desktop Actions */}
+                <HStack spacing={3} justify="flex-end" display={{ base: 'none', md: 'flex' }}>
                   <Button
                     leftIcon={<EditIcon />}
                     variant="outline"
