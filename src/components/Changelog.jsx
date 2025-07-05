@@ -31,10 +31,51 @@ const Changelog = () => {
 
   const changelogData = [
     {
-      version: '2.3.0',
+      version: '2.4.1',
       date: 'April 27, 2025',
-      title: 'Collaboration & Time Tracking Release',
-      description: 'Advanced collaboration features and comprehensive time tracking system',
+      title: 'Documentation & Feature Enhancement Update',
+      description: 'Comprehensive documentation updates and feature enhancements for better user experience',
+      type: 'minor',
+      changes: [
+        {
+          type: 'feature',
+          items: [
+            'Updated main README with latest collaboration features',
+            'Enhanced backend documentation with shared content management',
+            'Updated frontend documentation with time tracking features',
+            'Improved feature descriptions and technical details',
+            'Added comprehensive API documentation updates',
+            'Enhanced deployment and security documentation'
+          ]
+        },
+        {
+          type: 'improvement',
+          items: [
+            'Streamlined documentation structure for better readability',
+            'Updated business value and ROI information',
+            'Enhanced feature descriptions with technical details',
+            'Improved code examples and configuration guides',
+            'Better organization of project structure documentation',
+            'Updated security and deployment best practices'
+          ]
+        },
+        {
+          type: 'fix',
+          items: [
+            'Corrected outdated feature descriptions',
+            'Fixed broken links in documentation',
+            'Updated version numbers and release dates',
+            'Resolved documentation inconsistencies',
+            'Fixed configuration examples and environment variables'
+          ]
+        }
+      ]
+    },
+    {
+      version: '2.4.0',
+      date: 'April 27, 2025',
+      title: 'Enhanced Collaboration & Documentation Update',
+      description: 'Advanced collaboration features, comprehensive time tracking system, and updated documentation',
       type: 'major',
       changes: [
         {

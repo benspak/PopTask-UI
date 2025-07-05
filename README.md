@@ -1,13 +1,13 @@
 # PopTask Frontend
 
-A modern, responsive Progressive Web App (PWA) for task management with comprehensive user authentication, collaboration features, time tracking, and advanced project management, built with React, Chakra UI, and Vite.
+A modern, responsive Progressive Web App (PWA) for task management with comprehensive user authentication, collaboration features, time tracking, shared content management, and advanced project management, built with React, Chakra UI, and Vite.
 
 ## 💰 Business Value
 
 **Target Market**: SaaS productivity platform serving SMBs and freelancers
 **Revenue Potential**: $20M+ ARR by 2050 through scalable subscription model
 **Value Delivered**: 10x ROI through time savings and team collaboration
-**Key Features**: User authentication, task sharing, project management, time tracking, collaboration, PWA capabilities
+**Key Features**: User authentication, task sharing, project management, time tracking, collaboration, shared content management, PWA capabilities
 
 ## ✨ Features
 
@@ -55,6 +55,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Permission Levels** - Read-only and editable access controls
 - **Public Share Links** - External access without authentication
 - **Share Analytics** - Track view counts and access patterns
+- **Shared Project Task Creation** - Add tasks to projects shared with you
 
 ### ⏱️ Time Tracking
 - **Start/Stop Timer** - Track time spent on individual tasks
