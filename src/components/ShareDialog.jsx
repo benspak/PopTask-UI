@@ -43,6 +43,7 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
   const [copied, setCopied] = useState(false);
   const [sharedUsernames, setSharedUsernames] = useState([]);
   const [usernameInput, setUsernameInput] = useState('');
+  const [sharingLimits, setSharingLimits] = useState(null);
 
   // Initialize state when item changes or modal opens
   useEffect(() => {
@@ -93,6 +94,7 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
     };
 
     initializeShareData();
+    fetchSharingLimits();
   }, [item, type]);
 
   const handleCreateShare = async () => {
@@ -181,9 +183,37 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
     }
   };
 
+  const fetchSharingLimits = async () => {
+    try {
+      let response;
+      if (type === 'task') {
+        response = await apiService.getTaskSharingLimits();
+      } else {
+        response = await apiService.getProjectSharingLimits();
+      }
+      setSharingLimits(response.data);
+    } catch (error) {
+      console.error('Failed to fetch sharing limits:', error);
+    }
+  };
+
   const addUsername = () => {
     const username = usernameInput.trim().toLowerCase();
     if (username && !sharedUsernames.includes(username)) {
+      // Check sharing limits for basic users
+      if (sharingLimits && !sharingLimits.unlimited) {
+        const newTotal = sharedUsernames.length + 1;
+        if (newTotal > sharingLimits.limit) {
+          toast({
+            title: 'Sharing limit exceeded',
+            description: `Basic users can only share with up to ${sharingLimits.limit} usernames. Upgrade to Pro for unlimited collaboration.`,
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+      }
       setSharedUsernames([...sharedUsernames, username]);
       setUsernameInput('');
     }
@@ -260,6 +290,21 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
                 Press Enter or click the + button to add
               </Text>
             </Box>
+
+            {/* Sharing Limits Info */}
+            {sharingLimits && !sharingLimits.unlimited && (
+              <Alert status="info" borderRadius="md">
+                <AlertIcon />
+                <AlertDescription>
+                  Sharing: {sharedUsernames.length} / {sharingLimits.limit} usernames
+                  {sharingLimits.remaining !== null && (
+                    <Text as="span" fontWeight="bold" ml={1}>
+                      ({sharingLimits.remaining} remaining)
+                    </Text>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Username Tags */}
             {sharedUsernames.length > 0 && (

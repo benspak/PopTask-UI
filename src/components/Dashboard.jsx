@@ -76,7 +76,7 @@ export default function Dashboard() {
     return saved !== null ? JSON.parse(saved) : !isMobile;
   });
 
-  const { isOpen: isDetailOpen, onToggle: toggleDetail } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isDetailOpen, onToggle: toggleDetail, onOpen: openDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
 
   // Toggle functions with localStorage persistence
@@ -147,6 +147,10 @@ export default function Dashboard() {
     const saved = localStorage.getItem('sharedContentExpanded');
     return saved !== null ? JSON.parse(saved) : true;
   });
+
+  // Add local state for shared projects
+  const [localSharedProjects, setLocalSharedProjects] = React.useState(sharedProjects);
+  React.useEffect(() => { setLocalSharedProjects(sharedProjects); }, [sharedProjects]);
 
   React.useEffect(() => {
     if (!sharedContent) {
@@ -796,8 +800,11 @@ export default function Dashboard() {
     try {
       await apiService.leaveSharedProject(projectId);
 
-      // Refresh projects
-      loadProjects();
+      // Optimistically update local state
+      setLocalSharedProjects(prev => prev.filter(project => project._id !== projectId));
+
+      // Optionally, sync with backend
+      loadSharedProjects();
 
       toast({
         title: 'Success',
@@ -1087,8 +1094,26 @@ export default function Dashboard() {
   };
 
   const handleSharedTaskClick = (task) => {
-    setSelectedTask(task);
-    setIsDetailOpen(true);
+    setSelectedTask({
+      title: task.title,
+      description: task.description,
+      expanded: false,
+      dueDate: task.dueDate,
+      project: task.project,
+      tags: task.tags,
+      completed: task.completed,
+      _id: task._id,
+      fileAttachments: task.fileAttachments || [],
+      isSharedWithMe: true
+    });
+    setIsEditing(false);
+    if (isMobile) {
+      openMobileTaskDetail();
+    } else {
+      if (!isDetailOpen) {
+        toggleDetail();
+      }
+    }
   };
 
   const handleSharedProjectClick = (project) => {
@@ -1332,7 +1357,7 @@ export default function Dashboard() {
           {/* Shared Content Panel */}
           <SharedContentPanel
             sharedTasks={sharedTasks}
-            sharedProjects={sharedProjects}
+            sharedProjects={localSharedProjects}
             sharedTasksLoading={sharedTasksLoading}
             sharedProjectsLoading={sharedProjectsLoading}
             sharedTasksError={sharedTasksError}

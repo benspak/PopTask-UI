@@ -80,14 +80,10 @@ const LimitsDisplay = ({ type = 'tasks', showNotification = true, refreshTrigger
           <Text fontSize="sm" color={textColor}>
             {type === 'tasks' ? 'Tasks' : 'Projects'}:
           </Text>
-          <Badge
-            colorScheme={isAtLimit ? 'red' : isUnlimited ? 'green' : 'blue'}
-            variant="subtle"
-            fontSize="xs"
-          >
+          <Text fontSize="sm" color={textColor} fontWeight="medium">
             {limits.current}
             {!isUnlimited && `/${limits.limit}`}
-          </Badge>
+          </Text>
           {!isUnlimited && remaining !== null && (
             <Text fontSize="xs" color={textColor}>
               ({remaining} remaining)

@@ -510,6 +510,20 @@ class ApiService {
     });
   }
 
+  // Get task sharing limits for current user
+  async getTaskSharingLimits() {
+    return await this.request('/tasks/sharing-limits', {
+      method: 'GET',
+    });
+  }
+
+  // Get project sharing limits for current user
+  async getProjectSharingLimits() {
+    return await this.request('/projects/sharing-limits', {
+      method: 'GET',
+    });
+  }
+
   // Utility method to copy share URL to clipboard
   async copyToClipboard(text) {
     try {
@@ -536,7 +550,7 @@ class ApiService {
   }
 
   // Payment API methods
-  async createPaymentLink(type = 'subscription', email = null) {
+  async createPaymentLink(type = 'subscription', email = undefined) {
     const payload = { type };
     if (email) {
       payload.email = email;

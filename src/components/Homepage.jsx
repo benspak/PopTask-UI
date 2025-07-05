@@ -31,6 +31,7 @@ import {
   SunIcon,
   MoonIcon,
 } from '@chakra-ui/icons';
+import { Input } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';
 
@@ -39,6 +40,8 @@ const Homepage = () => {
   const { login, register, user } = useAuth();
   const toast = useToast();
   const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [anonymousEmail, setAnonymousEmail] = useState('');
 
   const bgColor = useColorModeValue('white', 'gray.900');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -65,23 +68,11 @@ const Homepage = () => {
       benefit: 'Cut meeting time in half with better visibility'
     },
     {
-      icon: CheckIcon,
-      title: 'Task Automation',
-      description: 'AI-powered task suggestions and smart tagging. Let our system help you organize and prioritize work.',
-      benefit: 'Automate 30% of routine task management'
-    },
-    {
       icon: TimeIcon,
       title: 'Time Tracking',
       description: 'Built-in time tracking helps you understand where time goes. Identify bottlenecks and optimize workflows.',
       benefit: 'Identify and eliminate 25% of time waste'
     },
-    {
-      icon: InfoIcon,
-      title: 'ROI Analytics',
-      description: 'Track productivity improvements and time savings. See the real business impact of better task management.',
-      benefit: 'Measure and prove productivity gains'
-    }
   ];
 
   // const testimonials = [
@@ -119,11 +110,17 @@ const Homepage = () => {
   };
 
   const handleGetProNow = async () => {
+    // If user is not logged in and we haven't shown email input yet, show it
+    if (!user && !showEmailInput) {
+      setShowEmailInput(true);
+      return;
+    }
+
     setIsCreatingPaymentLink(true);
 
     try {
-      // If user is logged in, use their email, otherwise create anonymous link
-      const userEmail = user?.email || null;
+      // If user is logged in, use their email, otherwise use anonymous email or undefined
+      const userEmail = user?.email || (anonymousEmail.trim() || undefined);
 
       const response = await apiService.createPaymentLink('subscription', userEmail);
 
@@ -141,9 +138,21 @@ const Homepage = () => {
       }
     } catch (error) {
       console.error('Payment link creation error:', error);
+
+      // Provide more specific error messages
+      let errorMessage = 'Failed to create payment link. Please try again.';
+
+      if (error.message && error.message.includes('Invalid email address')) {
+        errorMessage = 'Please log in or provide a valid email address to continue.';
+      } else if (error.status === 429) {
+        errorMessage = 'Too many requests. Please wait a moment and try again.';
+      } else if (error.status === 500) {
+        errorMessage = 'Payment service temporarily unavailable. Please try again later.';
+      }
+
       toast({
         title: 'Payment Error',
-        description: 'Failed to create payment link. Please try again.',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -385,24 +394,25 @@ const Homepage = () => {
                     <VStack spacing={3} align="start" w="full">
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Up to 10 tasks</Text>
-                      </HStack>
-                      <HStack spacing={3}>
-                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
                         <Text fontSize="sm" color={textColor}>Up to 3 projects</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Basic task management</Text>
+                        <Text fontSize="sm" color={textColor}>Up to 10 tasks</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Mobile responsive</Text>
+                        <Text fontSize="sm" color={textColor}>Team collaboration</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Email support</Text>
+                        <Text fontSize="sm" color={textColor}>Task and project analytics</Text>
                       </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>In app feedback</Text>
+                      </HStack>
+
                     </VStack>
                   </VStack>
 
@@ -449,13 +459,10 @@ const Homepage = () => {
                       Pro
                     </Text>
                     <Text fontSize="3xl" fontWeight="bold" color={accentColor}>
-                      $50
+                      $10
                     </Text>
                     <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                      per month
-                    </Text>
-                    <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} fontWeight="medium">
-                      for teams of 5 or less
+                      per user
                     </Text>
                   </VStack>
 
@@ -470,48 +477,66 @@ const Homepage = () => {
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>All features included</Text>
+                        <Text fontSize="sm" color={textColor}>Unlimited projects</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Project organization</Text>
+                        <Text fontSize="sm" color={textColor}>Unlimited collaboration</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
                         <Text fontSize="sm" color={textColor}>Priority support</Text>
                       </HStack>
-                      <HStack spacing={3}>
-                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Team collaboration</Text>
-                      </HStack>
-                      <HStack spacing={3}>
-                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Advanced analytics</Text>
-                      </HStack>
-                      <HStack spacing={3}>
-                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Up to 5 team members</Text>
-                      </HStack>
                     </VStack>
                   </VStack>
 
-                  <Button
-                    colorScheme="blue"
-                    w="full"
-                    onClick={handleGetProNow}
-                    rightIcon={isCreatingPaymentLink ? <Spinner size="sm" /> : <ArrowForwardIcon />}
-                    isLoading={isCreatingPaymentLink}
-                    loadingText="Creating..."
-                  >
-                    Get Pro Now
-                  </Button>
+                  {showEmailInput && !user ? (
+                    <VStack spacing={3} w="full">
+                      <Input
+                        placeholder="Enter your email address"
+                        value={anonymousEmail}
+                        onChange={(e) => setAnonymousEmail(e.target.value)}
+                        type="email"
+                        size="md"
+                      />
+                      <Button
+                        colorScheme="blue"
+                        w="full"
+                        onClick={handleGetProNow}
+                        rightIcon={isCreatingPaymentLink ? <Spinner size="sm" /> : <ArrowForwardIcon />}
+                        isLoading={isCreatingPaymentLink}
+                        loadingText="Creating..."
+                        isDisabled={!anonymousEmail.trim()}
+                      >
+                        Get Pro Now
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowEmailInput(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </VStack>
+                  ) : (
+                    <Button
+                      colorScheme="blue"
+                      w="full"
+                      onClick={handleGetProNow}
+                      rightIcon={isCreatingPaymentLink ? <Spinner size="sm" /> : <ArrowForwardIcon />}
+                      isLoading={isCreatingPaymentLink}
+                      loadingText="Creating..."
+                    >
+                      Get Pro Now
+                    </Button>
+                  )}
                 </VStack>
               </Box>
             </SimpleGrid>
 
             <VStack spacing={4} textAlign="center">
               <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                All plans include a 30 day moneyback guarantee. Cancel anytime.
+                Pro plans include a 30 day money back guarantee.
               </Text>
               <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
                 Need a custom plan for your team? <Link color="blue.500" href="https://x.com/benvspak" isExternal>Contact us</Link>

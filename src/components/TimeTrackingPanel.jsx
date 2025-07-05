@@ -20,17 +20,46 @@ import apiService from '../services/api';
 
 const TimeTrackingPanel = ({ task, onTimeUpdate }) => {
   const [timeSummary, setTimeSummary] = useState(null);
-  const [estimatedTime, setEstimatedTime] = useState('');
+  const [estimatedHours, setEstimatedHours] = useState('');
+  const [estimatedMinutes, setEstimatedMinutes] = useState('');
   const [isEditingEstimate, setIsEditingEstimate] = useState(false);
   const toast = useToast();
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
 
+  // Convert minutes to hours and minutes
+  const minutesToHoursMinutes = (totalMinutes) => {
+    if (!totalMinutes || totalMinutes === 0) return { hours: '', minutes: '' };
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return { hours: hours.toString(), minutes: minutes.toString() };
+  };
+
+  // Convert hours and minutes to total minutes
+  const hoursMinutesToMinutes = (hours, minutes) => {
+    const h = parseInt(hours) || 0;
+    const m = parseInt(minutes) || 0;
+    return h * 60 + m;
+  };
+
+  // Format estimated time for display
+  const formatEstimatedTime = (minutes) => {
+    if (!minutes || minutes === 0) return 'Not set';
+    const { hours, minutes: mins } = minutesToHoursMinutes(minutes);
+    if (parseInt(hours) > 0) {
+      return `${hours}h ${mins}m`;
+    } else {
+      return `${mins}m`;
+    }
+  };
+
   useEffect(() => {
     if (task) {
       fetchTimeSummary();
-      setEstimatedTime(task.timeTracking?.estimatedTime?.toString() || '');
+      const { hours, minutes } = minutesToHoursMinutes(task.estimatedTime);
+      setEstimatedHours(hours);
+      setEstimatedMinutes(minutes);
     }
   }, [task]);
 
@@ -45,19 +74,24 @@ const TimeTrackingPanel = ({ task, onTimeUpdate }) => {
 
   const handleUpdateEstimatedTime = async () => {
     try {
-      const minutes = parseInt(estimatedTime);
-      if (isNaN(minutes) || minutes < 0) {
+      const totalMinutes = hoursMinutesToMinutes(estimatedHours, estimatedMinutes);
+
+      if (totalMinutes < 0) {
         toast({
           title: 'Invalid time',
-          description: 'Please enter a valid number of minutes',
+          description: 'Please enter a valid time (hours and minutes)',
           status: 'error',
           duration: 3000,
         });
         return;
       }
 
-      await apiService.updateTaskEstimatedTime(task._id, minutes);
+      await apiService.updateTaskEstimatedTime(task._id, totalMinutes);
       setIsEditingEstimate(false);
+
+      // Refetch time summary to update the UI with new estimated time
+      await fetchTimeSummary();
+
       toast({
         title: 'Success',
         description: 'Estimated time updated',
@@ -112,21 +146,42 @@ const TimeTrackingPanel = ({ task, onTimeUpdate }) => {
             <StatLabel>Estimated Time</StatLabel>
             <StatNumber>
               {isEditingEstimate ? (
-                <HStack>
-                  <Input
-                    size="sm"
-                    value={estimatedTime}
-                    onChange={(e) => setEstimatedTime(e.target.value)}
-                    placeholder="Minutes"
-                    w="60px"
-                  />
-                  <Button size="sm" onClick={handleUpdateEstimatedTime}>
-                    Save
-                  </Button>
-                </HStack>
+                <VStack spacing={2} align="start">
+                  <HStack spacing={2}>
+                    <Input
+                      size="sm"
+                      value={estimatedHours}
+                      onChange={(e) => setEstimatedHours(e.target.value)}
+                      placeholder="Hours"
+                      w="60px"
+                      type="number"
+                      min="0"
+                    />
+                    <Text fontSize="sm">h</Text>
+                    <Input
+                      size="sm"
+                      value={estimatedMinutes}
+                      onChange={(e) => setEstimatedMinutes(e.target.value)}
+                      placeholder="Minutes"
+                      w="60px"
+                      type="number"
+                      min="0"
+                      max="59"
+                    />
+                    <Text fontSize="sm">m</Text>
+                  </HStack>
+                  <HStack spacing={2}>
+                    <Button size="sm" onClick={handleUpdateEstimatedTime}>
+                      Save
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setIsEditingEstimate(false)}>
+                      Cancel
+                    </Button>
+                  </HStack>
+                </VStack>
               ) : (
                 <HStack>
-                  <Text>{timeSummary.estimatedTime ? `${timeSummary.estimatedTime}m` : 'Not set'}</Text>
+                  <Text>{formatEstimatedTime(timeSummary.estimatedTime)}</Text>
                   <Button size="sm" variant="ghost" onClick={() => setIsEditingEstimate(true)}>
                     <EditIcon />
                   </Button>

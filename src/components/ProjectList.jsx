@@ -273,9 +273,9 @@ const ProjectList = ({
                         </Text>
                       )}
                       {project.taskCount !== undefined && (
-                        <Badge size="sm" colorScheme="gray" variant="subtle">
+                        <Text fontSize="sm" color="gray.600">
                           {project.taskCount} task{project.taskCount !== 1 ? 's' : ''}
-                        </Badge>
+                        </Text>
                       )}
                     </VStack>
 
