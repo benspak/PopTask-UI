@@ -31,6 +31,46 @@ const Changelog = () => {
 
   const changelogData = [
     {
+      version: '2.4.2',
+      date: 'July 8, 2025',
+      title: 'Performance & Security Update',
+      description: 'Performance optimizations, security enhancements, and bug fixes for improved stability',
+      type: 'patch',
+      changes: [
+        {
+          type: 'feature',
+          items: [
+            'Enhanced API rate limiting for better security',
+            'Improved error handling and user feedback',
+            'Added comprehensive logging for debugging',
+            'Enhanced mobile responsiveness for better user experience'
+          ]
+        },
+        {
+          type: 'improvement',
+          items: [
+            'Optimized database queries for faster performance',
+            'Improved authentication token validation',
+            'Enhanced file upload security and validation',
+            'Better error messages and user guidance',
+            'Streamlined task creation and editing workflow',
+            'Improved shared content loading performance'
+          ]
+        },
+        {
+          type: 'fix',
+          items: [
+            'Fixed authentication token expiration issues',
+            'Resolved file upload timeout problems',
+            'Corrected time tracking session calculation bugs',
+            'Fixed mobile layout issues on smaller screens',
+            'Resolved shared content refresh problems',
+            'Fixed project statistics display errors'
+          ]
+        }
+      ]
+    },
+    {
       version: '2.4.1',
       date: 'July 4, 2025',
       title: 'Documentation & Feature Enhancement Update',
