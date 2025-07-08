@@ -36,6 +36,7 @@ const ProjectsPanel = ({
   handleProjectClick,
   handleShareProject,
   handleProjectDetailOpen,
+  handleProjectDelete,
   toggleCenter,
   refreshLimitsTrigger = 0,
 }) => (
@@ -143,7 +144,7 @@ const ProjectsPanel = ({
                   display={{ base: 'none', md: 'inline-flex' }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleProjectFilter(project.name);
+                    handleProjectClick(project);
                   }}
                 />
               </Box>
@@ -203,7 +204,7 @@ const ProjectsPanel = ({
                 borderRadius="lg"
                 cursor="pointer"
                 _hover={{ bg: colorMode === 'light' ? 'gray.300' : 'gray.700' }}
-                onClick={() => handleProjectFilter(project.name)}
+                onClick={() => handleProjectClick(project)}
                 position="relative"
               >
                 <Text fontWeight="medium" mb={1} color={colorMode === 'light' ? 'gray.800' : 'white'}>{project.name}</Text>

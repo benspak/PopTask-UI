@@ -19,7 +19,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Account Management** - User profile editing and password changes
 - **Session Management** - Automatic token refresh and logout
 - **Account Locking** - Protection against brute force attacks
-- **User Limits** - Basic users limited to 10 tasks and 3 projects
+- **User Limits** - Basic users limited to 10 tasks and 5 projects
 
 ### 🚀 PWA Capabilities
 - **Offline Support** - Works without internet connection

@@ -552,9 +552,14 @@ export default function Dashboard() {
     setIsFilteredByDay(false);
     setSelectedDay(null);
 
-    const projectTasks = Array.isArray(backendTasks) ? backendTasks.filter(task =>
-      task.project === project.name
-    ) : [];
+    const projectTasks = Array.isArray(backendTasks)
+      ? backendTasks.filter(
+          task =>
+            task.project &&
+            project.name &&
+            task.project.toLowerCase() === project.name.toLowerCase()
+        )
+      : [];
 
     setFilteredTasks(projectTasks);
 
@@ -568,12 +573,16 @@ export default function Dashboard() {
     setIsFilteredByDay(false);
     setSelectedDay(null);
 
-    // Filter tasks by project name
-    const projectTasks = Array.isArray(backendTasks) ? backendTasks.filter(task =>
-      task.project === projectName
-    ) : [];
+    // Filter tasks by project name (case-insensitive)
+    const projectTasks = Array.isArray(backendTasks)
+      ? backendTasks.filter(
+          task =>
+            task.project &&
+            projectName &&
+            task.project.toLowerCase() === projectName.toLowerCase()
+        )
+      : [];
 
-    // Always set filtered tasks, even if empty, to show "no tasks" message
     setFilteredTasks(projectTasks);
   };
 
@@ -694,7 +703,7 @@ export default function Dashboard() {
     });
   };
 
-  const sortTasksByPriority = (tasks) => {
+  const sortTasks = (tasks) => {
     return tasks.sort((a, b) => {
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
@@ -1349,6 +1358,7 @@ export default function Dashboard() {
             setSelectedProject(project);
             setIsProjectDetailModalOpen(true);
           }}
+          handleProjectDelete={onDeleteProject}
           toggleCenter={toggleCenter}
           refreshLimitsTrigger={refreshLimitsTrigger}
         />
@@ -1589,7 +1599,11 @@ export default function Dashboard() {
         project={selectedProject}
         tasks={backendTasks}
         onProjectUpdate={updateProject}
-        onProjectDelete={onDeleteProject}
+        onProjectDelete={async (projectId) => {
+          await deleteProject(projectId);
+          setIsProjectDetailModalOpen(false);
+          setSelectedProject(null);
+        }}
         onLeaveProject={onLeaveProject}
         onClose={() => setIsProjectDetailModalOpen(false)}
         onShareProject={handleShareProject}

@@ -18,7 +18,7 @@ import { LinkIcon } from '@chakra-ui/icons';
 const MainTaskList = ({
   filteredTasks,
   searchTerm,
-  sortTasksByPriority,
+  sortTasks,
   getFilteredTasksBySearch,
   currentView,
   taskData,
@@ -62,7 +62,7 @@ const MainTaskList = ({
             <>
               {currentView === 'all' ? (
                 // Show all tasks from all sources
-                sortTasksByPriority(
+                sortTasks(
                   getFilteredTasksBySearch(filteredTasks)
                 ).map((task, idx) => {
                   try {
@@ -184,7 +184,7 @@ const MainTaskList = ({
               ) : (
                 // Show filtered tasks
                 (() => {
-                  return sortTasksByPriority(getFilteredTasksBySearch(filteredTasks)).map((task, idx) => {
+                  return sortTasks(getFilteredTasksBySearch(filteredTasks)).map((task, idx) => {
                     try {
                       return (
                         <Box key={idx}>

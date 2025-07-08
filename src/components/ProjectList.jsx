@@ -52,7 +52,6 @@ const ProjectList = ({
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
-    color: '#3182ce',
   });
   const toast = useToast();
 
@@ -75,7 +74,7 @@ const ProjectList = ({
 
     try {
       await onProjectCreate(newProject);
-      setNewProject({ name: '', description: '', color: '#3182ce' });
+      setNewProject({ name: '', description: '' });
       onClose();
       toast({
         title: 'Success',
@@ -183,7 +182,7 @@ const ProjectList = ({
   const openCreateModal = () => {
     setIsEditMode(false);
     setEditingProject(null);
-    setNewProject({ name: '', description: '', color: '#3182ce' });
+    setNewProject({ name: '', description: '' });
     onOpen();
   };
 
@@ -366,23 +365,6 @@ const ProjectList = ({
                   }}
                   placeholder="Project description"
                 />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Color</FormLabel>
-                <HStack>
-                  <Input
-                    type="color"
-                    w="40px"
-                    p={0}
-                    value={isEditMode ? editingProject?.color || '#3182ce' : newProject.color}
-                    onChange={e => {
-                      if (isEditMode) setEditingProject(p => ({ ...p, color: e.target.value }));
-                      else setNewProject(p => ({ ...p, color: e.target.value }));
-                    }}
-                  />
-                  <Text fontSize="sm">{isEditMode ? editingProject?.color || '#3182ce' : newProject.color}</Text>
-                </HStack>
-                <FormHelperText>Pick a color for this project.</FormHelperText>
               </FormControl>
             </VStack>
             <HStack mt={6} justify="flex-end">

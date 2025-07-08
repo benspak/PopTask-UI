@@ -32,7 +32,7 @@ const Changelog = () => {
   const changelogData = [
     {
       version: '2.4.1',
-      date: 'April 27, 2025',
+      date: 'July 4, 2025',
       title: 'Documentation & Feature Enhancement Update',
       description: 'Comprehensive documentation updates and feature enhancements for better user experience',
       type: 'minor',
@@ -88,7 +88,7 @@ const Changelog = () => {
             'Session tracking with detailed history and statistics',
             'Estimated time tracking with progress percentage calculation',
             'Time statistics integration in task and project views',
-            'User limits system with Basic (10 tasks/3 projects) and Pro (unlimited) tiers',
+            'User limits system with Basic (10 tasks/5 projects) and Pro (unlimited) tiers',
             'Limits display with upgrade prompts and remaining count indicators',
             'Enhanced project management with color coding and statistics',
             'Shared project task creation allowing team members to add tasks',

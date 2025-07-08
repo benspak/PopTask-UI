@@ -31,12 +31,12 @@ const TaskCreatePanel = ({
   sharedProjects = [],
   loading = false,
 }) => {
+  // All hooks must be called at the top level, before any conditional logic
   const [taskData, setTaskData] = useState({
     title: '',
     description: '',
     dueDate: '',
     project: 'general',
-    priority: 'medium',
     tags: [],
   });
   const [tagInput, setTagInput] = useState('');
@@ -45,6 +45,9 @@ const TaskCreatePanel = ({
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
+
+  // Early return after all hooks have been called
+  if (!isOpen) return null;
 
   const handleInputChange = (field, value) => {
     setTaskData(prev => ({
@@ -97,7 +100,6 @@ const TaskCreatePanel = ({
         description: '',
         dueDate: '',
         project: 'general',
-        priority: 'medium',
         tags: [],
       });
       setTagInput('');
@@ -138,7 +140,6 @@ const TaskCreatePanel = ({
       description: '',
       dueDate: '',
       project: 'general',
-      priority: 'medium',
       tags: [],
     });
     setTagInput('');
@@ -152,8 +153,6 @@ const TaskCreatePanel = ({
       handleCancel();
     }
   };
-
-  if (!isOpen) return null;
 
   return (
     <Box
@@ -255,22 +254,6 @@ const TaskCreatePanel = ({
             </Select>
             <FormHelperText>
               Assign this task to a specific project. You can create tasks in projects shared with you.
-            </FormHelperText>
-          </FormControl>
-
-          <FormControl>
-            <FormLabel color={textColor}>Priority</FormLabel>
-            <Select
-              value={taskData.priority}
-              onChange={(e) => handleInputChange('priority', e.target.value)}
-              onKeyDown={handleKeyDown}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </Select>
-            <FormHelperText>
-              Set the priority level for this task
             </FormHelperText>
           </FormControl>
 

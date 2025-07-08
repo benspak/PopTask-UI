@@ -60,7 +60,7 @@ const SidebarCalendar = ({
         {/* Desktop: Show heading only */}
         <VStack align="start" spacing={4}>
           <Box w="full">
-            <Text fontSize="sm" mb={1} color="gray.400">Days</Text>
+            <Heading size="md" mb={2} color={colorMode === 'light' ? 'gray.800' : 'white'}>Week Days</Heading>
             <VStack align="stretch" spacing={1} w="full">
               {Object.keys(dayTasks).map((day) => (
                 <Box key={day} w="full">

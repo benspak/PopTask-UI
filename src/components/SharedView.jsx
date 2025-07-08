@@ -28,6 +28,7 @@ import {
   Stat,
   StatLabel,
   StatNumber,
+  StatHelpText,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, CopyIcon, CheckIcon, EditIcon, ViewIcon } from '@chakra-ui/icons';
 import apiService from '../services/api';
@@ -77,6 +78,25 @@ const SharedView = () => {
         // For projects, also get tasks and projectStats
         const tasks = response.data.tasks || [];
         const projectStats = response.data.projectStats || null;
+
+        // Debug logging for shared projects
+        if (type === 'project') {
+          console.log('Shared project data received:', {
+            project: itemData,
+            tasksCount: tasks.length,
+            projectStats: projectStats,
+            sharePermission,
+            shareStats
+          });
+
+          if (tasks.length > 0) {
+            console.log('Sample task data:', tasks[0]);
+          }
+
+          if (projectStats) {
+            console.log('Project statistics:', projectStats);
+          }
+        }
 
         setData({
           [type]: itemData,
@@ -384,6 +404,58 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
     completed: editData?.completed !== undefined ? editData.completed : task.completed || false
   };
 
+  // Utility function to format time in seconds to readable format
+  const formatTime = (seconds) => {
+    if (!seconds || seconds === 0) return '0s';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
+  };
+
+  // Utility function to format estimated time from minutes
+  const formatEstimatedTime = (minutes) => {
+    if (!minutes || minutes === 0) return 'Not set';
+
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    } else {
+      return `${mins}m`;
+    }
+  };
+
+  // Calculate time tracking progress
+  const getTimeTrackingStats = () => {
+    const totalTime = task.timeTracking?.totalTime || 0;
+    const estimatedTime = task.estimatedTime || 0;
+    const estimatedTimeSeconds = estimatedTime * 60; // Convert minutes to seconds
+
+    let progress = 0;
+    if (estimatedTimeSeconds > 0) {
+      progress = Math.round((totalTime / estimatedTimeSeconds) * 100);
+    }
+
+    return {
+      totalTime,
+      estimatedTime,
+      progress,
+      sessions: task.timeTracking?.sessions?.length || 0
+    };
+  };
+
+  const timeStats = getTimeTrackingStats();
+
   return (
     <VStack spacing={6} align="stretch">
       {/* Title */}
@@ -518,6 +590,60 @@ const SharedTaskView = ({ task, isEditing, editData, setEditData, onSave, onCanc
         )}
       </Box>
 
+      {/* Time Tracking Progress */}
+      <Box>
+        <Text fontSize="sm" mb={2} color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
+          Time Tracking
+        </Text>
+        <Box p={4} bg={colorMode === 'light' ? 'gray.50' : 'gray.700'} borderRadius="md">
+          <SimpleGrid columns={2} spacing={4}>
+            <Stat>
+              <StatLabel fontSize="sm">Total Time</StatLabel>
+              <StatNumber fontSize="md">{formatTime(timeStats.totalTime)}</StatNumber>
+              <StatHelpText fontSize="xs">{timeStats.sessions} sessions</StatHelpText>
+            </Stat>
+            <Stat>
+              <StatLabel fontSize="sm">Estimated Time</StatLabel>
+              <StatNumber fontSize="md">{formatEstimatedTime(timeStats.estimatedTime)}</StatNumber>
+              <StatHelpText fontSize="xs">Time estimate</StatHelpText>
+            </Stat>
+          </SimpleGrid>
+
+          {timeStats.estimatedTime > 0 && timeStats.totalTime > 0 && (
+            <Box mt={3}>
+              <HStack justify="space-between" mb={1}>
+                <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
+                  Progress
+                </Text>
+                <Text fontSize="sm" fontWeight="medium">
+                  {timeStats.progress}%
+                </Text>
+              </HStack>
+              <Box
+                w="100%"
+                bg={colorMode === 'light' ? 'gray.200' : 'gray.600'}
+                borderRadius="full"
+                h={2}
+                overflow="hidden"
+              >
+                <Box
+                  h="100%"
+                  bg={timeStats.progress > 100 ? 'red.500' : timeStats.progress > 80 ? 'orange.500' : 'green.500'}
+                  borderRadius="full"
+                  w={`${Math.min(timeStats.progress, 100)}%`}
+                  transition="width 0.3s ease"
+                />
+              </Box>
+              {timeStats.progress > 100 && (
+                <Text fontSize="xs" color="red.500" mt={1}>
+                  Over estimated time by {timeStats.progress - 100}%
+                </Text>
+              )}
+            </Box>
+          )}
+        </Box>
+      </Box>
+
       {/* File Attachments */}
       {task.fileAttachments && task.fileAttachments.length > 0 && (
         <Box>
@@ -567,6 +693,53 @@ const SharedProjectView = ({ project, isEditing, editData, setEditData, onSave, 
   const { colorMode } = useColorMode();
 
   if (!project) return null;
+
+  // Debug logging for project statistics
+  console.log('SharedProjectView rendering with:', {
+    projectName: project.name,
+    tasksCount: tasks.length,
+    projectStats: projectStats,
+    hasProjectStats: !!projectStats
+  });
+
+  // Fallback calculation for project statistics if backend stats are missing or zero
+  const calculateFallbackStats = () => {
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => task.completed).length;
+    const pendingTasks = totalTasks - completedTasks;
+
+    // Calculate total proposed time (estimated time in minutes converted to seconds)
+    const totalProposedTime = tasks.reduce((total, task) => {
+      return total + ((task.estimatedTime || 0) * 60); // Convert minutes to seconds
+    }, 0);
+
+    // Calculate total time tracked
+    const totalTimeTracked = tasks.reduce((total, task) => {
+      return total + (task.timeTracking?.totalTime || 0);
+    }, 0);
+
+    // Calculate completion rate
+    let completionRate = 0;
+    if (totalProposedTime > 0 && totalTimeTracked > 0) {
+      completionRate = Math.round((totalTimeTracked / totalProposedTime) * 100);
+    } else if (totalTasks > 0) {
+      completionRate = Math.round((completedTasks / totalTasks) * 100);
+    }
+
+    return {
+      totalTasks,
+      completedTasks,
+      pendingTasks,
+      totalTimeTracked,
+      totalProposedTime,
+      completionRate
+    };
+  };
+
+  // Use backend stats if available and non-zero, otherwise use fallback
+  const effectiveStats = projectStats && projectStats.totalTasks > 0 ? projectStats : calculateFallbackStats();
+
+  console.log('Effective project statistics:', effectiveStats);
 
   // Utility function to format time in seconds to readable format
   const formatTime = (seconds) => {
@@ -640,36 +813,50 @@ const SharedProjectView = ({ project, isEditing, editData, setEditData, onSave, 
       </Box>
 
       {/* Project Statistics */}
-      {projectStats && (
+      {effectiveStats && (
         <Box p={4} bg={colorMode === 'light' ? 'gray.50' : 'gray.700'} borderRadius="md">
-          <Text fontSize="lg" fontWeight="semibold" mb={3}>
-            Project Statistics
-          </Text>
+          <HStack justify="space-between" align="center" mb={3}>
+            <Text fontSize="lg" fontWeight="semibold">
+              Project Statistics
+            </Text>
+            {(!projectStats || projectStats.totalTasks === 0) && (
+              <Badge colorScheme="orange" size="sm">
+                Frontend Calculated
+              </Badge>
+            )}
+          </HStack>
           <SimpleGrid columns={2} spacing={4}>
             <Stat>
               <StatLabel>Total Tasks</StatLabel>
-              <StatNumber>{projectStats.totalTasks}</StatNumber>
+              <StatNumber>{effectiveStats.totalTasks}</StatNumber>
+              <StatHelpText>All tasks in project</StatHelpText>
             </Stat>
             <Stat>
               <StatLabel>Completed</StatLabel>
-              <StatNumber>{projectStats.completedTasks}</StatNumber>
+              <StatNumber>{effectiveStats.completedTasks}</StatNumber>
+              <StatHelpText>Tasks completed</StatHelpText>
             </Stat>
             <Stat>
               <StatLabel>Pending</StatLabel>
-              <StatNumber>{projectStats.pendingTasks}</StatNumber>
+              <StatNumber>{effectiveStats.pendingTasks}</StatNumber>
+              <StatHelpText>Tasks to complete</StatHelpText>
+            </Stat>
+            <Stat>
+              <StatLabel>Time Tracked</StatLabel>
+              <StatNumber>{formatTime(effectiveStats.totalTimeTracked)}</StatNumber>
+              <StatHelpText>Total time spent</StatHelpText>
+            </Stat>
+            <Stat>
+              <StatLabel>Proposed Time</StatLabel>
+              <StatNumber>{formatTime(effectiveStats.totalProposedTime)}</StatNumber>
+              <StatHelpText>Estimated time for all tasks</StatHelpText>
             </Stat>
             <Stat>
               <StatLabel>Completion Rate</StatLabel>
-              <StatNumber>{projectStats.completionRate}%</StatNumber>
+              <StatNumber>{effectiveStats.completionRate}%</StatNumber>
+              <StatHelpText>Time vs proposed</StatHelpText>
             </Stat>
           </SimpleGrid>
-          {projectStats.totalTimeTracked > 0 && (
-            <Box mt={3}>
-              <Text fontSize="sm" color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
-                Total Time Tracked: {formatTime(projectStats.totalTimeTracked)}
-              </Text>
-            </Box>
-          )}
         </Box>
       )}
 

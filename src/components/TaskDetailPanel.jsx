@@ -85,7 +85,6 @@ const TaskDetailPanel = ({
         dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
         project: task.project || '',
         tags: task.tags || [],
-        priority: task.priority || 'medium',
         completed: task.completed || false,
       });
       setTagsInput(task.tags ? task.tags.join(', ') : '');
@@ -213,15 +212,6 @@ const TaskDetailPanel = ({
 
   const getStatusColor = (completed) => {
     return completed ? 'green' : 'blue';
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'red';
-      case 'medium': return 'orange';
-      case 'low': return 'green';
-      default: return 'gray';
-    }
   };
 
   const formatFileSize = (bytes) => {
@@ -413,20 +403,6 @@ const TaskDetailPanel = ({
 
               <Box>
                 <Text fontSize="sm" fontWeight="medium" mb={2}>
-                  Priority
-                </Text>
-                <Select
-                  value={editedTask.priority}
-                  onChange={(e) => setEditedTask(prev => ({ ...prev, priority: e.target.value }))}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </Select>
-              </Box>
-
-              <Box>
-                <Text fontSize="sm" fontWeight="medium" mb={2}>
                   Tags (comma-separated)
                 </Text>
                 <Input
@@ -478,26 +454,15 @@ const TaskDetailPanel = ({
                 </Box>
               )}
 
-              {/* Status and Priority */}
-              <SimpleGrid columns={2} spacing={4}>
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium" mb={2}>
-                    Status
-                  </Text>
-                  <Badge colorScheme={getStatusColor(task.completed)}>
-                    {task.completed ? 'Completed' : 'Pending'}
-                  </Badge>
-                </Box>
-
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium" mb={2}>
-                    Priority
-                  </Text>
-                  <Badge colorScheme={getPriorityColor(task.priority)}>
-                    {task.priority?.charAt(0).toUpperCase() + task.priority?.slice(1) || 'Medium'}
-                  </Badge>
-                </Box>
-              </SimpleGrid>
+              {/* Status */}
+              <Box>
+                <Text fontSize="sm" fontWeight="medium" mb={2}>
+                  Status
+                </Text>
+                <Badge colorScheme={getStatusColor(task.completed)}>
+                  {task.completed ? 'Completed' : 'Pending'}
+                </Badge>
+              </Box>
 
               {/* Project and Due Date */}
               <SimpleGrid columns={2} spacing={4}>

@@ -350,6 +350,175 @@ const Homepage = () => {
         </Container>
       </Box>
 
+      {/* Project Invoicing Teaser Section */}
+      <Box py={20} bg={cardBg}>
+        <Container maxW="7xl">
+          <VStack spacing={12}>
+            <VStack spacing={4} textAlign="center">
+              <Badge colorScheme="purple" px={4} py={2} borderRadius="full" fontSize="sm">
+                Coming Soon
+              </Badge>
+              <Heading size="xl" color={textColor}>
+                Project Invoicing
+              </Heading>
+              <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
+                Turn your completed projects into professional invoices automatically.
+                Save 2.5 hours per month on invoicing tasks.
+              </Text>
+            </VStack>
+
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} maxW="5xl" w="full">
+              {/* Left Column - Benefits */}
+              <VStack spacing={6} align="start">
+                <Heading size="lg" color={textColor}>
+                  Why Project Invoicing?
+                </Heading>
+                <VStack spacing={4} align="start">
+                  <HStack spacing={4}>
+                    <Box
+                      p={2}
+                      bg="purple.500"
+                      color="white"
+                      borderRadius="lg"
+                    >
+                      <Icon as={CheckIcon} boxSize={4} />
+                    </Box>
+                    <VStack spacing={1} align="start">
+                      <Text fontWeight="semibold" color={textColor}>
+                        Invoice Generation
+                      </Text>
+                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                        Create professional invoices from completed tasks in seconds
+                      </Text>
+                    </VStack>
+                  </HStack>
+                  <HStack spacing={4}>
+                    <Box
+                      p={2}
+                      bg="purple.500"
+                      color="white"
+                      borderRadius="lg"
+                    >
+                      <Icon as={CheckIcon} boxSize={4} />
+                    </Box>
+                    <VStack spacing={1} align="start">
+                      <Text fontWeight="semibold" color={textColor}>
+                        Time Tracking Integration
+                      </Text>
+                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                        Accurate billing based on actual time spent on projects
+                      </Text>
+                    </VStack>
+                  </HStack>
+                  <HStack spacing={4}>
+                    <Box
+                      p={2}
+                      bg="purple.500"
+                      color="white"
+                      borderRadius="lg"
+                    >
+                      <Icon as={CheckIcon} boxSize={4} />
+                    </Box>
+                    <VStack spacing={1} align="start">
+                      <Text fontWeight="semibold" color={textColor}>
+                        Professional Template
+                      </Text>
+                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                        Invoices that look professional and get you paid faster
+                      </Text>
+                    </VStack>
+                  </HStack>
+                  <HStack spacing={4}>
+                    <Box
+                      p={2}
+                      bg="purple.500"
+                      color="white"
+                      borderRadius="lg"
+                    >
+                      <Icon as={CheckIcon} boxSize={4} />
+                    </Box>
+                    <VStack spacing={1} align="start">
+                      <Text fontWeight="semibold" color={textColor}>
+                        Payment Tracking
+                      </Text>
+                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                        Track invoice status and get notified when payments arrive
+                      </Text>
+                    </VStack>
+                  </HStack>
+                </VStack>
+              </VStack>
+
+              {/* Right Column - ROI Calculator */}
+              <Box
+                bg={bgColor}
+                p={6}
+                borderRadius="xl"
+                border="1px"
+                borderColor={useColorModeValue('gray.200', 'gray.700')}
+              >
+                <VStack spacing={6}>
+                  <Heading size="md" color={textColor} textAlign="center">
+                    Your Invoicing ROI
+                  </Heading>
+                  <SimpleGrid columns={2} spacing={4} w="full">
+                    <VStack spacing={2}>
+                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                        Time Saved
+                      </Text>
+                      <Text fontSize="2xl" color="green.500" fontWeight="bold">
+                        2.5 hrs/month
+                      </Text>
+                    </VStack>
+                    <VStack spacing={2}>
+                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                        Annual Savings
+                      </Text>
+                      <Text fontSize="2xl" color="green.500" fontWeight="bold">
+                        $1,050
+                      </Text>
+                    </VStack>
+                    <VStack spacing={2}>
+                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                        Feature Cost
+                      </Text>
+                      <Text fontSize="2xl" color="purple.500" fontWeight="bold">
+                        $120/year
+                      </Text>
+                    </VStack>
+                    <VStack spacing={2}>
+                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                        ROI
+                      </Text>
+                      <Text fontSize="2xl" color="green.500" fontWeight="bold">
+                        8.75x
+                      </Text>
+                    </VStack>
+                  </SimpleGrid>
+                  <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                    Based on $35/hour rate and 2.5 hours saved per month
+                  </Text>
+                </VStack>
+              </Box>
+            </SimpleGrid>
+
+            <VStack spacing={4} textAlign="center">
+              <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                Be the first to know when project invoicing launches
+              </Text>
+              <Button
+                colorScheme="purple"
+                size="md"
+                onClick={handleSignup}
+                rightIcon={<ArrowForwardIcon />}
+              >
+                Get Early Access
+              </Button>
+            </VStack>
+          </VStack>
+        </Container>
+      </Box>
+
       {/* Pricing Section */}
       <Box id="pricing" py={20} bg={cardBg}>
         <Container maxW="7xl">
@@ -394,7 +563,7 @@ const Homepage = () => {
                     <VStack spacing={3} align="start" w="full">
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Up to 3 projects</Text>
+                        <Text fontSize="sm" color={textColor}>Up to 5 projects</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
@@ -482,6 +651,10 @@ const Homepage = () => {
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
                         <Text fontSize="sm" color={textColor}>Unlimited collaboration</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Project Invoicing (Coming Soon)</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />

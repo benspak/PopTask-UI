@@ -14,30 +14,7 @@ const theme = extendTheme({
   },
 });
 
-// Development helper: Clear old service workers and cache
-if (import.meta.env.DEV) {
-  if ('serviceWorker' in navigator) {
-    // Unregister all existing service workers
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      for (let registration of registrations) {
-        registration.unregister();
-      }
-    });
-
-    // Clear all caches
-    if ('caches' in window) {
-      caches.keys().then((cacheNames) => {
-        cacheNames.forEach((cacheName) => {
-          caches.delete(cacheName);
-        });
-      });
-    }
-
-    // Note: Removed localStorage.clear() to preserve authentication tokens
-    // Only clear sessionStorage for development
-    sessionStorage.clear();
-  }
-}
+// Production-ready service worker handling
 
 // Register PWA service worker with better error handling
 const updateSW = registerSW({
@@ -51,7 +28,7 @@ const updateSW = registerSW({
     // App ready to work offline
   },
   onRegisterError(error) {
-    console.error('SW registration error:', error);
+    // Service worker registration error handled silently in production
   }
 });
 

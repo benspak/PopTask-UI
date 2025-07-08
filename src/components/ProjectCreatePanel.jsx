@@ -25,16 +25,19 @@ const ProjectCreatePanel = ({
   onCreateProject,
   loading = false,
 }) => {
+  // All hooks must be called at the top level, before any conditional logic
   const [projectData, setProjectData] = useState({
     name: '',
     description: '',
-    color: '#3182ce',
   });
 
   const toast = useToast();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
+
+  // Early return after all hooks have been called
+  if (!isOpen) return null;
 
   const handleInputChange = (field, value) => {
     setProjectData(prev => ({
@@ -57,7 +60,7 @@ const ProjectCreatePanel = ({
 
     try {
       await onCreateProject(projectData);
-      setProjectData({ name: '', description: '', color: '#3182ce' });
+      setProjectData({ name: '', description: '' });
       onClose();
       toast({
         title: 'Success',
@@ -90,7 +93,7 @@ const ProjectCreatePanel = ({
   };
 
   const handleCancel = () => {
-    setProjectData({ name: '', description: '', color: '#3182ce' });
+    setProjectData({ name: '', description: '' });
     onClose();
   };
 
@@ -101,8 +104,6 @@ const ProjectCreatePanel = ({
       handleCancel();
     }
   };
-
-  if (!isOpen) return null;
 
   return (
     <Box
@@ -164,30 +165,6 @@ const ProjectCreatePanel = ({
               Add details about what this project is for
             </FormHelperText>
           </FormControl>
-
-          <FormControl>
-            <FormLabel color={textColor}>Color</FormLabel>
-            <HStack spacing={3}>
-              <Input
-                type="color"
-                value={projectData.color}
-                onChange={(e) => handleInputChange('color', e.target.value)}
-                w="60px"
-                h="40px"
-                p={1}
-                borderRadius="md"
-              />
-              <Input
-                value={projectData.color}
-                onChange={(e) => handleInputChange('color', e.target.value)}
-                placeholder="#3182ce"
-                fontFamily="mono"
-              />
-            </HStack>
-            <FormHelperText>
-              Choose a color to identify this project
-            </FormHelperText>
-          </FormControl>
         </VStack>
 
         <Divider />
@@ -215,11 +192,11 @@ const ProjectCreatePanel = ({
 
         {/* Keyboard shortcuts hint */}
         <Box
-          bg={useColorModeValue('gray.50', 'gray.700')}
+          bg={bgColor === 'white' ? 'gray.50' : 'gray.700'}
           p={3}
           borderRadius="md"
           fontSize="sm"
-          color={useColorModeValue('gray.600', 'gray.300')}
+          color={textColor === 'gray.800' ? 'gray.600' : 'gray.300'}
         >
           <Text fontWeight="medium" mb={1}>Keyboard Shortcuts:</Text>
           <Text>• Ctrl/Cmd + Enter: Create project</Text>

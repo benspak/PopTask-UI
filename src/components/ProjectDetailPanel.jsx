@@ -74,7 +74,6 @@ const ProjectDetailPanel = ({
       setEditedProject({
         name: project.name || '',
         description: project.description || '',
-        color: project.color || '#3182ce',
         active: project.active !== undefined ? project.active : true,
       });
     }
@@ -179,15 +178,39 @@ const ProjectDetailPanel = ({
   };
 
   const getProjectStats = () => {
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(task => task.completed).length;
+    // Filter tasks to only include those assigned to this specific project
+    const projectTasks = tasks.filter(
+      task =>
+        task.project &&
+        project.name &&
+        task.project.toLowerCase() === project.name.toLowerCase()
+    );
+
+    const totalTasks = projectTasks.length;
+    const completedTasks = projectTasks.filter(task => task.completed).length;
     const pendingTasks = totalTasks - completedTasks;
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // Calculate total proposed time (estimated time in minutes converted to seconds)
+    const totalProposedTime = projectTasks.reduce((total, task) => {
+      return total + ((task.estimatedTime || 0) * 60); // Convert minutes to seconds
+    }, 0);
 
     // Calculate total time tracked
-    const totalTimeTracked = tasks.reduce((total, task) => {
+    const totalTimeTracked = projectTasks.reduce((total, task) => {
       return total + (task.timeTracking?.totalTime || 0);
     }, 0);
+
+    // Calculate completion percentage and rate based on proposed time vs tracked time
+    let completionPercentage = 0;
+    let completionRate = 0;
+
+    if (totalProposedTime > 0 && totalTimeTracked > 0) {
+      completionPercentage = Math.round((totalTimeTracked / totalProposedTime) * 100);
+      completionRate = Math.round((totalTimeTracked / totalProposedTime) * 100);
+    } else if (totalTasks > 0) {
+      // Fallback to task-based completion if no time data
+      completionRate = Math.round((completedTasks / totalTasks) * 100);
+    }
 
     return {
       totalTasks,
@@ -195,6 +218,8 @@ const ProjectDetailPanel = ({
       pendingTasks,
       completionRate,
       totalTimeTracked,
+      totalProposedTime,
+      completionPercentage,
     };
   };
 
@@ -258,17 +283,7 @@ const ProjectDetailPanel = ({
         <ModalOverlay />
         <ModalContent maxW="800px">
           <ModalHeader>
-            <HStack spacing={3} align="center">
-              <Box
-                w={6}
-                h={6}
-                bg={project?.color || '#3182ce'}
-                borderRadius="md"
-                border="2px solid"
-                borderColor={borderColor}
-              />
-              <Text>Project Details</Text>
-            </HStack>
+            <Text>Project Details</Text>
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
@@ -306,7 +321,7 @@ const ProjectDetailPanel = ({
                     <Stat>
                       <StatLabel>Completed</StatLabel>
                       <StatNumber>{stats.completedTasks}</StatNumber>
-                      <StatHelpText>{stats.completionRate}% completion rate</StatHelpText>
+                      <StatHelpText>Tasks completed</StatHelpText>
                     </Stat>
                     <Stat>
                       <StatLabel>Pending</StatLabel>
@@ -317,6 +332,18 @@ const ProjectDetailPanel = ({
                       <StatLabel>Time Tracked</StatLabel>
                       <StatNumber>{formatTime(stats.totalTimeTracked)}</StatNumber>
                       <StatHelpText>Total time spent</StatHelpText>
+                    </Stat>
+
+                    <Stat>
+                      <StatLabel>Proposed Time</StatLabel>
+                      <StatNumber>{formatTime(stats.totalProposedTime)}</StatNumber>
+                      <StatHelpText>Estimated time for all tasks</StatHelpText>
+                    </Stat>
+
+                    <Stat>
+                      <StatLabel>Completion Rate</StatLabel>
+                      <StatNumber>{stats.completionRate}%</StatNumber>
+                      <StatHelpText>Time vs proposed</StatHelpText>
                     </Stat>
                   </SimpleGrid>
                 </Box>
@@ -340,13 +367,6 @@ const ProjectDetailPanel = ({
                       <Badge colorScheme={project.active ? 'green' : 'gray'}>
                         {project.active ? 'Active' : 'Inactive'}
                       </Badge>
-                    </HStack>
-                    <HStack justify="space-between">
-                      <Text fontSize="sm" color="white">Color</Text>
-                      <HStack spacing={2}>
-                        <Box w={4} h={4} bg={project.color || '#3182ce'} borderRadius="sm" border="1px solid" borderColor="gray.300" />
-                        <Text fontSize="sm" color="white">{project.color || '#3182ce'}</Text>
-                      </HStack>
                     </HStack>
                   </VStack>
                 </Box>
@@ -421,19 +441,6 @@ const ProjectDetailPanel = ({
                           placeholder="Project description"
                           rows={3}
                         />
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" fontWeight="medium" mb={2}>Color</Text>
-                        <HStack>
-                          <Input
-                            type="color"
-                            w="40px"
-                            p={0}
-                            value={editedProject.color}
-                            onChange={(e) => setEditedProject(prev => ({ ...prev, color: e.target.value }))}
-                          />
-                          <Text fontSize="sm">{editedProject.color}</Text>
-                        </HStack>
                       </Box>
                       <HStack justify="flex-end" spacing={2}>
                         <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
