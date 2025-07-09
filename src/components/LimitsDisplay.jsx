@@ -74,31 +74,6 @@ const LimitsDisplay = ({ type = 'tasks', showNotification = true, refreshTrigger
 
   return (
     <Box>
-      {/* Limits Display */}
-      <HStack spacing={2} mb={2} justify="space-between">
-        <HStack spacing={2}>
-          <Text fontSize="sm" color={textColor}>
-            {type === 'tasks' ? 'Tasks' : 'Projects'}:
-          </Text>
-          <Text fontSize="sm" color={textColor} fontWeight="medium">
-            {limits.current}
-            {!isUnlimited && `/${limits.limit}`}
-          </Text>
-          {!isUnlimited && remaining !== null && (
-            <Text fontSize="xs" color={textColor}>
-              ({remaining} remaining)
-            </Text>
-          )}
-        </HStack>
-
-        {isUnlimited && (
-          <Badge colorScheme="green" variant="subtle" fontSize="xs">
-            <StarIcon boxSize={2} mr={1} />
-            Pro
-          </Badge>
-        )}
-      </HStack>
-
       {/* Limit Reached Notification - Only show for basic users */}
       {showNotification && isAtLimit && !isUnlimited && (
         <Alert status="warning" size="sm" borderRadius="md" mb={3}>

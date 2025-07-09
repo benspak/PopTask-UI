@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Flex,
@@ -15,6 +15,7 @@ import {
   HStack,
   Tooltip,
   Collapse,
+  Button,
 } from '@chakra-ui/react';
 import {
   CloseIcon,
@@ -23,7 +24,7 @@ import {
   LinkIcon,
   SettingsIcon,
 } from '@chakra-ui/icons';
-import LimitsDisplay from './LimitsDisplay';
+import apiService from '../services/api';
 
 const ProjectsPanel = ({
   isCenterOpen,
@@ -39,7 +40,35 @@ const ProjectsPanel = ({
   handleProjectDelete,
   toggleCenter,
   refreshLimitsTrigger = 0,
-}) => (
+}) => {
+  const [projectLimits, setProjectLimits] = useState(null);
+  const [isProjectLimitAlertDismissed, setIsProjectLimitAlertDismissed] = useState(false);
+
+  // Fetch project limits to show specific alert
+  useEffect(() => {
+    const fetchProjectLimits = async () => {
+      try {
+        const response = await apiService.getProjectLimits();
+        if (response.success) {
+          setProjectLimits(response.data);
+        }
+      } catch (err) {
+        // Silently handle errors - don't show anything if we can't fetch limits
+        console.log('Could not fetch project limits for alert');
+      }
+    };
+
+    fetchProjectLimits();
+  }, [refreshLimitsTrigger]);
+
+  // Reset dismissed state when limits change (e.g., when user creates/deletes projects)
+  useEffect(() => {
+    if (projectLimits && projectLimits.remaining !== 1) {
+      setIsProjectLimitAlertDismissed(false);
+    }
+  }, [projectLimits]);
+
+  return (
   <>
     {/* Projects Section - Mobile pop-over */}
     {isCenterOpen && (
@@ -69,10 +98,35 @@ const ProjectsPanel = ({
           />
         </Flex>
 
-        {/* Project Limits Display */}
-        <Box mb={4}>
-          <LimitsDisplay type="projects" />
-        </Box>
+        {/* Project Limit Alert - Show when user has only 1 project remaining */}
+        {projectLimits && !projectLimits.unlimited && projectLimits.remaining === 1 && !isProjectLimitAlertDismissed && (
+          <Box mb={4}>
+            <Alert status="info" size="sm" borderRadius="md" mb={3}>
+              <AlertIcon />
+              <AlertDescription fontSize="xs" flex="1">
+                Only 1 project remaining. Upgrade to Pro for unlimited projects.
+                <Button
+                  size="xs"
+                  colorScheme="blue"
+                  ml={2}
+                  onClick={() => window.open('/#pricing', '_blank')}
+                >
+                  Upgrade
+                </Button>
+              </AlertDescription>
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => setIsProjectLimitAlertDismissed(true)}
+                color="gray.500"
+                _hover={{ color: "gray.700" }}
+              >
+                ✕
+              </Button>
+            </Alert>
+          </Box>
+        )}
+
         {projectsLoading ? (
           <Flex justify="center" align="center" p={4}>
             <Spinner size="sm" color="blue.500" />
@@ -172,10 +226,34 @@ const ProjectsPanel = ({
       <Box mb={2} display={{ base: 'none', md: 'block' }} p={8}>
         <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
 
-        {/* Project Limits Display */}
-        <Box mb={3}>
-          <LimitsDisplay type="projects" refreshTrigger={refreshLimitsTrigger} />
-        </Box>
+        {/* Project Limit Alert - Show when user has only 1 project remaining */}
+        {projectLimits && !projectLimits.unlimited && projectLimits.remaining === 1 && !isProjectLimitAlertDismissed && (
+          <Box mb={3}>
+            <Alert status="info" size="sm" borderRadius="md" mb={3}>
+              <AlertIcon />
+              <AlertDescription fontSize="xs" flex="1">
+                Only 1 project remaining. Upgrade to Pro for unlimited projects.
+                <Button
+                  size="xs"
+                  colorScheme="blue"
+                  ml={2}
+                  onClick={() => window.open('/#pricing', '_blank')}
+                >
+                  Upgrade
+                </Button>
+              </AlertDescription>
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => setIsProjectLimitAlertDismissed(true)}
+                color="gray.500"
+                _hover={{ color: "gray.700" }}
+              >
+                ✕
+              </Button>
+            </Alert>
+          </Box>
+        )}
 
         {/* Error Alert - Display above project list */}
         {projectsError && (
@@ -258,6 +336,7 @@ const ProjectsPanel = ({
       </Box>
     </Collapse>
   </>
-);
+  );
+};
 
 export default ProjectsPanel;

@@ -70,7 +70,6 @@ export default function BottomNav({
             _hover={{ bg: isAddMode ? 'red.600' : 'green.600' }}
           />
         </Tooltip>
-
         <Tooltip
           label="Send Feedback"
           placement="top"

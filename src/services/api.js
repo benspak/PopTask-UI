@@ -565,6 +565,85 @@ class ApiService {
   async verifyPaymentSession(sessionId) {
     return await this.request(`/payments/verify-session/${sessionId}`);
   }
+
+  async getClients() {
+    return this.request('/clients');
+  }
+
+  // Get client limits for current user
+  async getClientLimits() {
+    return await this.request('/clients/limits', {
+      method: 'GET',
+    });
+  }
+
+  async createClient(clientData) {
+    return this.request('/clients', {
+      method: 'POST',
+      body: JSON.stringify(clientData)
+    });
+  }
+
+  async updateClient(clientId, clientData) {
+    return this.request(`/clients/${clientId}`, {
+      method: 'PUT',
+      body: JSON.stringify(clientData)
+    });
+  }
+
+  async deleteClient(clientId) {
+    return this.request(`/clients/${clientId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async assignProjectsToClient(clientId, projectIds) {
+    return this.request(`/clients/${clientId}/assign-projects`, {
+      method: 'POST',
+      body: JSON.stringify({ projectIds })
+    });
+  }
+
+  // Invoice methods
+  async getInvoices() {
+    return this.request('/invoices');
+  }
+
+  async createInvoice(invoiceData) {
+    return this.request('/invoices', {
+      method: 'POST',
+      body: JSON.stringify(invoiceData)
+    });
+  }
+
+  async updateInvoice(id, invoiceData) {
+    return this.request(`/invoices/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(invoiceData)
+    });
+  }
+
+  async getInvoice(id) {
+    return this.request(`/invoices/${id}`);
+  }
+
+  async createPaymentLink(invoiceId) {
+    return this.request(`/invoices/${invoiceId}/payment-link`, {
+      method: 'POST'
+    });
+  }
+
+  async sendInvoiceEmail(invoiceId) {
+    return this.request(`/invoices/${invoiceId}/send-email`, {
+      method: 'POST'
+    });
+  }
+
+  async deleteInvoice(invoiceId) {
+    return this.request(`/invoices/${invoiceId}`, {
+      method: 'DELETE'
+    });
+  }
 }
 
 // Create and export a singleton instance

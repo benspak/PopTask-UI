@@ -12,6 +12,8 @@ import {
   Tooltip,
   Badge,
   Text,
+  Link,
+  HStack,
 } from '@chakra-ui/react';
 import {
   CheckCircleIcon,
@@ -22,6 +24,7 @@ import {
   StarIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
+import { Link as RouterLink } from 'react-router-dom';
 
 const TopBar = ({
   colorMode,

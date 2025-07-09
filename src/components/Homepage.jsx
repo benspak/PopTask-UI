@@ -51,26 +51,26 @@ const Homepage = () => {
   const features = [
     {
       icon: CalendarIcon,
-      title: 'Smart Calendar View',
+      title: 'Calendar & Project Organization',
       description: 'Organize tasks by day of the week with our intuitive calendar interface. See your workload at a glance and plan efficiently.',
       benefit: 'Save 2-3 hours per week on task planning'
     },
     {
       icon: StarIcon,
-      title: 'Project Management',
-      description: 'Group tasks by projects with color-coded organization. Keep related work together and track progress seamlessly.',
+      title: 'Client & Project Management',
+      description: 'Manage clients and associate projects with color-coded organization. Keep related work together and track progress seamlessly.',
       benefit: 'Reduce project coordination time by 40%'
     },
     {
       icon: AtSignIcon,
-      title: 'Team Collaboration',
-      description: 'Share tasks and projects with team members. Real-time updates keep everyone on the same page.',
+      title: 'Task & Project Sharing',
+      description: 'Share tasks and projects with team members via public links. Real-time updates keep everyone on the same page.',
       benefit: 'Cut meeting time in half with better visibility'
     },
     {
       icon: TimeIcon,
-      title: 'Time Tracking',
-      description: 'Built-in time tracking helps you understand where time goes. Identify bottlenecks and optimize workflows.',
+      title: 'Professional Time Tracking',
+      description: 'Built-in time tracking with session management helps you understand where time goes. Identify bottlenecks and optimize workflows.',
       benefit: 'Identify and eliminate 25% of time waste'
     },
   ];
@@ -222,12 +222,12 @@ const Homepage = () => {
             maxW="4xl"
             lineHeight="1.2"
           >
-            Stop Wasting Time on
-            <Text as="span" color={accentColor}> Task Management</Text>
+            Professional Task & Time Management
+            <Text as="span" color={accentColor}> for Teams</Text>
           </Heading>
           <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-            PopTask is the simplest way to organize tasks and get more done.
-            Teams save 5+ hours per week with our streamlined approach.
+            Complete project management with time tracking, invoicing, and client management.
+            Teams save 3-5 hours per week on task management and invoicing.
           </Text>
           <HStack spacing={4} pt={4}>
             <Button
@@ -248,10 +248,10 @@ const Homepage = () => {
           <VStack spacing={16}>
             <VStack spacing={4} textAlign="center">
               <Heading size="xl" color={textColor}>
-                Everything You Need, Nothing You Don't
+                Complete Solution for Teams & Freelancers
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-                We built PopTask to do one thing really well: help you organize tasks and get more done.
+                Time tracking → Invoicing → Payment collection. Everything you need to manage projects and get paid.
               </Text>
             </VStack>
 
@@ -330,7 +330,7 @@ const Homepage = () => {
                     Time Saved
                   </Text>
                   <Text fontSize="3xl" color="green.500" fontWeight="bold">
-                    5 hrs/week
+                    3-5 hrs/week
                   </Text>
                 </VStack>
                 <VStack spacing={4}>
@@ -338,12 +338,12 @@ const Homepage = () => {
                     Annual Savings
                   </Text>
                   <Text fontSize="3xl" color="green.500" fontWeight="bold">
-                    $78,000
+                    $91,000
                   </Text>
                 </VStack>
               </SimpleGrid>
               <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center" mt={6}>
-                Based on average hourly rate of $30 and 5 hours saved per week per employee
+                Based on average hourly rate of $35 and 4 hours saved per week per employee
               </Text>
             </Box>
           </VStack>
@@ -356,165 +356,253 @@ const Homepage = () => {
           <VStack spacing={12}>
             <VStack spacing={4} textAlign="center">
               <Badge colorScheme="purple" px={4} py={2} borderRadius="full" fontSize="sm">
-                Coming Soon
+                Pro Users
               </Badge>
               <Heading size="xl" color={textColor}>
-                Project Invoicing
+                Professional Invoicing & Payment Collection
               </Heading>
-              <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-                Turn your completed projects into professional invoices automatically.
-                Save 2.5 hours per month on invoicing tasks.
+              <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="3xl">
+                Transform your time tracking into professional invoices that get you paid faster.
+                Automated payment collection with Stripe integration saves hours every month.
               </Text>
             </VStack>
 
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} maxW="5xl" w="full">
-              {/* Left Column - Benefits */}
-              <VStack spacing={6} align="start">
+            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} maxW="6xl" w="full">
+              {/* Left Column - Feature Showcase */}
+              <VStack spacing={8} align="start">
                 <Heading size="lg" color={textColor}>
-                  Why Project Invoicing?
+                  Complete Invoicing Workflow
                 </Heading>
-                <VStack spacing={4} align="start">
-                  <HStack spacing={4}>
-                    <Box
-                      p={2}
-                      bg="purple.500"
-                      color="white"
-                      borderRadius="lg"
-                    >
-                      <Icon as={CheckIcon} boxSize={4} />
-                    </Box>
-                    <VStack spacing={1} align="start">
-                      <Text fontWeight="semibold" color={textColor}>
-                        Invoice Generation
-                      </Text>
-                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
-                        Create professional invoices from completed tasks in seconds
-                      </Text>
+
+                {/* Feature Grid */}
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} w="full">
+                  <Box
+                    bg={bgColor}
+                    p={6}
+                    borderRadius="xl"
+                    border="1px"
+                    borderColor={useColorModeValue('gray.200', 'gray.700')}
+                    _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+                    transition="all 0.3s"
+                  >
+                    <VStack spacing={4} align="start">
+                      <Box
+                        p={3}
+                        bg="purple.500"
+                        color="white"
+                        borderRadius="lg"
+                      >
+                        <Icon as={TimeIcon} boxSize={5} />
+                      </Box>
+                      <VStack spacing={2} align="start">
+                        <Text fontWeight="semibold" color={textColor} fontSize="md">
+                          Time-to-Invoice Automation
+                        </Text>
+                        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                          Convert tracked time into professional invoices in seconds
+                        </Text>
+                      </VStack>
                     </VStack>
-                  </HStack>
-                  <HStack spacing={4}>
-                    <Box
-                      p={2}
-                      bg="purple.500"
-                      color="white"
-                      borderRadius="lg"
-                    >
-                      <Icon as={CheckIcon} boxSize={4} />
-                    </Box>
-                    <VStack spacing={1} align="start">
-                      <Text fontWeight="semibold" color={textColor}>
-                        Time Tracking Integration
-                      </Text>
-                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
-                        Accurate billing based on actual time spent on projects
-                      </Text>
+                  </Box>
+
+                  <Box
+                    bg={bgColor}
+                    p={6}
+                    borderRadius="xl"
+                    border="1px"
+                    borderColor={useColorModeValue('gray.200', 'gray.700')}
+                    _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+                    transition="all 0.3s"
+                  >
+                    <VStack spacing={4} align="start">
+                      <Box
+                        p={3}
+                        bg="green.500"
+                        color="white"
+                        borderRadius="lg"
+                      >
+                        <Icon as={CheckIcon} boxSize={5} />
+                      </Box>
+                      <VStack spacing={2} align="start">
+                        <Text fontWeight="semibold" color={textColor} fontSize="md">
+                          One-Click Payment Collection
+                        </Text>
+                        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                          Stripe-powered payment links get you paid instantly
+                        </Text>
+                      </VStack>
                     </VStack>
-                  </HStack>
-                  <HStack spacing={4}>
-                    <Box
-                      p={2}
-                      bg="purple.500"
-                      color="white"
-                      borderRadius="lg"
-                    >
-                      <Icon as={CheckIcon} boxSize={4} />
-                    </Box>
-                    <VStack spacing={1} align="start">
-                      <Text fontWeight="semibold" color={textColor}>
-                        Professional Template
-                      </Text>
-                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
-                        Invoices that look professional and get you paid faster
-                      </Text>
+                  </Box>
+
+                  <Box
+                    bg={bgColor}
+                    p={6}
+                    borderRadius="xl"
+                    border="1px"
+                    borderColor={useColorModeValue('gray.200', 'gray.700')}
+                    _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+                    transition="all 0.3s"
+                  >
+                    <VStack spacing={4} align="start">
+                      <Box
+                        p={3}
+                        bg="blue.500"
+                        color="white"
+                        borderRadius="lg"
+                      >
+                        <Icon as={AtSignIcon} boxSize={5} />
+                      </Box>
+                      <VStack spacing={2} align="start">
+                        <Text fontWeight="semibold" color={textColor} fontSize="md">
+                          Automated Email Delivery
+                        </Text>
+                        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                          Professional invoice emails with payment links included
+                        </Text>
+                      </VStack>
                     </VStack>
-                  </HStack>
-                  <HStack spacing={4}>
-                    <Box
-                      p={2}
-                      bg="purple.500"
-                      color="white"
-                      borderRadius="lg"
-                    >
-                      <Icon as={CheckIcon} boxSize={4} />
-                    </Box>
-                    <VStack spacing={1} align="start">
-                      <Text fontWeight="semibold" color={textColor}>
-                        Payment Tracking
-                      </Text>
-                      <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
-                        Track invoice status and get notified when payments arrive
-                      </Text>
+                  </Box>
+
+                  <Box
+                    bg={bgColor}
+                    p={6}
+                    borderRadius="xl"
+                    border="1px"
+                    borderColor={useColorModeValue('gray.200', 'gray.700')}
+                    _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+                    transition="all 0.3s"
+                  >
+                    <VStack spacing={4} align="start">
+                      <Box
+                        p={3}
+                        bg="orange.500"
+                        color="white"
+                        borderRadius="lg"
+                      >
+                        <Icon as={CalendarIcon} boxSize={5} />
+                      </Box>
+                      <VStack spacing={2} align="start">
+                        <Text fontWeight="semibold" color={textColor} fontSize="md">
+                          Payment Status Tracking
+                        </Text>
+                        <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
+                          Real-time tracking of invoice status and payments
+                        </Text>
+                      </VStack>
                     </VStack>
-                  </HStack>
-                </VStack>
+                  </Box>
+                </SimpleGrid>
               </VStack>
 
-              {/* Right Column - ROI Calculator */}
-              <Box
-                bg={bgColor}
-                p={6}
-                borderRadius="xl"
-                border="1px"
-                borderColor={useColorModeValue('gray.200', 'gray.700')}
-              >
-                <VStack spacing={6}>
-                  <Heading size="md" color={textColor} textAlign="center">
-                    Your Invoicing ROI
-                  </Heading>
-                  <SimpleGrid columns={2} spacing={4} w="full">
-                    <VStack spacing={2}>
-                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                        Time Saved
-                      </Text>
-                      <Text fontSize="2xl" color="green.500" fontWeight="bold">
-                        2.5 hrs/month
-                      </Text>
-                    </VStack>
-                    <VStack spacing={2}>
-                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                        Annual Savings
-                      </Text>
-                      <Text fontSize="2xl" color="green.500" fontWeight="bold">
-                        $1,050
-                      </Text>
-                    </VStack>
-                    <VStack spacing={2}>
-                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                        Feature Cost
-                      </Text>
-                      <Text fontSize="2xl" color="purple.500" fontWeight="bold">
-                        $120/year
-                      </Text>
-                    </VStack>
-                    <VStack spacing={2}>
-                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                        ROI
-                      </Text>
-                      <Text fontSize="2xl" color="green.500" fontWeight="bold">
-                        8.75x
-                      </Text>
-                    </VStack>
-                  </SimpleGrid>
-                  <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
-                    Based on $35/hour rate and 2.5 hours saved per month
-                  </Text>
-                </VStack>
-              </Box>
-            </SimpleGrid>
+              {/* Right Column - ROI Calculator & CTA */}
+              <VStack spacing={8} align="stretch">
+                {/* ROI Calculator */}
+                <Box
+                  bg={bgColor}
+                  p={8}
+                  borderRadius="xl"
+                  border="1px"
+                  borderColor={useColorModeValue('gray.200', 'gray.700')}
+                  boxShadow="lg"
+                >
+                  <VStack spacing={6}>
+                    <Heading size="md" color={textColor} textAlign="center">
+                      Your Invoicing ROI Calculator
+                    </Heading>
 
-            <VStack spacing={4} textAlign="center">
-              <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                Be the first to know when project invoicing launches
-              </Text>
-              <Button
-                colorScheme="purple"
-                size="md"
-                onClick={handleSignup}
-                rightIcon={<ArrowForwardIcon />}
-              >
-                Get Early Access
-              </Button>
-            </VStack>
+                    <SimpleGrid columns={2} spacing={6} w="full">
+                      <VStack spacing={3}>
+                        <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                          Time Saved Monthly
+                        </Text>
+                        <Text fontSize="3xl" color="green.500" fontWeight="bold" textAlign="center">
+                          4.5 hrs
+                        </Text>
+                        <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                          vs manual invoicing
+                        </Text>
+                      </VStack>
+
+                      <VStack spacing={3}>
+                        <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                          Annual Savings
+                        </Text>
+                        <Text fontSize="3xl" color="green.500" fontWeight="bold" textAlign="center">
+                          $2,340
+                        </Text>
+                        <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                          at $35/hour rate
+                        </Text>
+                      </VStack>
+
+                      <VStack spacing={3}>
+                        <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                          Pro Plan Cost
+                        </Text>
+                        <Text fontSize="2xl" color="purple.500" fontWeight="bold" textAlign="center">
+                          $180/year
+                        </Text>
+                        <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                          $15/month per user
+                        </Text>
+                      </VStack>
+
+                      <VStack spacing={3}>
+                        <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                          Net ROI
+                        </Text>
+                        <Text fontSize="3xl" color="green.500" fontWeight="bold" textAlign="center">
+                          13x
+                        </Text>
+                        <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
+                          return on investment
+                        </Text>
+                      </VStack>
+                    </SimpleGrid>
+
+                    <Box
+                      bg="green.50"
+                      p={4}
+                      borderRadius="lg"
+                      border="1px"
+                      borderColor="green.200"
+                      w="full"
+                    >
+                      <Text fontSize="sm" color="green.800" textAlign="center" fontWeight="medium">
+                        💰 You save $2,160 more than you spend annually
+                      </Text>
+                    </Box>
+                  </VStack>
+                </Box>
+
+                {/* CTA Section */}
+                <VStack spacing={6} p={8} bg={accentColor} borderRadius="xl" textAlign="center">
+                  <VStack spacing={4}>
+                    <Heading size="md" color="white">
+                      Ready to Get Paid Faster?
+                    </Heading>
+                  </VStack>
+
+                  <VStack spacing={4} w="full">
+                    <Button
+                      size="lg"
+                      bg="white"
+                      color={accentColor}
+                      _hover={{ bg: 'gray.100' }}
+                      onClick={handleGetProNow}
+                      rightIcon={isCreatingPaymentLink ? <Spinner size="sm" /> : <ArrowForwardIcon />}
+                      isLoading={isCreatingPaymentLink}
+                      loadingText="Setting up..."
+                      w="full"
+                    >
+                      Get Pro Now</Button>
+                    <Text fontSize="xs" color="blue.100">
+                      30-day money-back guarantee • Cancel anytime
+                    </Text>
+                  </VStack>
+                </VStack>
+              </VStack>
+            </SimpleGrid>
           </VStack>
         </Container>
       </Box>
@@ -563,6 +651,10 @@ const Homepage = () => {
                     <VStack spacing={3} align="start" w="full">
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Up to 3 clients</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
                         <Text fontSize="sm" color={textColor}>Up to 5 projects</Text>
                       </HStack>
                       <HStack spacing={3}>
@@ -571,11 +663,11 @@ const Homepage = () => {
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Team collaboration</Text>
+                        <Text fontSize="sm" color={textColor}>Time tracking</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Task and project analytics</Text>
+                        <Text fontSize="sm" color={textColor}>Manual invoicing</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
@@ -628,10 +720,10 @@ const Homepage = () => {
                       Pro
                     </Text>
                     <Text fontSize="3xl" fontWeight="bold" color={accentColor}>
-                      $10
+                      $15
                     </Text>
                     <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                      per user
+                      per user/month
                     </Text>
                   </VStack>
 
@@ -642,19 +734,11 @@ const Homepage = () => {
                     <VStack spacing={3} align="start" w="full">
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Unlimited tasks</Text>
+                        <Text fontSize="sm" color={textColor}>Unlimited tasks, projects and clients</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Unlimited projects</Text>
-                      </HStack>
-                      <HStack spacing={3}>
-                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Unlimited collaboration</Text>
-                      </HStack>
-                      <HStack spacing={3}>
-                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Project Invoicing (Coming Soon)</Text>
+                        <Text fontSize="sm" color={textColor}>Semi-automated invoicing</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
@@ -727,8 +811,8 @@ const Homepage = () => {
               Ready to Get More Done?
             </Heading>
             <Text fontSize="lg" color="blue.100" maxW="2xl">
-              Stop juggling tasks in your head. Get organized and focused with PopTask.
-              Start free and see the difference in minutes.
+              Complete solution for freelancers and small teams. Stop juggling tasks in your head.
+              Get organized and focused with PopTask. Start free and see the difference in minutes.
             </Text>
             <HStack spacing={4}>
               <Button

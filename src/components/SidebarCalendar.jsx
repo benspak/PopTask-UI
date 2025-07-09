@@ -12,6 +12,8 @@ import {
   Image,
   Badge,
   Tooltip,
+  Spinner,
+  Divider,
 } from '@chakra-ui/react';
 import { CloseIcon, WarningIcon, HamburgerIcon, StarIcon, LinkIcon } from '@chakra-ui/icons';
 

@@ -7,6 +7,7 @@ import {
   Button,
   Input,
   Textarea,
+  Select,
   IconButton,
   Badge,
   useToast,
@@ -46,6 +47,8 @@ import {
   CalendarIcon,
   CheckCircleIcon,
 } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
+import apiService from '../services/api';
 
 const ProjectDetailPanel = ({
   project,
@@ -60,14 +63,44 @@ const ProjectDetailPanel = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProject, setEditedProject] = useState({});
+  const [clients, setClients] = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
   const toast = useToast();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const cancelRef = React.useRef();
+  const navigate = useNavigate();
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const statsBgColor = useColorModeValue('gray.50', 'gray.700');
   const editFormBgColor = useColorModeValue('gray.50', 'gray.700');
+
+  // Load clients when component mounts
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        setClientsLoading(true);
+        const response = await apiService.getClients();
+        const clientsData = Array.isArray(response) ? response : (response.data || []);
+        setClients(clientsData);
+      } catch (error) {
+        console.error('Failed to load clients:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load clients',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setClientsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      loadClients();
+    }
+  }, [isOpen, toast]);
 
   useEffect(() => {
     if (project) {
@@ -75,6 +108,7 @@ const ProjectDetailPanel = ({
         name: project.name || '',
         description: project.description || '',
         active: project.active !== undefined ? project.active : true,
+        clientId: project.clientId || '',
       });
     }
   }, [project]);
@@ -239,6 +273,31 @@ const ProjectDetailPanel = ({
     }
   };
 
+  // Helper to create invoice line items from tasks
+  const getLineItemsFromTasks = () => {
+    // Only include tasks for this project
+    const projectTasks = tasks.filter(
+      task => task.project && project.name && task.project.toLowerCase() === project.name.toLowerCase()
+    );
+    return projectTasks.map(task => ({
+      description: task.title || 'Task',
+      hours: (task.timeTracking?.totalTime || 0) / 3600, // convert seconds to hours
+      rate: 0, // User can edit this later
+      amount: 0 // User can edit this later
+    }));
+  };
+
+  const handleCreateInvoice = () => {
+    const lineItems = getLineItemsFromTasks();
+    navigate('/invoices/create', {
+      state: {
+        projectId: project._id,
+        clientId: project.clientId?._id || project.clientId,
+        lineItems
+      }
+    });
+  };
+
   if (!project) return null;
 
   const stats = getProjectStats();
@@ -368,6 +427,23 @@ const ProjectDetailPanel = ({
                         {project.active ? 'Active' : 'Inactive'}
                       </Badge>
                     </HStack>
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" color="white">Client</Text>
+                      <Text fontSize="sm" color="white">
+                        {project.clientId ? (
+                          <HStack spacing={1}>
+                            <Text>{project.clientId.name}</Text>
+                            {project.clientId.company && (
+                              <Badge colorScheme="blue" variant="subtle" fontSize="xs">
+                                {project.clientId.company}
+                              </Badge>
+                            )}
+                          </HStack>
+                        ) : (
+                          'No client assigned'
+                        )}
+                      </Text>
+                    </HStack>
                   </VStack>
                 </Box>
 
@@ -442,6 +518,22 @@ const ProjectDetailPanel = ({
                           rows={3}
                         />
                       </Box>
+                      <Box>
+                        <Text fontSize="sm" fontWeight="medium" mb={2}>Client</Text>
+                        <Select
+                          value={editedProject.clientId}
+                          onChange={(e) => setEditedProject(prev => ({ ...prev, clientId: e.target.value }))}
+                          placeholder="Select a client"
+                          isDisabled={clientsLoading}
+                        >
+                          <option value="">No client assigned</option>
+                          {clients.map((client) => (
+                            <option key={client._id} value={client._id}>
+                              {client.name} {client.company ? `(${client.company})` : ''}
+                            </option>
+                          ))}
+                        </Select>
+                      </Box>
                       <HStack justify="flex-end" spacing={2}>
                         <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
                           Cancel
@@ -497,6 +589,15 @@ const ProjectDetailPanel = ({
                       Share Project
                     </Button>
                   )}
+                  <Button
+                    leftIcon={<CheckCircleIcon />}
+                    colorScheme="green"
+                    variant="solid"
+                    onClick={handleCreateInvoice}
+                    w="full"
+                  >
+                    Create Invoice from Tasks
+                  </Button>
                 </VStack>
 
                 {/* Desktop Actions */}
@@ -538,6 +639,14 @@ const ProjectDetailPanel = ({
                       Share Project
                     </Button>
                   )}
+                  <Button
+                    leftIcon={<CheckCircleIcon />}
+                    colorScheme="green"
+                    variant="solid"
+                    onClick={handleCreateInvoice}
+                  >
+                    Create Invoice from Tasks
+                  </Button>
                 </HStack>
               </VStack>
             )}

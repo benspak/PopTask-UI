@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Box,
   VStack,
@@ -21,7 +21,7 @@ import {
   LinkIcon,
   AddIcon
 } from '@chakra-ui/icons';
-import LimitsDisplay from './LimitsDisplay';
+import apiService from '../services/api';
 
 const TaskList = ({
   tasks = [],
@@ -47,6 +47,32 @@ const TaskList = ({
   onClearTagFilter,
   refreshLimitsTrigger = 0,
 }) => {
+  const [taskLimits, setTaskLimits] = useState(null);
+  const [isTaskLimitAlertDismissed, setIsTaskLimitAlertDismissed] = useState(false);
+
+  // Fetch task limits to show specific alert
+  useEffect(() => {
+    const fetchTaskLimits = async () => {
+      try {
+        const response = await apiService.getTaskLimits();
+        if (response.success) {
+          setTaskLimits(response.data);
+        }
+      } catch (err) {
+        // Silently handle errors - don't show anything if we can't fetch limits
+        console.log('Could not fetch task limits for alert');
+      }
+    };
+
+    fetchTaskLimits();
+  }, [refreshLimitsTrigger]);
+
+  // Reset dismissed state when limits change (e.g., when user creates/deletes tasks)
+  useEffect(() => {
+    if (taskLimits && taskLimits.remaining !== 2) {
+      setIsTaskLimitAlertDismissed(false);
+    }
+  }, [taskLimits]);
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
@@ -235,10 +261,34 @@ const TaskList = ({
       {/* Error Alert - Display above task list */}
       {errorAlert}
 
-      {/* Task Limits Display */}
-      <Box p={4} pb={2}>
-        <LimitsDisplay type="tasks" refreshTrigger={refreshLimitsTrigger} />
-      </Box>
+      {/* Task Limit Alert - Show when user has only 2 tasks remaining */}
+      {taskLimits && !taskLimits.unlimited && taskLimits.remaining === 2 && !isTaskLimitAlertDismissed && (
+        <Box p={4} pb={2}>
+          <Alert status="info" size="sm" borderRadius="md" mb={3}>
+            <AlertIcon />
+            <AlertDescription fontSize="xs" flex="1">
+              Only 2 tasks remaining. Upgrade to Pro for unlimited tasks.
+              <Button
+                size="xs"
+                colorScheme="blue"
+                ml={2}
+                onClick={() => window.open('/#pricing', '_blank')}
+              >
+                Upgrade
+              </Button>
+            </AlertDescription>
+            <Button
+              size="xs"
+              variant="ghost"
+              onClick={() => setIsTaskLimitAlertDismissed(true)}
+              color="gray.500"
+              _hover={{ color: "gray.700" }}
+            >
+              ✕
+            </Button>
+          </Alert>
+        </Box>
+      )}
 
       {/* Day Filter Indicator */}
       {isFilteredByDay && (

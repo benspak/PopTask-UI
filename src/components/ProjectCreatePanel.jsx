@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   VStack,
@@ -16,8 +16,10 @@ import {
   Divider,
   Heading,
   Flex,
+  Select,
 } from '@chakra-ui/react';
 import { CloseIcon, CheckIcon } from '@chakra-ui/icons';
+import apiService from '../services/api';
 
 const ProjectCreatePanel = ({
   isOpen,
@@ -29,12 +31,42 @@ const ProjectCreatePanel = ({
   const [projectData, setProjectData] = useState({
     name: '',
     description: '',
+    clientId: '',
   });
+  const [clients, setClients] = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
 
   const toast = useToast();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
+
+  // Load clients when component mounts
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        setClientsLoading(true);
+        const response = await apiService.getClients();
+        const clientsData = Array.isArray(response) ? response : (response.data || []);
+        setClients(clientsData);
+      } catch (error) {
+        console.error('Failed to load clients:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load clients',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setClientsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      loadClients();
+    }
+  }, [isOpen, toast]);
 
   // Early return after all hooks have been called
   if (!isOpen) return null;
@@ -60,7 +92,7 @@ const ProjectCreatePanel = ({
 
     try {
       await onCreateProject(projectData);
-      setProjectData({ name: '', description: '' });
+      setProjectData({ name: '', description: '', clientId: '' });
       onClose();
       toast({
         title: 'Success',
@@ -93,7 +125,7 @@ const ProjectCreatePanel = ({
   };
 
   const handleCancel = () => {
-    setProjectData({ name: '', description: '' });
+    setProjectData({ name: '', description: '', clientId: '' });
     onClose();
   };
 
@@ -163,6 +195,27 @@ const ProjectCreatePanel = ({
             />
             <FormHelperText>
               Add details about what this project is for
+            </FormHelperText>
+          </FormControl>
+
+          <FormControl>
+            <FormLabel color={textColor}>Client</FormLabel>
+            <Select
+              placeholder="Select a client"
+              value={projectData.clientId}
+              onChange={(e) => handleInputChange('clientId', e.target.value)}
+              onKeyDown={handleKeyDown}
+              isDisabled={clientsLoading}
+            >
+              <option value="">No client assigned</option>
+              {clients.map((client) => (
+                <option key={client._id} value={client._id}>
+                  {client.name} {client.company ? `(${client.company})` : ''}
+                </option>
+              ))}
+            </Select>
+            <FormHelperText>
+              Select a client for this project
             </FormHelperText>
           </FormControl>
         </VStack>

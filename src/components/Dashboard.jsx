@@ -45,6 +45,7 @@ import { ChevronDownIcon, ChevronUpIcon, AddIcon, EditIcon, ChatIcon, DownloadIc
 import { useAuth } from '../contexts/AuthContext';
 import { useTasks } from '../hooks/useTasks';
 import { useProjects } from '../hooks/useProjects';
+import { useClients } from '../hooks/useClients';
 import apiService, { OfflineNotifications } from '../services/api';
 import SharedView from './SharedView';
 import ShareDialog from './ShareDialog';
@@ -60,6 +61,7 @@ import TaskCreatePanel from './TaskCreatePanel';
 import ProjectDetailPanel from './ProjectDetailPanel';
 import FeedbackModal from './FeedbackModal';
 import SharedContentPanel from './SharedContentPanel';
+import { ClientCreateModal } from './ClientList';
 
 export default function Dashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -78,6 +80,7 @@ export default function Dashboard() {
 
   const { isOpen: isDetailOpen, onToggle: toggleDetail, onOpen: openDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
+  const { isOpen: isClientCreateOpen, onOpen: openClientCreate, onClose: closeClientCreate } = useDisclosure();
 
   // Toggle functions with localStorage persistence
   const toggleSidebar = () => {
@@ -132,6 +135,16 @@ export default function Dashboard() {
     deleteProject,
   } = useProjects();
 
+  const {
+    clients,
+    loading: clientsLoading,
+    error: clientsError,
+    loadClients,
+    createClient,
+    updateClient,
+    deleteClient,
+  } = useClients();
+
   const [allBackendTasks, setAllBackendTasks] = React.useState([]);
 
   const [sharedContent, setSharedContent] = React.useState(null);
@@ -156,8 +169,9 @@ export default function Dashboard() {
     if (!sharedContent) {
       loadTasks();
       loadProjects();
+      loadClients();
     }
-  }, [loadTasks, loadProjects, sharedContent]);
+  }, [loadTasks, loadProjects, loadClients, sharedContent]);
 
   // Periodic refresh of shared content (every 5 minutes)
   React.useEffect(() => {
@@ -900,6 +914,8 @@ export default function Dashboard() {
 
 
 
+
+
   const [isDeleteProjectDialogOpen, setIsDeleteProjectDialogOpen] = React.useState(false);
   const [projectToDelete, setProjectToDelete] = React.useState(null);
 
@@ -1323,6 +1339,24 @@ export default function Dashboard() {
               <Heading size="md" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
                 PopTask
               </Heading>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.href = '/clients'}
+                color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
+                _hover={{ bg: colorMode === 'dark' ? 'gray.700' : 'gray.100' }}
+              >
+                Clients
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.href = '/invoices'}
+                color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
+                _hover={{ bg: colorMode === 'dark' ? 'gray.700' : 'gray.100' }}
+              >
+                Invoices
+              </Button>
             </HStack>
 
             <HStack spacing={2}>
@@ -1407,9 +1441,8 @@ export default function Dashboard() {
         <BottomNav
           isSidebarOpen={isSidebarOpen}
           isCenterOpen={isCenterOpen}
-          isDetailOpen={isDetailOpen}
+          isAddMode={isMobileTaskCreateOpen}
           isFooterOpen={isFeedbackModalOpen}
-          selectedTask={selectedTask}
           toggleSidebar={toggleSidebar}
           toggleCenter={toggleCenter}
           handleAddTask={handleAddTask}
@@ -1611,6 +1644,12 @@ export default function Dashboard() {
         isShared={selectedProject?.isSharedWithMe || false}
       />
     )}
+
+    <ClientCreateModal
+      isOpen={isClientCreateOpen}
+      onClose={closeClientCreate}
+      onClientAdded={loadClients}
+    />
   </Box>
 );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import AuthGuard from './components/AuthGuard';
 import Login from './views/Login';
@@ -11,7 +11,13 @@ import Dashboard from './components/Dashboard';
 import SharedView from './components/SharedView';
 import Homepage from './components/Homepage';
 import Changelog from './components/Changelog';
-import { Spinner, Center, VStack, Text } from '@chakra-ui/react';
+import { Spinner, Center, VStack, Text, HStack, Link, Box } from '@chakra-ui/react';
+import { ClientList } from './components/ClientList';
+import { ProjectList } from './components/ProjectList';
+import { InvoiceList } from './components/InvoiceList';
+import { InvoiceCreatePanel } from './components/InvoiceCreatePanel';
+import { InvoiceDetail } from './components/InvoiceDetail';
+import { InvoiceEditPanel } from './components/InvoiceEditPanel';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -54,6 +60,36 @@ export default function App() {
       <Route path="/dashboard" element={
         <AuthGuard>
           <Dashboard />
+        </AuthGuard>
+      } />
+      <Route path="/clients" element={
+        <AuthGuard>
+          <ClientList />
+        </AuthGuard>
+      } />
+      <Route path="/projects" element={
+        <AuthGuard>
+          <ProjectList />
+        </AuthGuard>
+      } />
+      <Route path="/invoices" element={
+        <AuthGuard>
+          <InvoiceList />
+        </AuthGuard>
+      } />
+      <Route path="/invoices/create" element={
+        <AuthGuard>
+          <InvoiceCreatePanel />
+        </AuthGuard>
+      } />
+      <Route path="/invoices/:invoiceId" element={
+        <AuthGuard>
+          <InvoiceDetail />
+        </AuthGuard>
+      } />
+      <Route path="/invoices/:invoiceId/edit" element={
+        <AuthGuard>
+          <InvoiceEditPanel />
         </AuthGuard>
       } />
 
