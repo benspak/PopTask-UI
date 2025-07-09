@@ -10,6 +10,14 @@ export const useTasks = () => {
   const [sharedError, setSharedError] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
 
+  const dismissError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const dismissSharedError = useCallback(() => {
+    setSharedError(null);
+  }, []);
+
   const loadTasks = useCallback(async (filters = {}) => {
     try {
       setLoading(true);
@@ -161,6 +169,8 @@ export const useTasks = () => {
     error,
     sharedError,
     isOffline,
+    dismissError,
+    dismissSharedError,
     loadTasks,
     loadSharedTasks,
     refreshSharedTasks,

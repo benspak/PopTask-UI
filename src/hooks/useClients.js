@@ -13,8 +13,6 @@ export const useClients = () => {
       const response = await apiService.getClients();
       // Handle both direct array response and response.data
       const clientsData = Array.isArray(response) ? response : (response.data || []);
-      console.log('API Response:', response);
-      console.log('Clients data:', clientsData);
       setClients(clientsData);
     } catch (err) {
       setError(err.message || 'Failed to load clients');
@@ -31,8 +29,6 @@ export const useClients = () => {
       const response = await apiService.createClient(clientData);
       // Handle both direct object response and response.data
       const newClient = response.data || response;
-      console.log('Create client response:', response);
-      console.log('New client:', newClient);
       setClients(prev => [...prev, newClient]);
       return newClient;
     } catch (err) {

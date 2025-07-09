@@ -45,6 +45,8 @@ const TaskCreatePanel = ({
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
+  const hintBgColor = useColorModeValue('gray.50', 'gray.700');
+  const hintTextColor = useColorModeValue('gray.600', 'gray.300');
 
   // Early return after all hooks have been called
   if (!isOpen) return null;
@@ -321,11 +323,11 @@ const TaskCreatePanel = ({
 
         {/* Keyboard shortcuts hint */}
         <Box
-          bg={useColorModeValue('gray.50', 'gray.700')}
+          bg={hintBgColor}
           p={3}
           borderRadius="md"
           fontSize="sm"
-          color={useColorModeValue('gray.600', 'gray.300')}
+          color={hintTextColor}
         >
           <Text fontWeight="medium" mb={1}>Keyboard Shortcuts:</Text>
           <Text>• Ctrl/Cmd + Enter: Create task</Text>

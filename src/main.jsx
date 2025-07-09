@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
 import { registerSW } from 'virtual:pwa-register';
 import { AuthProvider } from './contexts/AuthContext';
+import { TimezoneProvider } from './contexts/TimezoneContext';
 import App from './App.jsx';
 
 // Create theme with dark mode as default
@@ -38,7 +39,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ChakraProvider theme={theme}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <TimezoneProvider>
+            <App />
+          </TimezoneProvider>
         </AuthProvider>
       </BrowserRouter>
     </ChakraProvider>

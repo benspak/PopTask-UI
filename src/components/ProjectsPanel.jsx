@@ -17,6 +17,7 @@ import {
   Collapse,
   Button,
 } from '@chakra-ui/react';
+import DismissibleAlert from './DismissibleAlert';
 import {
   CloseIcon,
   HamburgerIcon,
@@ -40,6 +41,7 @@ const ProjectsPanel = ({
   handleProjectDelete,
   toggleCenter,
   refreshLimitsTrigger = 0,
+  onDismissError,
 }) => {
   const [projectLimits, setProjectLimits] = useState(null);
   const [isProjectLimitAlertDismissed, setIsProjectLimitAlertDismissed] = useState(false);
@@ -132,15 +134,13 @@ const ProjectsPanel = ({
             <Spinner size="sm" color="blue.500" />
           </Flex>
         ) : projectsError ? (
-          <Alert status="error" mb={4}>
-            <AlertIcon />
-            <Box>
-              <AlertTitle>Projects Error!</AlertTitle>
-              <AlertDescription>
-                {projectsError}. Please check if the backend server is running.
-              </AlertDescription>
-            </Box>
-          </Alert>
+          <DismissibleAlert
+            status="error"
+            title="Projects Error!"
+            description={`${projectsError}. Please check if the backend server is running.`}
+            onDismiss={onDismissError}
+            mb={4}
+          />
         ) : (
           <SimpleGrid columns={2} spacing={3}>
             {projects.map((project) => (
@@ -257,15 +257,13 @@ const ProjectsPanel = ({
 
         {/* Error Alert - Display above project list */}
         {projectsError && (
-          <Alert status="error" mb={4}>
-            <AlertIcon />
-            <Box>
-              <AlertTitle>Projects Error!</AlertTitle>
-              <AlertDescription>
-                {projectsError}
-              </AlertDescription>
-            </Box>
-          </Alert>
+          <DismissibleAlert
+            status="error"
+            title="Projects Error!"
+            description={projectsError}
+            onDismiss={onDismissError}
+            mb={4}
+          />
         )}
 
         {projectsLoading ? (

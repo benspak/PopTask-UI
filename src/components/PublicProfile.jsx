@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   VStack,
@@ -27,10 +27,12 @@ import {
   ExternalLinkIcon,
 } from '@chakra-ui/icons';
 import apiService from '../services/api';
+import { formatTimezoneForDisplay } from '../utils/timezone';
 
 const PublicProfile = () => {
   const { username } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,7 +48,12 @@ const PublicProfile = () => {
         setIsLoading(true);
         setError(null);
 
-        const response = await apiService.getPublicProfile(username);
+        // Use different API method based on URL path
+        const isUsersPath = location.pathname.startsWith('/users/');
+        const response = isUsersPath
+          ? await apiService.getPublicUserProfile(username)
+          : await apiService.getPublicProfile(username);
+
         setProfile(response.user);
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -59,7 +66,7 @@ const PublicProfile = () => {
     if (username) {
       fetchProfile();
     }
-  }, [username]);
+  }, [username, location.pathname]);
 
   const handleBack = () => {
     navigate(-1);
@@ -163,13 +170,15 @@ const PublicProfile = () => {
                   </VStack>
 
                   <HStack spacing={3}>
-                    <Badge
-                      colorScheme={profile.userType === 'pro' ? 'green' : 'blue'}
-                      variant="subtle"
-                      fontSize="sm"
-                    >
-                      {profile.userType === 'pro' ? 'Pro User' : 'Basic User'}
-                    </Badge>
+                    {profile.userType === 'pro' && (
+                      <Badge
+                        colorScheme="green"
+                        variant="subtle"
+                        fontSize="sm"
+                      >
+                        Pro User
+                      </Badge>
+                    )}
 
                     {profile.isEmailVerified && (
                       <Badge colorScheme="green" variant="subtle" fontSize="sm">
@@ -201,27 +210,6 @@ const PublicProfile = () => {
                 </Text>
                 <VStack spacing={3} align="stretch">
                   <HStack justify="space-between">
-                    <Text color={mutedTextColor}>Name:</Text>
-                    <Text color={textColor} fontWeight="medium">
-                      {profile.firstName} {profile.lastName}
-                    </Text>
-                  </HStack>
-
-                  <HStack justify="space-between">
-                    <Text color={mutedTextColor}>Display Name:</Text>
-                    <Text color={textColor} fontWeight="medium">
-                      {profile.displayName}
-                    </Text>
-                  </HStack>
-
-                  <HStack justify="space-between">
-                    <Text color={mutedTextColor}>Username:</Text>
-                    <Text color={textColor} fontWeight="medium">
-                      @{profile.username}
-                    </Text>
-                  </HStack>
-
-                  <HStack justify="space-between">
                     <Text color={mutedTextColor}>Member Since:</Text>
                     <Text color={textColor} fontWeight="medium">
                       {new Date(profile.createdAt).toLocaleDateString('en-US', {
@@ -229,6 +217,13 @@ const PublicProfile = () => {
                         month: 'long',
                         day: 'numeric'
                       })}
+                    </Text>
+                  </HStack>
+
+                  <HStack justify="space-between">
+                    <Text color={mutedTextColor}>Timezone:</Text>
+                    <Text color={textColor} fontWeight="medium">
+                      {profile.timezone ? formatTimezoneForDisplay(profile.timezone) : 'Not set'}
                     </Text>
                   </HStack>
                 </VStack>

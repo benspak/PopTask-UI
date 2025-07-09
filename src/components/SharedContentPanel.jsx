@@ -14,6 +14,7 @@ import {
   AlertIcon,
   AlertDescription,
 } from '@chakra-ui/react';
+import DismissibleAlert from './DismissibleAlert';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -35,6 +36,7 @@ const SharedContentPanel = ({
   isExpanded = false,
   onToggleExpanded,
   onRefresh,
+  onDismissSharedError,
 }) => {
   // All hooks must be called at the top level
   const bgColor = useColorModeValue('blue.50', 'blue.900');
@@ -143,12 +145,13 @@ const SharedContentPanel = ({
           )}
 
           {hasError && (
-            <Alert status="warning" size="sm" mb={3}>
-              <AlertIcon />
-              <AlertDescription fontSize="sm">
-                {sharedTasksError || sharedProjectsError}
-              </AlertDescription>
-            </Alert>
+            <DismissibleAlert
+              status="warning"
+              description={sharedTasksError || sharedProjectsError}
+              onDismiss={onDismissSharedError}
+              size="sm"
+              mb={3}
+            />
           )}
 
           {!isLoading && !hasError && (

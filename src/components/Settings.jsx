@@ -26,18 +26,26 @@ import {
   useColorModeValue,
   Flex,
   Image,
+  Select,
+  useColorMode,
 } from '@chakra-ui/react';
 import {
   EditIcon,
   CheckIcon,
   CloseIcon,
   AddIcon,
+  ArrowBackIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
+import { useTimezone } from '../contexts/TimezoneContext';
 import apiService from '../services/api';
+import { TIMEZONE_OPTIONS, getUserTimezone } from '../utils/timezone';
+import TopBar from './TopBar';
 
 const Settings = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
+  const { updateTimezone } = useTimezone();
+  const { colorMode, toggleColorMode } = useColorMode();
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,6 +61,7 @@ const Settings = () => {
     username: '',
     biography: '',
     profilePicture: '',
+    timezone: '',
   });
 
   // Validation state
@@ -65,6 +74,20 @@ const Settings = () => {
   const textColor = useColorModeValue('gray.800', 'white');
   const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
 
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  // Handle back navigation
+  const handleBack = () => {
+    window.history.back();
+  };
+
   // Load user data on component mount
   useEffect(() => {
     if (user) {
@@ -76,6 +99,7 @@ const Settings = () => {
         username: user.username || '',
         biography: user.biography || '',
         profilePicture: user.profilePicture || '',
+        timezone: user.timezone || getUserTimezone(),
       });
     }
   }, [user]);
@@ -262,6 +286,11 @@ const Settings = () => {
       // Refresh user data
       await refreshUser();
 
+      // Update timezone context if timezone changed
+      if (formData.timezone && formData.timezone !== user?.timezone) {
+        updateTimezone(formData.timezone);
+      }
+
       setShowSuccess(true);
       toast({
         title: 'Profile updated',
@@ -299,17 +328,45 @@ const Settings = () => {
   }
 
   return (
-    <Box maxW="800px" mx="auto" p={6}>
-      <VStack spacing={8} align="stretch">
-        {/* Header */}
-        <Box>
-          <Heading size="lg" color={textColor} mb={2}>
-            Account Settings
-          </Heading>
-          <Text color={mutedTextColor}>
-            Manage your profile information and preferences
-          </Text>
-        </Box>
+    <Box h="100vh" display="flex" flexDirection="column">
+      {/* TopBar */}
+      <TopBar
+        colorMode={colorMode}
+        toggleColorMode={toggleColorMode}
+        isOnline={true}
+        currentView="settings"
+        searchTerm=""
+        handleSearch={() => {}}
+        resetToAllTasks={() => {}}
+        isSidebarOpen={false}
+        isCenterOpen={false}
+        onLogout={handleLogout}
+      />
+
+      {/* Main Content */}
+      <Box flex="1" overflowY="auto" p={6}>
+        <Box maxW="800px" mx="auto">
+          <VStack spacing={8} align="stretch">
+            {/* Header with Back Button */}
+            <Flex align="center" gap={4}>
+              <IconButton
+                icon={<ArrowBackIcon />}
+                aria-label="Go back"
+                onClick={handleBack}
+                size="sm"
+                variant="ghost"
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+              />
+              <Box>
+                <Heading size="lg" color={textColor} mb={2}>
+                  Account Settings
+                </Heading>
+                <Text color={mutedTextColor}>
+                  Manage your profile information and preferences
+                </Text>
+              </Box>
+            </Flex>
 
         {/* Success Alert */}
         {showSuccess && (
@@ -522,6 +579,34 @@ const Settings = () => {
                     </Text>
                   </FormControl>
 
+                  {/* Timezone */}
+                  <FormControl isInvalid={!!errors.timezone}>
+                    <FormLabel fontWeight="semibold" color={textColor}>
+                      Timezone
+                    </FormLabel>
+                    <Select
+                      value={formData.timezone}
+                      onChange={(e) => handleInputChange('timezone', e.target.value)}
+                      placeholder="Select your timezone"
+                      bg={useColorModeValue('white', 'gray.700')}
+                      borderColor={borderColor}
+                    >
+                      {TIMEZONE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Select>
+                    {errors.timezone && (
+                      <Text color="red.500" fontSize="sm" mt={1}>
+                        {errors.timezone}
+                      </Text>
+                    )}
+                    <Text fontSize="sm" color={mutedTextColor} mt={1}>
+                      Your timezone will be used to display dates and times throughout the app
+                    </Text>
+                  </FormControl>
+
                   {/* Submit Button */}
                   <Button
                     type="submit"
@@ -538,7 +623,9 @@ const Settings = () => {
             </VStack>
           </CardBody>
         </Card>
-      </VStack>
+          </VStack>
+        </Box>
+      </Box>
     </Box>
   );
 };

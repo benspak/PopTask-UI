@@ -16,12 +16,20 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [hasAttemptedAutoLogin, setHasAttemptedAutoLogin] = useState(false);
+  const [hasExplicitlyLoggedOut, setHasExplicitlyLoggedOut] = useState(false);
 
   // Check authentication status on mount and when tokens change
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         setIsLoading(true);
+
+        // If user has explicitly logged out, don't attempt auto-login
+        if (hasExplicitlyLoggedOut) {
+          setIsAuthenticated(false);
+          setUser(null);
+          return;
+        }
 
         // Check if we have any tokens stored
         const hasToken = apiService.isAuthenticated();
@@ -95,13 +103,16 @@ export const AuthProvider = ({ children }) => {
     // Listen for storage changes (when tokens are updated in other tabs)
     const handleStorageChange = (e) => {
       if (e.key === apiService.tokenKey || e.key === apiService.refreshTokenKey) {
-        checkAuthStatus();
+        // Only check auth status if user hasn't explicitly logged out
+        if (!hasExplicitlyLoggedOut) {
+          checkAuthStatus();
+        }
       }
     };
 
     // Listen for page visibility changes
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
+      if (!document.hidden && !hasExplicitlyLoggedOut) {
         checkAuthStatus();
       }
     };
@@ -113,7 +124,7 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('storage', handleStorageChange);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [hasExplicitlyLoggedOut]);
 
   const login = async (credentials) => {
     try {
@@ -131,6 +142,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setUser(result.user);
       setHasAttemptedAutoLogin(false);
+      setHasExplicitlyLoggedOut(false);
       return result;
     } catch (error) {
       throw error;
@@ -152,6 +164,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setUser(result.user);
       setHasAttemptedAutoLogin(false);
+      setHasExplicitlyLoggedOut(false);
       return result;
     } catch (error) {
       throw error;
@@ -163,6 +176,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setUser(null);
     setHasAttemptedAutoLogin(false);
+    setHasExplicitlyLoggedOut(true);
   };
 
   const refreshUser = async () => {

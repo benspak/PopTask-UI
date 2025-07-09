@@ -16,6 +16,7 @@ import {
   Checkbox,
   Tooltip,
 } from '@chakra-ui/react';
+import DismissibleAlert from './DismissibleAlert';
 import {
   AttachmentIcon,
   LinkIcon,
@@ -46,6 +47,7 @@ const TaskList = ({
   onClearProjectFilter,
   onClearTagFilter,
   refreshLimitsTrigger = 0,
+  onDismissError,
 }) => {
   const [taskLimits, setTaskLimits] = useState(null);
   const [isTaskLimitAlertDismissed, setIsTaskLimitAlertDismissed] = useState(false);
@@ -189,12 +191,13 @@ const TaskList = ({
 
   // Display error above the task list instead of replacing it
   const errorAlert = error ? (
-    <Alert status="error" mb={4} borderRadius="md">
-      <AlertIcon />
-      <AlertDescription>
-        {error}
-      </AlertDescription>
-    </Alert>
+    <DismissibleAlert
+      status="error"
+      description={error}
+      onDismiss={onDismissError}
+      mb={4}
+      borderRadius="md"
+    />
   ) : null;
 
   if (filteredAndSortedTasks.length === 0) {

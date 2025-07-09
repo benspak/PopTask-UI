@@ -58,6 +58,7 @@ export default function App() {
       {/* Shared content routes (public) */}
       <Route path="/shared/:type/:token" element={<SharedView />} />
       <Route path="/profile/:username" element={<PublicProfile />} />
+      <Route path="/users/:username" element={<PublicProfile />} />
 
       {/* Protected routes */}
       <Route path="/dashboard" element={

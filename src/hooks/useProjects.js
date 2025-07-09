@@ -10,6 +10,14 @@ export const useProjects = () => {
   const [sharedError, setSharedError] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
 
+  const dismissError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const dismissSharedError = useCallback(() => {
+    setSharedError(null);
+  }, []);
+
   const loadProjects = useCallback(async () => {
     try {
       setLoading(true);
@@ -144,6 +152,8 @@ export const useProjects = () => {
     error,
     sharedError,
     isOffline,
+    dismissError,
+    dismissSharedError,
     loadProjects,
     loadSharedProjects,
     refreshSharedProjects,

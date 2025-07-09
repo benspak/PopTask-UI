@@ -224,6 +224,10 @@ class ApiService {
     return await this.request(`/auth/profile/${username}`);
   }
 
+  async getPublicUserProfile(username) {
+    return await this.request(`/auth/users/${username}`);
+  }
+
   async updateProfile(profileData) {
     return await this.request('/auth/profile', {
       method: 'PUT',

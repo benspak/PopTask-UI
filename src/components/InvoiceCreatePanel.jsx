@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Input, Select, NumberInput, NumberInputField, List, ListItem, Heading, Flex, VStack, HStack, Text, useToast, Spinner } from '@chakra-ui/react';
+import { Box, Button, Input, Select, NumberInput, NumberInputField, List, ListItem, Heading, Flex, VStack, HStack, Text, useToast, Spinner, IconButton, useColorMode } from '@chakra-ui/react';
+import { ArrowBackIcon } from '@chakra-ui/icons';
 import apiService from '../services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatHoursToTime, parseTimeToHours } from '../utils/timeFormat';
+import TopBar from './TopBar';
+import { useAuth } from '../contexts/AuthContext';
 
 export const InvoiceCreatePanel = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
+  const { colorMode, toggleColorMode } = useColorMode();
+  const { logout } = useAuth();
   const prefill = location.state || {};
 
   const [clients, setClients] = useState([]);
@@ -23,6 +28,20 @@ export const InvoiceCreatePanel = () => {
   const [newItemTimeInput, setNewItemTimeInput] = useState('00:00');
   const [editingTimeInputs, setEditingTimeInputs] = useState({});
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({ title: 'Logout failed', status: 'error' });
+    }
+  };
+
+  const handleBack = () => {
+    navigate('/invoices');
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -34,15 +53,9 @@ export const InvoiceCreatePanel = () => {
           apiService.getProjects()
         ]);
 
-        // Handle backend response format: { success: true, data: [...], count: ... }
-        const clientsData = clientsRes?.data || [];
-        const projectsData = projectsRes?.data || [];
-
-        // Debug logging
-        console.log('Clients response:', clientsRes);
-        console.log('Projects response:', projectsRes);
-        console.log('Clients data:', clientsData);
-        console.log('Projects data:', projectsData);
+        // Handle both direct array response and response.data format
+        const clientsData = Array.isArray(clientsRes) ? clientsRes : (clientsRes?.data || []);
+        const projectsData = Array.isArray(projectsRes) ? projectsRes : (projectsRes?.data || []);
 
         setClients(clientsData || []);
         setProjects(projectsData || []);
@@ -148,107 +161,232 @@ export const InvoiceCreatePanel = () => {
 
   if (loading) {
     return (
-      <Box maxW="lg" mx="auto" mt={8} p={4} textAlign="center">
-        <Spinner size="xl" color="white" />
-        <Text color="white" mt={4}>Loading...</Text>
+      <Box h="100vh" display="flex" flexDirection="column">
+        <TopBar
+          colorMode={colorMode}
+          toggleColorMode={toggleColorMode}
+          isOnline={true}
+          currentView="invoices"
+          searchTerm=""
+          handleSearch={() => {}}
+          resetToAllTasks={() => {}}
+          isSidebarOpen={false}
+          isCenterOpen={false}
+          onLogout={handleLogout}
+        />
+        <Box flex="1" display="flex" alignItems="center" justifyContent="center">
+          <VStack spacing={4}>
+            <Spinner size="xl" color={colorMode === 'light' ? 'gray.600' : 'white'} />
+            <Text color={colorMode === 'light' ? 'gray.600' : 'white'}>Loading...</Text>
+          </VStack>
+        </Box>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box maxW="lg" mx="auto" mt={8} p={4} textAlign="center">
-        <Text color="red.300" mb={4}>{error}</Text>
-        <Button onClick={() => window.location.reload()} colorScheme="blue">
-          Retry
-        </Button>
+      <Box h="100vh" display="flex" flexDirection="column">
+        <TopBar
+          colorMode={colorMode}
+          toggleColorMode={toggleColorMode}
+          isOnline={true}
+          currentView="invoices"
+          searchTerm=""
+          handleSearch={() => {}}
+          resetToAllTasks={() => {}}
+          isSidebarOpen={false}
+          isCenterOpen={false}
+          onLogout={handleLogout}
+        />
+        <Box flex="1" display="flex" alignItems="center" justifyContent="center">
+          <VStack spacing={4}>
+            <Text color="red.300" mb={4}>{error}</Text>
+            <Button onClick={() => window.location.reload()} colorScheme="blue">
+              Retry
+            </Button>
+          </VStack>
+        </Box>
       </Box>
     );
   }
 
   return (
-    <Box maxW="lg" mx="auto" mt={8} p={4} borderWidth={1} borderRadius="md" boxShadow="md" bg="gray.800">
-      <Heading size="md" mb={4} color="white">Create Invoice</Heading>
-      <VStack spacing={2} align="stretch" mb={4}>
-        <Select placeholder="Select client" value={clientId} onChange={e => setClientId(e.target.value)} bg="gray.700" color="white">
-          {(clients || []).map(client => (
-            <option key={client._id} value={client._id}>{client.company || client.name}</option>
-          ))}
-        </Select>
-        <Select placeholder="Select project" value={projectId} onChange={e => setProjectId(e.target.value)} bg="gray.700" color="white">
-          {(projects || []).filter(p => {
-            // Handle both populated clientId object and string clientId
-            const projectClientId = p.clientId?._id || p.clientId;
-            const shouldShow = !clientId || projectClientId === clientId;
-            console.log(`Project ${p.name}: clientId=${projectClientId}, selectedClientId=${clientId}, shouldShow=${shouldShow}`);
-            return shouldShow;
-          }).map(project => (
-            <option key={project._id} value={project._id}>{project.name}</option>
-          ))}
-        </Select>
-        <HStack gap={2} mb={1}>
-          <Text color="gray.300" fontSize="sm" w="180px">Task Name</Text>
-          <Text color="gray.300" fontSize="sm" w="120px">Hours</Text>
-          <Text color="gray.300" fontSize="sm" w="120px">Rate</Text>
-        </HStack>
-        <List spacing={2} mb={2}>
-          {(lineItems || []).map((item, idx) => (
-            <ListItem key={idx}>
-              <HStack>
-                <Input value={item.description || ''} onChange={e => updateLineItem(idx, 'description', e.target.value)} bg="gray.700" color="white" w="180px" />
-                <Input
-                  value={editingTimeInputs[idx] || formatTimeInput(item.hours || 0)}
-                  onChange={e => handleTimeChange(
-                    e.target.value,
-                    (hours) => updateLineItem(idx, 'hours', hours),
-                    (input) => setEditingTimeInputs(prev => ({ ...prev, [idx]: input }))
-                  )}
-                  onFocus={() => setEditingTimeInputs(prev => ({ ...prev, [idx]: formatTimeInput(item.hours || 0) }))}
-                  onBlur={() => setEditingTimeInputs(prev => ({ ...prev, [idx]: undefined }))}
-                  placeholder="00:00"
-                  bg="gray.700"
-                  color="white"
-                  w="100px"
-                />
-                <NumberInput value={item.rate || 0} min={0} onChange={val => updateLineItem(idx, 'rate', Number(val))} w="100px">
-                  <NumberInputField placeholder="Rate" />
-                </NumberInput>
-                <Text color="gray.200">${((item.hours || 0) * (item.rate || 0)).toFixed(2)}</Text>
-                <Button size="xs" colorScheme="red" onClick={() => removeLineItem(idx)}>Remove</Button>
-              </HStack>
-            </ListItem>
-          ))}
-        </List>
-        <Flex gap={2} mb={2} wrap="wrap">
-          <Input
-            placeholder="Description"
-            value={newItem.description}
-            onChange={e => setNewItem({ ...newItem, description: e.target.value })}
-            bg="gray.700" color="white"
-            w="180px"
-          />
-          <Input
-            value={newItemTimeInput}
-            onChange={e => handleTimeChange(
-              e.target.value,
-              (hours) => setNewItem({ ...newItem, hours }),
-              (input) => setNewItemTimeInput(input)
-            )}
-            placeholder="00:00"
-            bg="gray.700"
-            color="white"
-            w="120px"
-          />
-          <NumberInput value={newItem.rate} min={0} onChange={val => setNewItem({ ...newItem, rate: Number(val) })} w="120px">
-            <NumberInputField placeholder="Rate" />
-          </NumberInput>
-          <Button onClick={addLineItem} colorScheme="blue">Add</Button>
-        </Flex>
-        <Box fontWeight="bold" mb={2} color="white">Total: ${total.toFixed(2)}</Box>
-        <Button onClick={handleSubmit} colorScheme="green" isLoading={submitting} alignSelf="flex-end">
-          Create Invoice
-        </Button>
-      </VStack>
+    <Box h="100vh" display="flex" flexDirection="column">
+      {/* TopBar */}
+      <TopBar
+        colorMode={colorMode}
+        toggleColorMode={toggleColorMode}
+        isOnline={true}
+        currentView="invoices"
+        searchTerm=""
+        handleSearch={() => {}}
+        resetToAllTasks={() => {}}
+        isSidebarOpen={false}
+        isCenterOpen={false}
+        onLogout={handleLogout}
+      />
+
+      {/* Main Content */}
+      <Box flex="1" overflowY="auto" p={6}>
+        <Box maxW="lg" mx="auto">
+          {/* Header with Back Button */}
+          <Flex align="center" gap={4} mb={6}>
+            <IconButton
+              icon={<ArrowBackIcon />}
+              aria-label="Go back to invoices"
+              onClick={handleBack}
+              size="sm"
+              variant="ghost"
+              color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+              _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+            />
+            <Box>
+              <Heading size="lg" color={colorMode === 'light' ? 'gray.800' : 'white'} mb={2}>
+                Create Invoice
+              </Heading>
+              <Text color={colorMode === 'light' ? 'gray.600' : 'gray.300'}>
+                Create a new invoice for your client
+              </Text>
+            </Box>
+          </Flex>
+
+          {/* Invoice Form */}
+          <Box borderWidth={1} borderRadius="md" boxShadow="md" bg={colorMode === 'light' ? 'white' : 'gray.800'} p={6}>
+            <VStack spacing={4} align="stretch">
+              <Select
+                placeholder="Select client"
+                value={clientId}
+                onChange={e => setClientId(e.target.value)}
+                bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                color={colorMode === 'light' ? 'gray.800' : 'white'}
+                borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+              >
+                {(clients || []).map(client => (
+                  <option key={client._id} value={client._id}>{client.company || client.name}</option>
+                ))}
+              </Select>
+              <Select
+                placeholder="Select project"
+                value={projectId}
+                onChange={e => setProjectId(e.target.value)}
+                bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
+                color={colorMode === 'light' ? 'gray.800' : 'white'}
+                borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+              >
+                {(projects || []).filter(p => {
+                  // Handle both populated clientId object and string clientId
+                  const projectClientId = p.clientId?._id || p.clientId;
+                  const shouldShow = !clientId || projectClientId === clientId;
+                  return shouldShow;
+                }).map(project => (
+                  <option key={project._id} value={project._id}>{project.name}</option>
+                ))}
+              </Select>
+
+              <Box>
+                <HStack gap={2} mb={2}>
+                  <Text color={colorMode === 'light' ? 'gray.600' : 'gray.300'} fontSize="sm" w="180px">Task Name</Text>
+                  <Text color={colorMode === 'light' ? 'gray.600' : 'gray.300'} fontSize="sm" w="120px">Hours</Text>
+                  <Text color={colorMode === 'light' ? 'gray.600' : 'gray.300'} fontSize="sm" w="120px">Rate</Text>
+                </HStack>
+                <List spacing={3}>
+                  {(lineItems || []).map((item, idx) => (
+                    <ListItem key={idx}>
+                      <HStack spacing={2}>
+                        <Input
+                          value={item.description || ''}
+                          onChange={e => updateLineItem(idx, 'description', e.target.value)}
+                          bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}
+                          color={colorMode === 'light' ? 'gray.800' : 'white'}
+                          w="180px"
+                          borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+                        />
+                        <Input
+                          value={editingTimeInputs[idx] || formatTimeInput(item.hours || 0)}
+                          onChange={e => handleTimeChange(
+                            e.target.value,
+                            (hours) => updateLineItem(idx, 'hours', hours),
+                            (input) => setEditingTimeInputs(prev => ({ ...prev, [idx]: input }))
+                          )}
+                          onFocus={() => setEditingTimeInputs(prev => ({ ...prev, [idx]: formatTimeInput(item.hours || 0) }))}
+                          onBlur={() => setEditingTimeInputs(prev => ({ ...prev, [idx]: undefined }))}
+                          placeholder="00:00"
+                          bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}
+                          color={colorMode === 'light' ? 'gray.800' : 'white'}
+                          w="100px"
+                          borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+                        />
+                        <NumberInput value={item.rate || 0} min={0} onChange={val => updateLineItem(idx, 'rate', Number(val))} w="100px">
+                          <NumberInputField
+                            placeholder="Rate"
+                            bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}
+                            color={colorMode === 'light' ? 'gray.800' : 'white'}
+                            borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+                          />
+                        </NumberInput>
+                        <Text color={colorMode === 'light' ? 'gray.700' : 'gray.200'} fontWeight="medium">
+                          ${((item.hours || 0) * (item.rate || 0)).toFixed(2)}
+                        </Text>
+                        <Button size="sm" colorScheme="red" variant="outline" onClick={() => removeLineItem(idx)}>
+                          Remove
+                        </Button>
+                      </HStack>
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+
+              <Box>
+                <HStack spacing={2} mb={3} wrap="wrap">
+                  <Input
+                    placeholder="Description"
+                    value={newItem.description}
+                    onChange={e => setNewItem({ ...newItem, description: e.target.value })}
+                    bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}
+                    color={colorMode === 'light' ? 'gray.800' : 'white'}
+                    w="180px"
+                    borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+                  />
+                  <Input
+                    value={newItemTimeInput}
+                    onChange={e => handleTimeChange(
+                      e.target.value,
+                      (hours) => setNewItem({ ...newItem, hours }),
+                      (input) => setNewItemTimeInput(input)
+                    )}
+                    placeholder="00:00"
+                    bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}
+                    color={colorMode === 'light' ? 'gray.800' : 'white'}
+                    w="120px"
+                    borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+                  />
+                  <NumberInput value={newItem.rate} min={0} onChange={val => setNewItem({ ...newItem, rate: Number(val) })} w="120px">
+                    <NumberInputField
+                      placeholder="Rate"
+                      bg={colorMode === 'light' ? 'gray.50' : 'gray.700'}
+                      color={colorMode === 'light' ? 'gray.800' : 'white'}
+                      borderColor={colorMode === 'light' ? 'gray.300' : 'gray.600'}
+                    />
+                  </NumberInput>
+                  <Button onClick={addLineItem} colorScheme="blue" size="sm">
+                    Add Item
+                  </Button>
+                </HStack>
+              </Box>
+
+              <Box>
+                <Text fontWeight="bold" fontSize="lg" color={colorMode === 'light' ? 'gray.800' : 'white'} mb={4}>
+                  Total: ${total.toFixed(2)}
+                </Text>
+                <Button onClick={handleSubmit} colorScheme="green" isLoading={submitting} size="lg" w="full">
+                  Create Invoice
+                </Button>
+              </Box>
+            </VStack>
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 };

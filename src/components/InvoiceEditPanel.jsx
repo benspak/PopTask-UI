@@ -58,9 +58,9 @@ export const InvoiceEditPanel = () => {
           apiService.getInvoice(invoiceId)
         ]);
 
-        // Handle backend response format: { success: true, data: [...], count: ... }
-        const clientsData = clientsRes?.data || [];
-        const projectsData = projectsRes?.data || [];
+        // Handle both direct array response and response.data format
+        const clientsData = Array.isArray(clientsRes) ? clientsRes : (clientsRes?.data || []);
+        const projectsData = Array.isArray(projectsRes) ? projectsRes : (projectsRes?.data || []);
         const invoiceData = invoiceRes?.data || invoiceRes;
 
         setClients(clientsData || []);

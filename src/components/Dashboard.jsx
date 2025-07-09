@@ -111,6 +111,8 @@ export default function Dashboard() {
     sharedLoading: sharedTasksLoading,
     error: tasksError,
     sharedError: sharedTasksError,
+    dismissError: dismissTasksError,
+    dismissSharedError: dismissSharedTasksError,
     loadTasks,
     loadSharedTasks,
     refreshSharedTasks,
@@ -128,6 +130,8 @@ export default function Dashboard() {
     sharedLoading: sharedProjectsLoading,
     error: projectsError,
     sharedError: sharedProjectsError,
+    dismissError: dismissProjectsError,
+    dismissSharedError: dismissSharedProjectsError,
     loadProjects,
     loadSharedProjects,
     refreshSharedProjects,
@@ -236,6 +240,7 @@ export default function Dashboard() {
   };
 
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+  const [showOfflineAlert, setShowOfflineAlert] = React.useState(true);
   const toast = useToast();
 
   const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
@@ -285,7 +290,17 @@ export default function Dashboard() {
 
   React.useEffect(() => {
     const handleOnlineStatusChange = () => {
-      setIsOnline(navigator.onLine);
+      const wasOnline = isOnline;
+      const isNowOnline = navigator.onLine;
+      setIsOnline(isNowOnline);
+
+      // Show offline alert when going offline, hide when coming back online
+      if (!isNowOnline && wasOnline) {
+        setShowOfflineAlert(true);
+      } else if (isNowOnline && !wasOnline) {
+        setShowOfflineAlert(false);
+      }
+
       checkOnlineStatus();
     };
 
@@ -1301,7 +1316,7 @@ export default function Dashboard() {
 
   return (
     <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
-    {!isOnline && (
+    {!isOnline && showOfflineAlert && (
       <Alert status="warning" variant="solid" position="fixed" top={0} left={0} right={0} zIndex={999}>
         <AlertIcon />
         <Box flex="1">
@@ -1310,6 +1325,15 @@ export default function Dashboard() {
             You're currently offline. Changes will be synced when you're back online.
           </AlertDescription>
         </Box>
+        <IconButton
+          aria-label="Dismiss offline alert"
+          icon={<CloseIcon />}
+          size="sm"
+          variant="ghost"
+          color="white"
+          _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
+          onClick={() => setShowOfflineAlert(false)}
+        />
       </Alert>
     )}
 
@@ -1360,6 +1384,7 @@ export default function Dashboard() {
           handleProjectDelete={onDeleteProject}
           toggleCenter={toggleCenter}
           refreshLimitsTrigger={refreshLimitsTrigger}
+          onDismissError={dismissProjectsError}
         />
 
                 <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
@@ -1376,6 +1401,7 @@ export default function Dashboard() {
             onTaskClick={handleSharedTaskClick}
             onProjectClick={handleSharedProjectClick}
             onRefresh={refreshSharedContent}
+            onDismissSharedError={dismissSharedTasksError}
           />
 
           <TaskList
@@ -1400,6 +1426,7 @@ export default function Dashboard() {
             onClearDayFilter={clearDayFilter}
             onClearProjectFilter={clearProjectFilter}
             onClearTagFilter={clearTagFilter}
+            onDismissError={dismissTasksError}
           />
         </Box>
 

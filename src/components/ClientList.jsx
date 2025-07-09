@@ -30,11 +30,15 @@ import {
   Select,
   Checkbox,
   Divider,
+  useColorMode,
 } from '@chakra-ui/react';
-import { EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons';
+import { EditIcon, DeleteIcon, AddIcon, ChevronLeftIcon } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
 import { useClients } from '../hooks/useClients';
 import apiService from '../services/api';
 import ClientLimitsDisplay from './ClientLimitsDisplay';
+import TopBar from './TopBar';
+import { useAuth } from '../contexts/AuthContext';
 
 export const ClientList = () => {
   const { clients, loading, error, loadClients, createClient, updateClient, deleteClient } = useClients();
@@ -49,9 +53,18 @@ export const ClientList = () => {
   const [clientToDelete, setClientToDelete] = useState(null);
 
   const toast = useToast();
+  const navigate = useNavigate();
+  const { colorMode, toggleColorMode } = useColorMode();
   const { isOpen: isCreateOpen, onOpen: openCreate, onClose: closeCreate } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: openEdit, onClose: closeEdit } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: openDelete, onClose: closeDelete } = useDisclosure();
+  const { logout } = useAuth();
+
+  // TopBar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCenterOpen, setIsCenterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -192,18 +205,63 @@ export const ClientList = () => {
     openDelete();
   };
 
+  // TopBar handlers
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const toggleCenter = () => setIsCenterOpen(!isCenterOpen);
+  const handleSearch = (value) => setSearchQuery(value);
+  const resetToAllTasks = () => navigate('/dashboard');
+  const openFeedbackModal = () => setIsFeedbackModalOpen(true);
+  const closeFeedbackModal = () => setIsFeedbackModalOpen(false);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({ title: 'Logout failed', status: 'error' });
+    }
+  };
+
   return (
-    <Box maxW="4xl" mx="auto" mt={8} p={4}>
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg" color="white">Clients</Heading>
-        <Button
-          leftIcon={<AddIcon />}
-          colorScheme="blue"
-          onClick={openCreate}
-        >
-          Add Client
-        </Button>
-      </Flex>
+    <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
+      <Flex h="100vh" overflow="hidden">
+        <Flex flex="1" direction="column">
+          <TopBar
+            colorMode={colorMode}
+            toggleColorMode={toggleColorMode}
+            isOnline={true}
+            currentView="clients"
+            searchTerm={searchQuery}
+            handleSearch={handleSearch}
+            resetToAllTasks={resetToAllTasks}
+            isSidebarOpen={isSidebarOpen}
+            isCenterOpen={isCenterOpen}
+            onLogout={handleLogout}
+          />
+
+          <Box flex="1" overflowY="auto" p={4}>
+            <Box maxW="4xl" mx="auto">
+              <Flex justify="space-between" align="center" mb={6}>
+                <HStack spacing={4} align="center">
+                  <IconButton
+                    icon={<ChevronLeftIcon />}
+                    aria-label="Go back"
+                    onClick={() => navigate('/dashboard')}
+                    size="sm"
+                    variant="ghost"
+                    color="gray.300"
+                    _hover={{ bg: 'gray.700' }}
+                  />
+                  <Heading size="lg" color="white">Clients</Heading>
+                </HStack>
+                <Button
+                  leftIcon={<AddIcon />}
+                  colorScheme="blue"
+                  onClick={openCreate}
+                >
+                  Add Client
+                </Button>
+              </Flex>
 
       {/* Client Limits Display */}
       <ClientLimitsDisplay showNotification={true} />
@@ -468,32 +526,38 @@ export const ClientList = () => {
         </ModalContent>
       </Modal>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog isOpen={isDeleteOpen} onClose={closeDelete}>
-        <AlertDialogOverlay>
-          <AlertDialogContent bg="gray.800">
-            <AlertDialogHeader color="white">
-              Delete Client
-            </AlertDialogHeader>
-            <AlertDialogBody color="gray.300">
-              Are you sure you want to delete "{clientToDelete?.name}"? This action cannot be undone.
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button onClick={closeDelete} variant="ghost">
-                Cancel
-              </Button>
-              <Button
-                colorScheme="red"
-                ml={3}
-                onClick={handleDelete}
-                isLoading={deleting}
-              >
-                Delete
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+            </Box>
+          </Box>
+
+          {/* Delete Confirmation Dialog */}
+          <AlertDialog isOpen={isDeleteOpen} onClose={closeDelete}>
+            <AlertDialogOverlay>
+              <AlertDialogContent bg="gray.800">
+                <AlertDialogHeader color="white">
+                  Delete Client
+                </AlertDialogHeader>
+                <AlertDialogBody color="gray.300">
+                  Are you sure you want to delete "{clientToDelete?.name}"? This action cannot be undone.
+                </AlertDialogBody>
+                <AlertDialogFooter>
+                  <Button onClick={closeDelete} variant="ghost">
+                    Cancel
+                  </Button>
+                  <Button
+                    colorScheme="red"
+                    ml={3}
+                    onClick={handleDelete}
+                    isLoading={deleting}
+                  >
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
+
+        </Flex>
+      </Flex>
     </Box>
   );
 };
