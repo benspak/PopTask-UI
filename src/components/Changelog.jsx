@@ -31,6 +31,49 @@ const Changelog = () => {
 
   const changelogData = [
     {
+      version: '2.4.3',
+      date: 'July 9, 2025',
+      title: 'Public Profiles & Enhanced User Experience',
+      description: 'New public profile system, enhanced navigation, and improved user interface features',
+      type: 'minor',
+      changes: [
+        {
+          type: 'feature',
+          items: [
+            'Public user profiles accessible via `/profile/:username` URLs',
+            'Profile picture management with drag-and-drop upload support',
+            'Enhanced user profile settings with biography and avatar upload',
+            'New public profile component with user information display',
+            'Profile picture display in top navigation bar',
+            'Enhanced navigation with Clients and Invoices section buttons',
+            'Improved user menu with profile picture and user type badges',
+            'Public profile API endpoint for viewing user information'
+          ]
+        },
+        {
+          type: 'improvement',
+          items: [
+            'Enhanced user experience with better profile management',
+            'Improved navigation structure with dedicated section buttons',
+            'Better visual feedback for user authentication status',
+            'Streamlined profile picture upload process',
+            'Enhanced user interface with profile picture integration',
+            'Improved user menu organization and accessibility'
+          ]
+        },
+        {
+          type: 'fix',
+          items: [
+            'Fixed profile picture upload validation and error handling',
+            'Resolved navigation button styling and responsiveness',
+            'Corrected user menu display issues on mobile devices',
+            'Fixed public profile loading and error states',
+            'Resolved profile picture display in navigation components'
+          ]
+        }
+      ]
+    },
+    {
       version: '2.4.2',
       date: 'July 8, 2025',
       title: 'Performance & Security Update',

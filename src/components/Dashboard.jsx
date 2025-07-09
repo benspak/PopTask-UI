@@ -62,6 +62,7 @@ import ProjectDetailPanel from './ProjectDetailPanel';
 import FeedbackModal from './FeedbackModal';
 import SharedContentPanel from './SharedContentPanel';
 import { ClientCreateModal } from './ClientList';
+import TopBar from './TopBar';
 
 export default function Dashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -1328,54 +1329,18 @@ export default function Dashboard() {
       />
 
       <Flex flex="1" direction="column">
-        <Box
-          bg={colorMode === 'dark' ? 'gray.800' : 'white'}
-          borderBottom="1px"
-          borderColor={colorMode === 'dark' ? 'gray.700' : 'gray.200'}
-          p={4}
-        >
-          <Flex justify="space-between" align="center">
-            <HStack spacing={4}>
-              <Heading size="md" color={colorMode === 'dark' ? 'white' : 'gray.800'}>
-                PopTask
-              </Heading>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/clients'}
-                color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
-                _hover={{ bg: colorMode === 'dark' ? 'gray.700' : 'gray.100' }}
-              >
-                Clients
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/invoices'}
-                color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
-                _hover={{ bg: colorMode === 'dark' ? 'gray.700' : 'gray.100' }}
-              >
-                Invoices
-              </Button>
-            </HStack>
-
-            <HStack spacing={2}>
-              <IconButton
-                icon={colorMode === 'dark' ? <SunIcon /> : <MoonIcon />}
-                variant="ghost"
-                onClick={toggleColorMode}
-                aria-label="Toggle color mode"
-              />
-              <Button
-                colorScheme="red"
-                size="sm"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
-            </HStack>
-          </Flex>
-        </Box>
+        <TopBar
+          colorMode={colorMode}
+          toggleColorMode={toggleColorMode}
+          isOnline={isOnline}
+          currentView={selectedProject ? 'project' : selectedTag ? 'tag' : isFilteredByDay ? 'day' : 'all'}
+          searchTerm={searchQuery}
+          handleSearch={handleSearch}
+          resetToAllTasks={resetToAllTasks}
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
+          onLogout={handleLogout}
+        />
 
         {/* Projects Panel */}
         <ProjectsPanel

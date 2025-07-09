@@ -220,6 +220,24 @@ class ApiService {
     return await this.request('/auth/me');
   }
 
+  async getPublicProfile(username) {
+    return await this.request(`/auth/profile/${username}`);
+  }
+
+  async updateProfile(profileData) {
+    return await this.request('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  }
+
+  async updateProfilePicture(profilePicture) {
+    return await this.request('/auth/profile-picture', {
+      method: 'PUT',
+      body: JSON.stringify({ profilePicture }),
+    });
+  }
+
   async refreshToken() {
     const refreshToken = localStorage.getItem(this.refreshTokenKey);
     if (!refreshToken) {
@@ -392,6 +410,31 @@ class ApiService {
     if (!response.ok) {
       const data = await response.json();
       throw new Error(data.message || data.error || `Upload failed: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  async uploadAvatar(file) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = {};
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.baseURL}/uploads/avatar`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || data.error || `Avatar upload failed: ${response.status}`);
     }
 
     return await response.json();

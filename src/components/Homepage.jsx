@@ -196,6 +196,19 @@ const Homepage = () => {
               </HStack>
             </HStack>
             <HStack spacing={4}>
+              <Text
+                fontSize="sm"
+                fontWeight="medium"
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                textAlign="right"
+                minW="120px"
+              >
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </Text>
               <IconButton
                 icon={colorMode === 'dark' ? <SunIcon /> : <MoonIcon />}
                 variant="ghost"

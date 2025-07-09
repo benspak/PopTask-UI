@@ -18,6 +18,8 @@ import { InvoiceList } from './components/InvoiceList';
 import { InvoiceCreatePanel } from './components/InvoiceCreatePanel';
 import { InvoiceDetail } from './components/InvoiceDetail';
 import { InvoiceEditPanel } from './components/InvoiceEditPanel';
+import Settings from './components/Settings';
+import PublicProfile from './components/PublicProfile';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,6 +57,7 @@ export default function App() {
 
       {/* Shared content routes (public) */}
       <Route path="/shared/:type/:token" element={<SharedView />} />
+      <Route path="/profile/:username" element={<PublicProfile />} />
 
       {/* Protected routes */}
       <Route path="/dashboard" element={
@@ -90,6 +93,11 @@ export default function App() {
       <Route path="/invoices/:invoiceId/edit" element={
         <AuthGuard>
           <InvoiceEditPanel />
+        </AuthGuard>
+      } />
+      <Route path="/settings" element={
+        <AuthGuard>
+          <Settings />
         </AuthGuard>
       } />
 
