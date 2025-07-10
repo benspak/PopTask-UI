@@ -20,6 +20,9 @@ import { InvoiceDetail } from './components/InvoiceDetail';
 import { InvoiceEditPanel } from './components/InvoiceEditPanel';
 import Settings from './components/Settings';
 import PublicProfile from './components/PublicProfile';
+import CompanyVerification from './components/CompanyVerification';
+import CompanyList from './components/CompanyList';
+import PublicCompanyDetail from './components/PublicCompanyDetail';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -54,11 +57,13 @@ export default function App() {
         isAuthenticated ? <Navigate to="/dashboard" replace /> : <ResetPassword />
       } />
       <Route path="/verify-email" element={<EmailVerification />} />
+      <Route path="/verify-company/:token" element={<CompanyVerification />} />
 
       {/* Shared content routes (public) */}
       <Route path="/shared/:type/:token" element={<SharedView />} />
       <Route path="/profile/:username" element={<PublicProfile />} />
       <Route path="/users/:username" element={<PublicProfile />} />
+      <Route path="/company/:slug/:token" element={<PublicCompanyDetail />} />
 
       {/* Protected routes */}
       <Route path="/dashboard" element={
@@ -99,6 +104,11 @@ export default function App() {
       <Route path="/settings" element={
         <AuthGuard>
           <Settings />
+        </AuthGuard>
+      } />
+      <Route path="/companies" element={
+        <AuthGuard>
+          <CompanyList />
         </AuthGuard>
       } />
 

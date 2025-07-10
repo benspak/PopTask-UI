@@ -110,6 +110,14 @@ const TopBar = ({
       },
     },
     {
+      label: 'Companies',
+      icon: <AtSignIcon />,
+      onClick: () => {
+        window.location.href = '/companies';
+        closeMobileMenu();
+      },
+    },
+    {
       label: 'Invoices',
       icon: <DownloadIcon />,
       onClick: () => {
@@ -173,6 +181,16 @@ const TopBar = ({
                 leftIcon={<DownloadIcon />}
               >
                 Invoices
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.href = '/companies'}
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                leftIcon={<AtSignIcon />}
+              >
+                Companies
               </Button>
             </>
           )}

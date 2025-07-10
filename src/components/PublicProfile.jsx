@@ -205,9 +205,6 @@ const PublicProfile = () => {
 
               {/* Profile Info */}
               <Box>
-                <Text fontWeight="semibold" color={textColor} mb={3}>
-                  Profile Information
-                </Text>
                 <VStack spacing={3} align="stretch">
                   <HStack justify="space-between">
                     <Text color={mutedTextColor}>Member Since:</Text>

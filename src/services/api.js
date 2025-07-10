@@ -444,6 +444,31 @@ class ApiService {
     return await response.json();
   }
 
+  async uploadLogo(file) {
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    const token = localStorage.getItem(this.tokenKey);
+    const headers = {};
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.baseURL}/uploads/logo`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || data.error || `Logo upload failed: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
   async deleteFile(taskId, filename) {
     return await this.request(`/uploads/task/${taskId}/file/${encodeURIComponent(filename)}`, {
       method: 'DELETE',
@@ -690,6 +715,65 @@ class ApiService {
     return this.request(`/invoices/${invoiceId}`, {
       method: 'DELETE'
     });
+  }
+
+  // Company methods
+  async getCompanies(filters = {}) {
+    const queryString = this.buildQueryString(filters);
+    return this.request(`/companies${queryString}`);
+  }
+
+  async getCompany(id) {
+    return this.request(`/companies/${id}`);
+  }
+
+  async createCompany(companyData) {
+    return this.request('/companies', {
+      method: 'POST',
+      body: JSON.stringify(companyData)
+    });
+  }
+
+  async updateCompany(id, companyData) {
+    return this.request(`/companies/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(companyData)
+    });
+  }
+
+  async deleteCompany(id) {
+    return this.request(`/companies/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async requestCompanyVerification(id) {
+    return this.request(`/companies/${id}/request-verification`, {
+      method: 'POST'
+    });
+  }
+
+  async generateCompanyPublicLink(id) {
+    return this.request(`/companies/${id}/generate-public-link`, {
+      method: 'POST'
+    });
+  }
+
+  async verifyCompany(token) {
+    return this.request(`/companies/verify/${token}`);
+  }
+
+  async getCompanyStats() {
+    return this.request('/companies/stats');
+  }
+
+  async getVerifiedCompanies(filters = {}) {
+    const queryString = this.buildQueryString(filters);
+    return this.request(`/companies/verified${queryString}`);
+  }
+
+  async getPublicCompany(slug, token) {
+    return this.request(`/companies/public/${slug}/${token}`);
   }
 }
 
