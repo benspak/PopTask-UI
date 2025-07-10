@@ -1,13 +1,13 @@
 # PopTask Frontend
 
-A modern, responsive Progressive Web App (PWA) for task management with comprehensive user authentication, collaboration features, time tracking, shared content management, and advanced project management, built with React, Chakra UI, and Vite.
+A modern, responsive Progressive Web App (PWA) for task management with comprehensive user authentication, collaboration features, time tracking, shared content management, company verification, invoice processing, and advanced project management, built with React, Chakra UI, and Vite.
 
 ## 💰 Business Value
 
 **Target Market**: SaaS productivity platform serving SMBs and freelancers
 **Revenue Potential**: $20M+ ARR by 2050 through scalable subscription model
-**Value Delivered**: 10x ROI through time savings and team collaboration
-**Key Features**: User authentication, task sharing, project management, time tracking, collaboration, shared content management, PWA capabilities
+**Value Delivered**: 10x ROI through time savings, team collaboration, and business management
+**Key Features**: User authentication, task sharing, project management, time tracking, collaboration, shared content management, company verification, invoice processing, payment integration, PWA capabilities
 
 ## ✨ Features
 
@@ -20,6 +20,35 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Session Management** - Automatic token refresh and logout
 - **Account Locking** - Protection against brute force attacks
 - **User Limits** - Basic users limited to 10 tasks and 5 projects
+- **Public Profiles** - Public user profiles with biography and verification status
+- **Profile Pictures** - Drag-and-drop avatar upload and management
+
+### 🏢 Company Management
+- **Company Profiles** - Create and manage company profiles with detailed information
+- **Company Verification** - Email-based verification system with secure tokens
+- **Public Company Profiles** - Verified companies with public sharing capabilities
+- **Logo Management** - Drag-and-drop company logo upload and display
+- **Industry Categorization** - Organize companies by industry and size
+- **Location Tracking** - City, state, and country-based company organization
+- **Company Search** - Advanced search with industry and location filters
+- **Public Sharing** - Secure token-based company sharing with view tracking
+
+### 👥 Client Management
+- **Client Profiles** - Create and manage client contact information
+- **Client-Project Relationships** - Associate clients with specific projects
+- **Billing Integration** - Link clients to invoices and payment processing
+- **Communication History** - Track client interactions and communications
+- **Contact Information** - Comprehensive client contact management
+
+### 💰 Invoice & Payment System
+- **Invoice Creation** - Create invoices with line items and automatic calculations
+- **Payment Integration** - Stripe payment processing for invoice payments
+- **Invoice Status Tracking** - Real-time status updates (draft, sent, paid)
+- **Payment Links** - Generate and share secure payment links with clients
+- **Email Delivery** - Professional invoice email templates and delivery
+- **Invoice Management** - Edit, update, and manage existing invoices
+- **Client Billing** - Associate invoices with clients and projects
+- **Payment Tracking** - Monitor payment status and webhook processing
 
 ### 🚀 PWA Capabilities
 - **Offline Support** - Works without internet connection
@@ -75,6 +104,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Error Handling** - User-friendly error messages
 - **Limits Display** - Visual indicators for user limits and upgrade prompts
 - **Feedback System** - Built-in feedback collection for user suggestions
+- **Enhanced Navigation** - Dedicated sections for Companies, Clients, and Invoices
 - **Keyboard Shortcuts** - (Coming soon)
 - **Drag & Drop** - (Coming soon)
 

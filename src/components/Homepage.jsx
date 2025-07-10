@@ -30,6 +30,10 @@ import {
   ArrowForwardIcon,
   SunIcon,
   MoonIcon,
+  ViewIcon,
+  TriangleDownIcon,
+  SettingsIcon,
+  LockIcon,
 } from '@chakra-ui/icons';
 import { Input } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
@@ -56,10 +60,22 @@ const Homepage = () => {
       benefit: 'Save 2-3 hours per week on task planning'
     },
     {
-      icon: StarIcon,
+      icon: ViewIcon,
+      title: 'Company Verification & Management',
+      description: 'Create and verify company profiles with public sharing. Build trust with verified badges and secure token-based sharing.',
+      benefit: 'Establish credibility and trust with clients'
+    },
+    {
+      icon: SettingsIcon,
       title: 'Client & Project Management',
-      description: 'Manage clients and associate projects with color-coded organization. Keep related work together and track progress seamlessly.',
+      description: 'Manage clients and associate projects with comprehensive contact tracking. Keep related work together and track progress seamlessly.',
       benefit: 'Reduce project coordination time by 40%'
+    },
+    {
+      icon: TriangleDownIcon,
+      title: 'Professional Invoicing & Payments',
+      description: 'Convert time tracking into professional invoices with Stripe payment integration. Get paid faster with automated payment collection.',
+      benefit: 'Save 4-5 hours per month on invoicing'
     },
     {
       icon: AtSignIcon,
@@ -235,12 +251,11 @@ const Homepage = () => {
             maxW="4xl"
             lineHeight="1.2"
           >
-            Professional Task & Time Management
-            <Text as="span" color={accentColor}> for Teams</Text>
+            Complete Business Management Platform
+            <Text as="span" color={accentColor}> for Teams & Freelancers</Text>
           </Heading>
           <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-            Complete project management with time tracking, invoicing, and client management.
-            Teams save 3-5 hours per week on task management and invoicing.
+            Task management, time tracking, company verification, client management, and professional invoicing with payment collection. Everything you need to run your business efficiently.
           </Text>
           <HStack spacing={4} pt={4}>
             <Button
@@ -261,10 +276,10 @@ const Homepage = () => {
           <VStack spacing={16}>
             <VStack spacing={4} textAlign="center">
               <Heading size="xl" color={textColor}>
-                Complete Solution for Teams & Freelancers
+                Complete Business Solution
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-                Time tracking → Invoicing → Payment collection. Everything you need to manage projects and get paid.
+                From task management to payment collection. Everything you need to organize, track, invoice, and get paid.
               </Text>
             </VStack>
 
@@ -307,8 +322,135 @@ const Homepage = () => {
         </Container>
       </Box>
 
-      {/* ROI Calculator Section */}
+      {/* Business Management Suite Section */}
       <Box py={20} bg={bgColor}>
+        <Container maxW="7xl">
+          <VStack spacing={16}>
+            <VStack spacing={4} textAlign="center">
+              <Badge colorScheme="purple" px={4} py={2} borderRadius="full" fontSize="sm">
+                New in v2.5.0
+              </Badge>
+              <Heading size="xl" color={textColor}>
+                Business Management Suite
+              </Heading>
+              <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="3xl">
+                Professional tools for company verification, client management, and automated invoicing with payment collection.
+              </Text>
+            </VStack>
+
+            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} maxW="6xl" w="full">
+              {/* Company Verification */}
+              <Box
+                bg={cardBg}
+                p={8}
+                borderRadius="xl"
+                border="1px"
+                borderColor={useColorModeValue('gray.200', 'gray.700')}
+              >
+                <VStack spacing={6} align="start">
+                  <HStack spacing={4}>
+                    <Box
+                      p={3}
+                      bg="purple.500"
+                      color="white"
+                      borderRadius="lg"
+                    >
+                      <Icon as={ViewIcon} boxSize={6} />
+                    </Box>
+                    <VStack spacing={1} align="start">
+                      <Heading size="md" color={textColor}>
+                        Company Verification
+                      </Heading>
+                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                        Build trust with verified company profiles
+                      </Text>
+                    </VStack>
+                  </HStack>
+
+                  <VStack spacing={4} align="start" w="full">
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Email-based verification system</Text>
+                    </HStack>
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Public company profiles with verification badges</Text>
+                    </HStack>
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Company logo upload and management</Text>
+                    </HStack>
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Industry categorization and location tracking</Text>
+                    </HStack>
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Secure token-based company sharing</Text>
+                    </HStack>
+                  </VStack>
+                </VStack>
+              </Box>
+
+              {/* Professional Invoicing */}
+              <Box
+                bg={cardBg}
+                p={8}
+                borderRadius="xl"
+                border="1px"
+                borderColor={useColorModeValue('gray.200', 'gray.700')}
+              >
+                <VStack spacing={6} align="start">
+                  <HStack spacing={4}>
+                    <Box
+                      p={3}
+                      bg="green.500"
+                      color="white"
+                      borderRadius="lg"
+                    >
+                      <Icon as={TriangleDownIcon} boxSize={6} />
+                    </Box>
+                    <VStack spacing={1} align="start">
+                      <Heading size="md" color={textColor}>
+                        Professional Invoicing
+                      </Heading>
+                      <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
+                        Automated invoicing with payment collection
+                      </Text>
+                    </VStack>
+                  </HStack>
+
+                  <VStack spacing={4} align="start" w="full">
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Convert time tracking to invoices</Text>
+                    </HStack>
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Stripe payment integration</Text>
+                    </HStack>
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Professional invoice email delivery</Text>
+                    </HStack>
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Real-time payment status tracking</Text>
+                    </HStack>
+                    <HStack spacing={3}>
+                      <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                      <Text fontSize="sm" color={textColor}>Automated payment webhook processing</Text>
+                    </HStack>
+                  </VStack>
+                </VStack>
+              </Box>
+            </SimpleGrid>
+          </VStack>
+        </Container>
+      </Box>
+
+      {/* ROI Calculator Section */}
+      <Box py={20} bg={cardBg}>
         <Container maxW="7xl">
           <VStack spacing={12}>
             <VStack spacing={4} textAlign="center">
@@ -316,12 +458,12 @@ const Homepage = () => {
                 See the Impact
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')}>
-                How much time could your team save?
+                How much time and money could your team save?
               </Text>
             </VStack>
 
             <Box
-              bg={cardBg}
+              bg={bgColor}
               p={8}
               borderRadius="xl"
               border="1px"
@@ -364,7 +506,7 @@ const Homepage = () => {
       </Box>
 
       {/* Project Invoicing Teaser Section */}
-      <Box py={20} bg={cardBg}>
+      <Box py={20} bg={bgColor}>
         <Container maxW="7xl">
           <VStack spacing={12}>
             <VStack spacing={4} textAlign="center">
@@ -384,13 +526,13 @@ const Homepage = () => {
               {/* Left Column - Feature Showcase */}
               <VStack spacing={8} align="start">
                 <Heading size="lg" color={textColor}>
-                  Complete Invoicing Workflow
+                  Complete Business Workflow
                 </Heading>
 
                 {/* Feature Grid */}
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} w="full">
                   <Box
-                    bg={bgColor}
+                    bg={cardBg}
                     p={6}
                     borderRadius="xl"
                     border="1px"
@@ -419,7 +561,7 @@ const Homepage = () => {
                   </Box>
 
                   <Box
-                    bg={bgColor}
+                    bg={cardBg}
                     p={6}
                     borderRadius="xl"
                     border="1px"
@@ -448,7 +590,7 @@ const Homepage = () => {
                   </Box>
 
                   <Box
-                    bg={bgColor}
+                    bg={cardBg}
                     p={6}
                     borderRadius="xl"
                     border="1px"
@@ -463,21 +605,21 @@ const Homepage = () => {
                         color="white"
                         borderRadius="lg"
                       >
-                        <Icon as={AtSignIcon} boxSize={5} />
+                        <Icon as={ViewIcon} boxSize={5} />
                       </Box>
                       <VStack spacing={2} align="start">
                         <Text fontWeight="semibold" color={textColor} fontSize="md">
-                          Automated Email Delivery
+                          Company Verification
                         </Text>
                         <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
-                          Professional invoice emails with payment links included
+                          Build trust with verified company profiles and badges
                         </Text>
                       </VStack>
                     </VStack>
                   </Box>
 
                   <Box
-                    bg={bgColor}
+                    bg={cardBg}
                     p={6}
                     borderRadius="xl"
                     border="1px"
@@ -492,11 +634,11 @@ const Homepage = () => {
                         color="white"
                         borderRadius="lg"
                       >
-                        <Icon as={CalendarIcon} boxSize={5} />
+                        <Icon as={LockIcon} boxSize={5} />
                       </Box>
                       <VStack spacing={2} align="start">
                         <Text fontWeight="semibold" color={textColor} fontSize="md">
-                          Payment Status Tracking
+                          Real-time Status Tracking
                         </Text>
                         <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')}>
                           Real-time tracking of invoice status and payments
@@ -511,7 +653,7 @@ const Homepage = () => {
               <VStack spacing={8} align="stretch">
                 {/* ROI Calculator */}
                 <Box
-                  bg={bgColor}
+                  bg={cardBg}
                   p={8}
                   borderRadius="xl"
                   border="1px"
@@ -520,7 +662,7 @@ const Homepage = () => {
                 >
                   <VStack spacing={6}>
                     <Heading size="md" color={textColor} textAlign="center">
-                      Your Invoicing ROI Calculator
+                      Your Business ROI Calculator
                     </Heading>
 
                     <SimpleGrid columns={2} spacing={6} w="full">
@@ -751,7 +893,15 @@ const Homepage = () => {
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
-                        <Text fontSize="sm" color={textColor}>Semi-automated invoicing</Text>
+                        <Text fontSize="sm" color={textColor}>Company verification & management</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Professional invoicing with Stripe</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Automated payment collection</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
@@ -824,8 +974,8 @@ const Homepage = () => {
               Ready to Get More Done?
             </Heading>
             <Text fontSize="lg" color="blue.100" maxW="2xl">
-              Complete solution for freelancers and small teams. Stop juggling tasks in your head.
-              Get organized and focused with PopTask. Start free and see the difference in minutes.
+              Complete business management solution for freelancers and small teams. Stop juggling tasks in your head.
+              Get organized, track time, manage clients, and get paid with PopTask. Start free and see the difference in minutes.
             </Text>
             <HStack spacing={4}>
               <Button
@@ -867,7 +1017,7 @@ const Homepage = () => {
                 PopTask
               </Heading>
               <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
-                Simple task management that actually works
+                Complete business management that actually works
               </Text>
             </VStack>
             <HStack spacing={6}>

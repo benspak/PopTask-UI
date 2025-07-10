@@ -31,6 +31,69 @@ const Changelog = () => {
 
   const changelogData = [
     {
+      version: '2.5.0',
+      date: 'July 9, 2025',
+      title: 'Business Management Suite & Payment Integration',
+      description: 'Complete business management system with company verification, invoice processing, client management, and Stripe payment integration',
+      type: 'major',
+      changes: [
+        {
+          type: 'feature',
+          items: [
+            'Company management system with profile creation and verification',
+            'Company verification system with email-based verification process',
+            'Public company profiles with verification badges and secure sharing',
+            'Company logo upload and management with drag-and-drop support',
+            'Industry categorization and company size tracking for better organization',
+            'Location-based company filtering and search capabilities',
+            'Complete invoice system with line items and automatic calculations',
+            'Stripe payment integration for invoice payments and subscriptions',
+            'Invoice status tracking (draft, sent, paid) with real-time updates',
+            'Payment link generation and secure sharing with clients',
+            'Invoice email delivery system with professional templates',
+            'Payment webhook processing for automatic status updates',
+            'Client management system with contact information tracking',
+            'Client-project relationship management and billing association',
+            'Enhanced navigation with dedicated Companies, Clients, and Invoices sections',
+            'Public company sharing with secure tokens and view tracking',
+            'Company search and discovery with industry and location filters',
+            'Invoice editing and management with line item calculations',
+            'Client-invoice relationship tracking and communication history'
+          ]
+        },
+        {
+          type: 'improvement',
+          items: [
+            'Enhanced business workflow with integrated company-client-invoice pipeline',
+            'Improved payment processing with automatic invoice status updates',
+            'Better user experience with dedicated business management sections',
+            'Streamlined company verification process with email automation',
+            'Enhanced security with secure token-based company sharing',
+            'Optimized database queries for company and invoice management',
+            'Improved mobile responsiveness for business management features',
+            'Enhanced error handling for payment and verification processes',
+            'Better visual feedback for company verification and payment status',
+            'Streamlined invoice creation and editing workflow'
+          ]
+        },
+        {
+          type: 'fix',
+          items: [
+            'Fixed company verification email delivery and token validation',
+            'Resolved invoice calculation errors and line item updates',
+            'Corrected payment link generation and webhook processing',
+            'Fixed client-project relationship display and management',
+            'Resolved company logo upload and display issues',
+            'Corrected invoice status updates and payment tracking',
+            'Fixed mobile layout issues for business management sections',
+            'Resolved company search and filtering functionality',
+            'Corrected payment webhook signature verification',
+            'Fixed invoice email template rendering and delivery'
+          ]
+        }
+      ]
+    },
+    {
       version: '2.4.3',
       date: 'July 9, 2025',
       title: 'Public Profiles & Enhanced User Experience',
