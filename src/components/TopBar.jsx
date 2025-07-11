@@ -42,6 +42,8 @@ import {
   CloseIcon,
   AtSignIcon,
   DownloadIcon,
+  ViewIcon,
+  EditIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useTimezone } from '../contexts/TimezoneContext';
@@ -110,10 +112,26 @@ const TopBar = ({
       },
     },
     {
+      label: 'Teams',
+      icon: <ViewIcon />,
+      onClick: () => {
+        window.location.href = '/teams';
+        closeMobileMenu();
+      },
+    },
+    {
       label: 'Companies',
       icon: <AtSignIcon />,
       onClick: () => {
         window.location.href = '/companies';
+        closeMobileMenu();
+      },
+    },
+    {
+      label: 'Templates',
+      icon: <EditIcon />,
+      onClick: () => {
+        window.location.href = '/proposal-templates';
         closeMobileMenu();
       },
     },
@@ -175,6 +193,16 @@ const TopBar = ({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => window.location.href = '/teams'}
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                leftIcon={<ViewIcon />}
+              >
+                Teams
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => window.location.href = '/invoices'}
                 color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
                 _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
@@ -191,6 +219,16 @@ const TopBar = ({
                 leftIcon={<AtSignIcon />}
               >
                 Companies
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.href = '/proposal-templates'}
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                leftIcon={<EditIcon />}
+              >
+                Templates
               </Button>
             </>
           )}

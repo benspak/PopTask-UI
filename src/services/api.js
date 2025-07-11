@@ -196,6 +196,11 @@ class ApiService {
     }
   }
 
+  // Add this generic GET method
+  async get(endpoint, options = {}) {
+    return this.request(endpoint, { ...options, method: 'GET' });
+  }
+
   // Authentication methods
   async login(credentials) {
     return await this.request('/auth/login', {
@@ -774,6 +779,72 @@ class ApiService {
 
   async getPublicCompany(slug, token) {
     return this.request(`/companies/public/${slug}/${token}`);
+  }
+
+  // Team methods
+  async getTeams() {
+    return this.request('/teams');
+  }
+
+  async getTeam(id) {
+    return this.request(`/teams/${id}`);
+  }
+
+  async createTeam(teamData) {
+    return this.request('/teams', {
+      method: 'POST',
+      body: JSON.stringify(teamData)
+    });
+  }
+
+  async updateTeam(id, teamData) {
+    return this.request(`/teams/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(teamData)
+    });
+  }
+
+  async deleteTeam(id) {
+    return this.request(`/teams/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async addTeamMember(teamId, memberData) {
+    return this.request(`/teams/${teamId}/members`, {
+      method: 'POST',
+      body: JSON.stringify(memberData)
+    });
+  }
+
+  async removeTeamMember(teamId, userId) {
+    return this.request(`/teams/${teamId}/members/${userId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async updateTeamMemberRole(teamId, userId, role) {
+    return this.request(`/teams/${teamId}/members/${userId}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role })
+    });
+  }
+
+  async addTeamProject(teamId, projectId) {
+    return this.request(`/teams/${teamId}/projects`, {
+      method: 'POST',
+      body: JSON.stringify({ projectId })
+    });
+  }
+
+  async removeTeamProject(teamId, projectId) {
+    return this.request(`/teams/${teamId}/projects/${projectId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getTeamLimits() {
+    return this.request('/teams/limits');
   }
 }
 

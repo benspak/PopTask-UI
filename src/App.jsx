@@ -23,6 +23,8 @@ import PublicProfile from './components/PublicProfile';
 import CompanyVerification from './components/CompanyVerification';
 import CompanyList from './components/CompanyList';
 import PublicCompanyDetail from './components/PublicCompanyDetail';
+import TeamList from './components/TeamList';
+import ProposalTemplateList from './components/ProposalTemplateList';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -109,6 +111,16 @@ export default function App() {
       <Route path="/companies" element={
         <AuthGuard>
           <CompanyList />
+        </AuthGuard>
+      } />
+      <Route path="/teams" element={
+        <AuthGuard>
+          <TeamList />
+        </AuthGuard>
+      } />
+      <Route path="/proposal-templates" element={
+        <AuthGuard>
+          <ProposalTemplateList />
         </AuthGuard>
       } />
 
