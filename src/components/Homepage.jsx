@@ -17,6 +17,7 @@ import {
   IconButton,
   useToast,
   Spinner,
+  Image,
 } from '@chakra-ui/react';
 import {
   CheckIcon,
@@ -33,16 +34,16 @@ import {
   LockIcon,
 } from '@chakra-ui/icons';
 import { Input } from '@chakra-ui/react';
-import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';
 
 const Homepage = () => {
   const { colorMode, toggleColorMode } = useColorMode();
-  const { login, register, user } = useAuth();
   const toast = useToast();
   const [isCreatingPaymentLink, setIsCreatingPaymentLink] = useState(false);
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [anonymousEmail, setAnonymousEmail] = useState('');
+
+
 
   const bgColor = useColorModeValue('white', 'gray.900');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -71,7 +72,7 @@ const Homepage = () => {
     {
       icon: TriangleDownIcon,
       title: 'Professional Invoicing',
-      description: 'Convert time tracking to invoices with Stripe',
+      description: 'Convert time tracking to invoices',
       benefit: 'Save 4-5 hours/month'
     },
     {
@@ -97,7 +98,7 @@ const Homepage = () => {
   };
 
   const handleGetProNow = async () => {
-    if (!user && !showEmailInput) {
+    if (!showEmailInput) {
       setShowEmailInput(true);
       return;
     }
@@ -105,7 +106,7 @@ const Homepage = () => {
     setIsCreatingPaymentLink(true);
 
     try {
-      const userEmail = user?.email || (anonymousEmail.trim() || undefined);
+      const userEmail = anonymousEmail.trim() || undefined;
       const response = await apiService.createPaymentLink('subscription', userEmail);
 
       if (response.success && response.url) {
@@ -158,18 +159,20 @@ const Homepage = () => {
         <Container maxW="7xl" py={4}>
           <Flex justify="space-between" align="center">
             <HStack spacing={8}>
-              <Heading size="lg" color={accentColor}>
-                PopTask
-              </Heading>
+              <Image
+                src={colorMode === 'dark' ? '/logos/logo-dark-mode.svg' : '/logos/logo-light-mode.svg'}
+                alt="PopTask"
+                height="32px"
+                width="auto"
+                cursor="pointer"
+                onClick={() => window.location.href = '/'}
+              />
               <HStack spacing={6} display={{ base: 'none', md: 'flex' }}>
                 <Link href="#features" color={textColor} _hover={{ color: accentColor }}>
                   Features
                 </Link>
                 <Link href="#pricing" color={textColor} _hover={{ color: accentColor }}>
                   Pricing
-                </Link>
-                <Link href="/changelog" color={textColor} _hover={{ color: accentColor }}>
-                  Changelog
                 </Link>
               </HStack>
             </HStack>
@@ -205,11 +208,8 @@ const Homepage = () => {
       <Container maxW="7xl" py={20}>
         <VStack spacing={8} textAlign="center">
           <HStack spacing={3}>
-            <Badge colorScheme="blue" px={4} py={2} borderRadius="full" fontSize="sm">
-              Simple • Fast • Effective
-            </Badge>
             <Badge colorScheme="orange" px={4} py={2} borderRadius="full" fontSize="sm">
-              BETA
+              Open BETA
             </Badge>
           </HStack>
           <Heading
@@ -315,52 +315,43 @@ const Homepage = () => {
 
                 <VStack spacing={4} w="full">
                   <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.300')} fontWeight="medium">
-                    Weekly Time Savings Breakdown:
+                    Weekly Time & Revenue Impact:
                   </Text>
 
                   <SimpleGrid columns={1} spacing={3} w="full">
                     <HStack justify="space-between" w="full">
                       <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>
-                        Task Management
+                        Task Organization & Prioritization
                       </Text>
                       <Text fontSize="xs" color="green.500" fontWeight="medium">
-                        +2.5 hrs/week
+                        +3.5 hrs/week
                       </Text>
                     </HStack>
 
                     <HStack justify="space-between" w="full">
                       <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>
-                        Client Coordination
+                        Client Communication & Updates
                       </Text>
                       <Text fontSize="xs" color="green.500" fontWeight="medium">
-                        +3.2 hrs/week
+                        +2.8 hrs/week
                       </Text>
                     </HStack>
 
                     <HStack justify="space-between" w="full">
                       <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>
-                        Meeting Efficiency
+                        Invoice Generation & Payment
                       </Text>
                       <Text fontSize="xs" color="green.500" fontWeight="medium">
-                        +2.0 hrs/week
+                        +1.5 hrs/week
                       </Text>
                     </HStack>
 
                     <HStack justify="space-between" w="full">
                       <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>
-                        Time Tracking
+                        Project Management & Reporting
                       </Text>
                       <Text fontSize="xs" color="green.500" fontWeight="medium">
-                        +1.8 hrs/week
-                      </Text>
-                    </HStack>
-
-                    <HStack justify="space-between" w="full">
-                      <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')}>
-                        Invoicing Automation
-                      </Text>
-                      <Text fontSize="xs" color="green.500" fontWeight="medium">
-                        +1.2 hrs/week
+                        +1.0 hrs/week
                       </Text>
                     </HStack>
                   </SimpleGrid>
@@ -375,10 +366,10 @@ const Homepage = () => {
                   >
                     <HStack justify="space-between" w="full">
                       <Text fontSize="sm" color="green.800" fontWeight="bold">
-                        Total Weekly Savings
+                        Total Weekly Time Savings
                       </Text>
                       <Text fontSize="lg" color="green.600" fontWeight="bold">
-                        10.7 hrs
+                        8.8 hrs
                       </Text>
                     </HStack>
                   </Box>
@@ -387,10 +378,10 @@ const Homepage = () => {
                 <SimpleGrid columns={2} spacing={6} w="full">
                   <VStack spacing={3}>
                     <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
-                      Monthly Savings
+                      Monthly Time Savings
                     </Text>
                     <Text fontSize="3xl" color="green.500" fontWeight="bold" textAlign="center">
-                      42.8 hrs
+                      35.2 hrs
                     </Text>
                     <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
                       vs manual processes
@@ -399,53 +390,17 @@ const Homepage = () => {
 
                   <VStack spacing={3}>
                     <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
-                      Annual Value
+                      Annual Time Value
                     </Text>
                     <Text fontSize="3xl" color="green.500" fontWeight="bold" textAlign="center">
-                      $22,360
+                      $14,784
                     </Text>
                     <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
-                      at $50/hour rate
+                      at $35/hour rate
                     </Text>
                   </VStack>
 
-                  <VStack spacing={3}>
-                    <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
-                      Pro Plan Cost
-                    </Text>
-                    <Text fontSize="2xl" color={accentColor} fontWeight="bold" textAlign="center">
-                      $180/year
-                    </Text>
-                    <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
-                      $15/month per user
-                    </Text>
-                  </VStack>
-
-                  <VStack spacing={3}>
-                    <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
-                      Net ROI
-                    </Text>
-                    <Text fontSize="3xl" color="green.500" fontWeight="bold" textAlign="center">
-                      124x
-                    </Text>
-                    <Text fontSize="xs" color={useColorModeValue('gray.500', 'gray.400')} textAlign="center">
-                      return on investment
-                    </Text>
-                  </VStack>
                 </SimpleGrid>
-
-                <Box
-                  bg="green.50"
-                  p={4}
-                  borderRadius="lg"
-                  border="1px"
-                  borderColor="green.200"
-                  w="full"
-                >
-                  <Text fontSize="sm" color="green.800" textAlign="center" fontWeight="medium">
-                    💰 You save $22,180 more than you spend annually
-                  </Text>
-                </Box>
               </VStack>
             </Box>
 
@@ -619,7 +574,7 @@ const Homepage = () => {
                     </VStack>
                   </VStack>
 
-                  {showEmailInput && !user ? (
+                  {showEmailInput ? (
                     <VStack spacing={3} w="full">
                       <Input
                         placeholder="Enter your email address"
@@ -737,9 +692,6 @@ const Homepage = () => {
               </Link>
               <Link href="#pricing" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
                 Pricing
-              </Link>
-              <Link href="/changelog" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
-                Changelog
               </Link>
             </HStack>
           </Flex>

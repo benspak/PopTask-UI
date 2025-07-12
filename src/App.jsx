@@ -11,7 +11,6 @@ import EmailVerification from './components/EmailVerification';
 import Dashboard from './components/Dashboard';
 import SharedView from './components/SharedView';
 import Homepage from './components/Homepage';
-import Changelog from './components/Changelog';
 import { Spinner, Center, VStack, Text, HStack, Link, Box } from '@chakra-ui/react';
 import { ClientList } from './components/ClientList';
 import { ProjectList } from './components/ProjectList';
@@ -49,7 +48,6 @@ export default function App() {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Homepage />} />
-      <Route path="/changelog" element={<Changelog />} />
       <Route path="/login" element={
         isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
       } />
