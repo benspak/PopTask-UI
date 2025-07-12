@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import apiService from '../services/api';
 
 export const useTasks = () => {
@@ -10,6 +10,12 @@ export const useTasks = () => {
   const [sharedError, setSharedError] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
 
+  // Add refs to track if data has been loaded and when
+  const hasLoadedTasks = useRef(false);
+  const hasLoadedSharedTasks = useRef(false);
+  const lastLoadTime = useRef(0);
+  const lastSharedLoadTime = useRef(0);
+
   const dismissError = useCallback(() => {
     setError(null);
   }, []);
@@ -18,13 +24,21 @@ export const useTasks = () => {
     setSharedError(null);
   }, []);
 
-  const loadTasks = useCallback(async (filters = {}) => {
+  const loadTasks = useCallback(async (filters = {}, forceRefresh = false) => {
+    // Don't reload if data was loaded recently (within 30 seconds) unless forced
+    const now = Date.now();
+    if (!forceRefresh && hasLoadedTasks.current && (now - lastLoadTime.current) < 30000) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       const response = await apiService.getTasks(filters);
       setTasks(response.data || []);
+      hasLoadedTasks.current = true;
+      lastLoadTime.current = now;
 
       // Check online status
       const isCurrentlyOnline = await apiService.checkServerConnection();
@@ -45,13 +59,21 @@ export const useTasks = () => {
     }
   }, []);
 
-  const loadSharedTasks = useCallback(async () => {
+  const loadSharedTasks = useCallback(async (forceRefresh = false) => {
+    // Don't reload if data was loaded recently (within 30 seconds) unless forced
+    const now = Date.now();
+    if (!forceRefresh && hasLoadedSharedTasks.current && (now - lastSharedLoadTime.current) < 30000) {
+      return;
+    }
+
     try {
       setSharedLoading(true);
       setSharedError(null);
 
       const response = await apiService.getSharedTasks();
       setSharedTasks(response.data || []);
+      hasLoadedSharedTasks.current = true;
+      lastSharedLoadTime.current = now;
 
       // Check online status
       const isCurrentlyOnline = await apiService.checkServerConnection();
@@ -79,6 +101,7 @@ export const useTasks = () => {
       const newCount = response.data?.length || 0;
 
       setSharedTasks(response.data || []);
+      lastSharedLoadTime.current = Date.now();
 
       // Show notification if requested and there are changes
       if (showNotification && previousCount !== newCount) {
@@ -155,11 +178,15 @@ export const useTasks = () => {
     }
   }, [refreshSharedTasks]);
 
-  // Initial data load
+  // Initial data load - only load once on mount
   useEffect(() => {
-    loadTasks();
-    loadSharedTasks();
-  }, [loadTasks, loadSharedTasks]);
+    if (!hasLoadedTasks.current) {
+      loadTasks();
+    }
+    if (!hasLoadedSharedTasks.current) {
+      loadSharedTasks();
+    }
+  }, []); // Empty dependency array to only run once on mount
 
   return {
     tasks,

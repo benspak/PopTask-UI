@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   Flex,
-  Input,
   IconButton,
   Avatar,
   Menu,
@@ -18,8 +17,6 @@ import {
   Button,
   useBreakpointValue,
   Collapse,
-  InputGroup,
-  InputRightElement,
   Drawer,
   DrawerBody,
   DrawerHeader,
@@ -37,9 +34,7 @@ import {
   SettingsIcon,
   StarIcon,
   ExternalLinkIcon,
-  SearchIcon,
   HamburgerIcon,
-  CloseIcon,
   AtSignIcon,
   DownloadIcon,
   ViewIcon,
@@ -49,6 +44,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTimezone } from '../contexts/TimezoneContext';
 import { formatInUserTimezone } from '../utils/timezone';
 import { Link as RouterLink } from 'react-router-dom';
+import PopTaskLogo from './PopTaskLogo';
 
 const TopBar = ({
   colorMode,
@@ -71,22 +67,7 @@ const TopBar = ({
   const isTablet = useBreakpointValue({ base: false, md: true, lg: false });
 
   // Mobile state
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleSearchChange = (value) => {
-    handleSearch(value);
-    if (isMobile && value === '') {
-      setIsSearchExpanded(false);
-    }
-  };
-
-  const toggleSearch = () => {
-    setIsSearchExpanded(!isSearchExpanded);
-    if (isSearchExpanded) {
-      handleSearch('');
-    }
-  };
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -101,7 +82,7 @@ const TopBar = ({
         resetToAllTasks();
         closeMobileMenu();
       },
-      isActive: currentView === 'all' && !searchTerm,
+      isActive: currentView === 'all',
     },
     {
       label: 'Clients',
@@ -158,28 +139,26 @@ const TopBar = ({
       <Flex justify="space-between" align="center" p={{ base: 2, md: 4 }}>
         {/* Left Section */}
         <Flex align="center" gap={{ base: 2, md: 3 }} flex="1">
-          <Heading
-            size={{ base: "sm", md: "md" }}
-            color={colorMode === 'light' ? 'gray.800' : 'white'}
-            mr={{ base: 2, md: 4 }}
-            noOfLines={1}
-          >
-            PopTask
-          </Heading>
+                    <Flex align="center" mr={{ base: 2, md: 4 }}>
+            <PopTaskLogo
+              size={{ base: 120, md: 140 }}
+              colorMode={colorMode}
+            />
+          </Flex>
 
           {/* Desktop Navigation */}
           {!isMobile && (
             <>
-              <IconButton
-                icon={<CheckCircleIcon />}
-                aria-label="Go to My Tasks"
-                onClick={resetToAllTasks}
+              <Button
+                variant="ghost"
                 size="sm"
-                colorScheme={currentView === 'all' && !searchTerm ? "blue" : "gray"}
-                variant="solid"
-                borderRadius="md"
-                title="My Tasks"
-              />
+                onClick={resetToAllTasks}
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                leftIcon={<CheckCircleIcon />}
+              >
+                Tasks
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -234,59 +213,7 @@ const TopBar = ({
           )}
         </Flex>
 
-        {/* Center Section - Search */}
-        <Flex align="center" flex="1" justify="center" px={{ base: 2, md: 4 }}>
-          {isMobile ? (
-            // Mobile Search
-            <Flex align="center" w="full" maxW="300px">
-              {!isSearchExpanded ? (
-                <IconButton
-                  icon={<SearchIcon />}
-                  aria-label="Search tasks"
-                  onClick={toggleSearch}
-                  size="sm"
-                  variant="ghost"
-                  color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                />
-              ) : (
-                <InputGroup size="sm">
-                  <Input
-                    placeholder="Filter tasks"
-                    bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-                    border={0}
-                    value={searchTerm}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
-                    color={colorMode === 'light' ? 'gray.800' : 'white'}
-                    autoFocus
-                  />
-                  <InputRightElement>
-                    <IconButton
-                      icon={<CloseIcon />}
-                      aria-label="Close search"
-                      size="xs"
-                      variant="ghost"
-                      onClick={toggleSearch}
-                      color={colorMode === 'light' ? 'gray.500' : 'gray.400'}
-                    />
-                  </InputRightElement>
-                </InputGroup>
-              )}
-            </Flex>
-          ) : (
-            // Desktop Search
-            <Input
-              placeholder="Filter tasks"
-              bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
-              border={0}
-              w={{ base: "200px", md: "300px" }}
-              _placeholder={{ color: colorMode === 'light' ? 'gray.500' : 'gray.400' }}
-              color={colorMode === 'light' ? 'gray.800' : 'white'}
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          )}
-        </Flex>
+
 
         {/* Right Section */}
         <Flex align="center" position="relative" gap={{ base: 1, md: 2 }}>

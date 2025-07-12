@@ -90,7 +90,6 @@ const CompanyList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [industryFilter, setIndustryFilter] = useState('');
   const [sizeFilter, setSizeFilter] = useState('');
-  const [verifiedFilter, setVerifiedFilter] = useState('');
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
@@ -108,8 +107,7 @@ const CompanyList = () => {
   }, [fetchCompanies]);
 
   useEffect(() => {
-    console.log('Companies state updated:', companies);
-    console.log('Companies length:', companies.length);
+    // Companies state updated
   }, [companies]);
 
   useEffect(() => {
@@ -130,7 +128,7 @@ const CompanyList = () => {
       search: searchTerm,
       industry: industryFilter,
       size: sizeFilter,
-      verified: verifiedFilter
+      includeVerified: true // Always include verified companies from all users
     });
   };
 
@@ -261,6 +259,8 @@ const CompanyList = () => {
                 </Button>
               </Flex>
 
+
+
               {/* Search and Filters */}
               <Card bg={cardBg} mb={4}>
                 <CardBody>
@@ -305,24 +305,18 @@ const CompanyList = () => {
                         ))}
                       </Select>
 
-                      <Select
-                        placeholder="Filter by verification"
-                        value={verifiedFilter}
-                        onChange={(e) => setVerifiedFilter(e.target.value)}
-                      >
-                        <option value="true">Verified</option>
-                        <option value="false">Not Verified</option>
-                      </Select>
+
 
                       <Button
-                        leftIcon={<SettingsIcon />}
                         onClick={handleSearch}
                         colorScheme="blue"
                         variant="outline"
                       >
-                        Apply Filters
+                        Filter
                       </Button>
                     </HStack>
+
+
                   </VStack>
                 </CardBody>
               </Card>
@@ -389,9 +383,23 @@ const CompanyList = () => {
                             </Badge>
                           </Tooltip>
                         ) : (
-                          <Tooltip label="Not Verified">
-                            <Badge colorScheme="gray" variant="outline">
+                          <Tooltip label="Not Verified - Hidden from default view">
+                            <Badge colorScheme="red" variant="outline">
                               <CloseIcon />
+                            </Badge>
+                          </Tooltip>
+                        )}
+                        {/* Show ownership indicator */}
+                        {company.createdBy === user?._id ? (
+                          <Tooltip label="Your Company">
+                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">
+                              Mine
+                            </Badge>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip label="Verified Company from Another User">
+                            <Badge colorScheme="purple" variant="subtle" fontSize="xs">
+                              Verified
                             </Badge>
                           </Tooltip>
                         )}
@@ -456,65 +464,75 @@ const CompanyList = () => {
 
                       <CardFooter pt={0}>
                         <Flex w="full" justify="space-between" align="center">
-                          <HStack spacing={2}>
-                            <IconButton
-                              icon={<EditIcon />}
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEdit(company)}
-                              aria-label="Edit company"
-                            />
-                            <IconButton
-                              icon={<DeleteIcon />}
-                              size="sm"
-                              variant="ghost"
-                              colorScheme="red"
-                              onClick={() => handleDeleteClick(company)}
-                              aria-label="Delete company"
-                            />
-                            {company.isVerified && (
+                          {/* Only show edit/delete buttons for user's own companies */}
+                          {company.createdBy === user?._id ? (
+                            <HStack spacing={2}>
                               <IconButton
-                                icon={<LinkIcon />}
+                                icon={<EditIcon />}
                                 size="sm"
                                 variant="ghost"
-                                colorScheme="purple"
-                                onClick={async () => {
-                                  const result = await generatePublicLink(company._id);
-                                  if (result.success) {
-                                    try {
-                                      await navigator.clipboard.writeText(result.data.publicUrl);
+                                onClick={() => handleEdit(company)}
+                                aria-label="Edit company"
+                              />
+                              <IconButton
+                                icon={<DeleteIcon />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="red"
+                                onClick={() => handleDeleteClick(company)}
+                                aria-label="Delete company"
+                              />
+                              {company.isVerified && (
+                                <IconButton
+                                  icon={<LinkIcon />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="purple"
+                                  onClick={async () => {
+                                    const result = await generatePublicLink(company._id);
+                                    if (result.success) {
+                                      try {
+                                        await navigator.clipboard.writeText(result.data.publicUrl);
+                                        toast({
+                                          title: 'Public Link Copied',
+                                          description: `Public link for "${company.name}" copied to clipboard.`,
+                                          status: 'success',
+                                          duration: 5000,
+                                          isClosable: true,
+                                        });
+                                      } catch (err) {
+                                        toast({
+                                          title: 'Link Generated',
+                                          description: `Public link: ${result.data.publicUrl}`,
+                                          status: 'success',
+                                          duration: 10000,
+                                          isClosable: true,
+                                        });
+                                      }
+                                    } else {
                                       toast({
-                                        title: 'Public Link Copied',
-                                        description: `Public link for "${company.name}" copied to clipboard.`,
-                                        status: 'success',
+                                        title: 'Error Generating Link',
+                                        description: result.error || 'Failed to generate public link for this company.',
+                                        status: 'error',
                                         duration: 5000,
                                         isClosable: true,
                                       });
-                                    } catch (err) {
-                                      toast({
-                                        title: 'Link Generated',
-                                        description: `Public link: ${result.data.publicUrl}`,
-                                        status: 'success',
-                                        duration: 10000,
-                                        isClosable: true,
-                                      });
                                     }
-                                  } else {
-                                    toast({
-                                      title: 'Error Generating Link',
-                                      description: result.error || 'Failed to generate public link for this company.',
-                                      status: 'error',
-                                      duration: 5000,
-                                      isClosable: true,
-                                    });
-                                  }
-                                }}
-                                aria-label="Share company"
-                              />
-                            )}
-                          </HStack>
+                                  }}
+                                  aria-label="Share company"
+                                />
+                              )}
+                            </HStack>
+                          ) : (
+                            <HStack spacing={2}>
+                              <Text fontSize="xs" color="gray.400">
+                                Verified by community
+                              </Text>
+                            </HStack>
+                          )}
 
-                          {!company.isVerified && company.contact.email && (
+                          {/* Only show verification request for user's own unverified companies */}
+                          {company.createdBy === user?._id && !company.isVerified && company.contact.email && (
                             <Button
                               size="sm"
                               colorScheme="green"
@@ -540,11 +558,11 @@ const CompanyList = () => {
                       No companies found
                     </Text>
                     <Text color="gray.400" textAlign="center">
-                      {searchTerm || industryFilter || sizeFilter || verifiedFilter
+                      {searchTerm || industryFilter || sizeFilter
                         ? 'Try adjusting your search criteria'
                         : 'Create your first company to get started'}
                     </Text>
-                    {!searchTerm && !industryFilter && !sizeFilter && !verifiedFilter && (
+                    {!searchTerm && !industryFilter && !sizeFilter && (
                       <Button colorScheme="blue" onClick={onCreateOpen}>
                         Add Your First Company
                       </Button>

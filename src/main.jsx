@@ -15,22 +15,26 @@ const theme = extendTheme({
   },
 });
 
-// Production-ready service worker handling
+// Production-ready service worker handling with improved tab switching support
 
 // Register PWA service worker with better error handling
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Show update notification
-    if (confirm('New content available. Reload?')) {
+    // Show update notification with better UX
+    if (confirm('New content available. Reload to get the latest features?')) {
       updateSW();
     }
   },
   onOfflineReady() {
     // App ready to work offline
+    console.log('App is ready to work offline');
   },
   onRegisterError(error) {
     // Service worker registration error handled silently in production
-  }
+    console.warn('Service worker registration failed:', error);
+  },
+  // Add immediate update option for better UX
+  immediate: true
 });
 
 ReactDOM.createRoot(document.getElementById('root')).render(

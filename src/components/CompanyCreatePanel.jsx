@@ -35,6 +35,7 @@ import {
 import { AddIcon, CloseIcon } from '@chakra-ui/icons';
 import { useCompanies } from '../hooks/useCompanies';
 import apiService from '../services/api';
+import { validateCompanyEmail } from '../utils/domainValidation';
 
 const CompanyCreatePanel = ({ isOpen, onClose, onSuccess }) => {
   const { createCompany } = useCompanies();
@@ -201,8 +202,12 @@ const CompanyCreatePanel = ({ isOpen, onClose, onSuccess }) => {
       newErrors.website = 'Website must start with http:// or https://';
     }
 
-    if (formData.contact.email && !/\S+@\S+\.\S+/.test(formData.contact.email)) {
-      newErrors.contactEmail = 'Please enter a valid email address';
+    // Validate email using domain validation
+    if (formData.contact.email) {
+      const emailValidation = validateCompanyEmail(formData.contact.email, formData.website);
+      if (!emailValidation.isValid) {
+        newErrors.contactEmail = emailValidation.message;
+      }
     }
 
     if (formData.founded && (formData.founded < 1800 || formData.founded > currentYear)) {
@@ -515,6 +520,9 @@ const CompanyCreatePanel = ({ isOpen, onClose, onSuccess }) => {
                     type="email"
                   />
                   <FormErrorMessage>{errors.contactEmail}</FormErrorMessage>
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Must be a company email address (not Gmail, Hotmail, etc.) and match your website domain
+                  </Text>
                 </FormControl>
 
                 <FormControl>

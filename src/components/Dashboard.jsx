@@ -170,13 +170,8 @@ export default function Dashboard() {
   const [localSharedProjects, setLocalSharedProjects] = React.useState(sharedProjects);
   React.useEffect(() => { setLocalSharedProjects(sharedProjects); }, [sharedProjects]);
 
-  React.useEffect(() => {
-    if (!sharedContent) {
-      loadTasks();
-      loadProjects();
-      loadClients();
-    }
-  }, [loadTasks, loadProjects, loadClients, sharedContent]);
+  // Data loading is now handled by the hooks themselves with smart caching
+  // No need to manually trigger loads here as they're handled on mount
 
   // Periodic refresh of shared content (every 5 minutes)
   React.useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import apiService from '../services/api';
 
 export const useClients = () => {
@@ -6,7 +6,17 @@ export const useClients = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-    const loadClients = useCallback(async () => {
+  // Add refs to track if data has been loaded and when
+  const hasLoadedClients = useRef(false);
+  const lastLoadTime = useRef(0);
+
+  const loadClients = useCallback(async (forceRefresh = false) => {
+    // Don't reload if data was loaded recently (within 30 seconds) unless forced
+    const now = Date.now();
+    if (!forceRefresh && hasLoadedClients.current && (now - lastLoadTime.current) < 30000) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -14,6 +24,8 @@ export const useClients = () => {
       // Handle both direct array response and response.data
       const clientsData = Array.isArray(response) ? response : (response.data || []);
       setClients(clientsData);
+      hasLoadedClients.current = true;
+      lastLoadTime.current = now;
     } catch (err) {
       setError(err.message || 'Failed to load clients');
       console.error('Error loading clients:', err);

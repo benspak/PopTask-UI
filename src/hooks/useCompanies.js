@@ -24,7 +24,7 @@ export const useCompanies = () => {
         ...(params.search && { search: params.search }),
         ...(params.industry && { industry: params.industry }),
         ...(params.size && { size: params.size }),
-        ...(params.verified !== undefined && { verified: params.verified })
+        includeVerified: params.includeVerified !== false ? 'true' : 'false' // Default to true
       });
 
       const response = await api.getCompanies({
@@ -33,17 +33,12 @@ export const useCompanies = () => {
         search: params.search,
         industry: params.industry,
         size: params.size,
-        verified: params.verified
+        includeVerified: params.includeVerified !== false ? 'true' : 'false' // Default to true
       });
 
-      console.log('Companies API response:', response);
-
       if (response.success) {
-        console.log('Setting companies:', response.data);
         setCompanies(response.data);
         setPagination(response.pagination);
-      } else {
-        console.log('API response not successful:', response);
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch companies');

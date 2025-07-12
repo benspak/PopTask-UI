@@ -20,33 +20,39 @@ export default defineConfig({
           'workbox-*.js',
           '**/node_modules/**'
         ],
-        // Runtime caching for API requests
+        // Runtime caching for API requests with better tab switching support
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/localhost:3001\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
-              networkTimeoutSeconds: 3,
+              networkTimeoutSeconds: 5,
               cacheableResponse: {
                 statuses: [0, 200]
+              },
+              // Add background sync for better offline support
+              backgroundSync: {
+                name: 'api-queue',
+                options: {
+                  maxRetentionTime: 24 * 60 // 24 hours
+                }
               }
             }
           },
           {
             urlPattern: /^https?:\/\/localhost:5173\/.*/i,
-            handler: 'NetworkFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'app-cache',
-              networkTimeoutSeconds: 3,
               cacheableResponse: {
                 statuses: [0, 200]
               }
             }
           }
         ],
-        // Skip waiting to ensure immediate activation
-        skipWaiting: true,
+        // Improved service worker behavior for tab switching
+        skipWaiting: false, // Don't skip waiting to prevent disruption
         clientsClaim: true,
         // Handle fetch errors gracefully
         navigateFallback: '/index.html',
@@ -54,7 +60,11 @@ export default defineConfig({
         // Clean up old caches
         cleanupOutdatedCaches: true,
         // Disable precaching in development to avoid issues
-        disableDevLogs: true
+        disableDevLogs: true,
+        // Add custom service worker events for better tab management
+        additionalManifestEntries: [
+          { url: '/', revision: '1' }
+        ]
       },
       manifest: {
         name: 'Task Dashboard',

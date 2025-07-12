@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
+import { useTabPersistence } from './hooks/useTabPersistence';
 import AuthGuard from './components/AuthGuard';
 import Login from './views/Login';
 import Register from './views/Register';
@@ -28,6 +29,9 @@ import ProposalTemplateList from './components/ProposalTemplateList';
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
+
+  // Initialize tab persistence
+  useTabPersistence();
 
   // Show loading spinner while checking authentication
   if (isLoading) {

@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-ed3775ef'], (function (workbox) { 'use strict';
+define(['./workbox-1b889e92'], (function (workbox) { 'use strict';
 
   self.skipWaiting();
   workbox.clientsClaim();
@@ -79,7 +79,7 @@ define(['./workbox-ed3775ef'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "/index.html",
-    "revision": "0.ifalettn33g"
+    "revision": "0.ih2gd59s1o8"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
@@ -87,14 +87,15 @@ define(['./workbox-ed3775ef'], (function (workbox) { 'use strict';
   }));
   workbox.registerRoute(/^https?:\/\/localhost:3001\/api\/.*/i, new workbox.NetworkFirst({
     "cacheName": "api-cache",
-    "networkTimeoutSeconds": 3,
+    "networkTimeoutSeconds": 5,
     plugins: [new workbox.CacheableResponsePlugin({
       statuses: [0, 200]
+    }), new workbox.BackgroundSyncPlugin("api-queue", {
+      maxRetentionTime: 1440
     })]
   }), 'GET');
-  workbox.registerRoute(/^https?:\/\/localhost:5173\/.*/i, new workbox.NetworkFirst({
+  workbox.registerRoute(/^https?:\/\/localhost:5173\/.*/i, new workbox.StaleWhileRevalidate({
     "cacheName": "app-cache",
-    "networkTimeoutSeconds": 3,
     plugins: [new workbox.CacheableResponsePlugin({
       statuses: [0, 200]
     })]

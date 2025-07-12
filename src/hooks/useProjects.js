@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import apiService from '../services/api';
 
 export const useProjects = () => {
@@ -10,6 +10,12 @@ export const useProjects = () => {
   const [sharedError, setSharedError] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
 
+  // Add refs to track if data has been loaded and when
+  const hasLoadedProjects = useRef(false);
+  const hasLoadedSharedProjects = useRef(false);
+  const lastLoadTime = useRef(0);
+  const lastSharedLoadTime = useRef(0);
+
   const dismissError = useCallback(() => {
     setError(null);
   }, []);
@@ -18,13 +24,21 @@ export const useProjects = () => {
     setSharedError(null);
   }, []);
 
-  const loadProjects = useCallback(async () => {
+  const loadProjects = useCallback(async (forceRefresh = false) => {
+    // Don't reload if data was loaded recently (within 30 seconds) unless forced
+    const now = Date.now();
+    if (!forceRefresh && hasLoadedProjects.current && (now - lastLoadTime.current) < 30000) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       const response = await apiService.getProjects();
       setProjects(response.data || []);
+      hasLoadedProjects.current = true;
+      lastLoadTime.current = now;
 
       // Check online status
       const isCurrentlyOnline = await apiService.checkServerConnection();
@@ -45,13 +59,21 @@ export const useProjects = () => {
     }
   }, []);
 
-  const loadSharedProjects = useCallback(async () => {
+  const loadSharedProjects = useCallback(async (forceRefresh = false) => {
+    // Don't reload if data was loaded recently (within 30 seconds) unless forced
+    const now = Date.now();
+    if (!forceRefresh && hasLoadedSharedProjects.current && (now - lastSharedLoadTime.current) < 30000) {
+      return;
+    }
+
     try {
       setSharedLoading(true);
       setSharedError(null);
 
       const response = await apiService.getSharedProjects();
       setSharedProjects(response.data || []);
+      hasLoadedSharedProjects.current = true;
+      lastSharedLoadTime.current = now;
 
       // Check online status
       const isCurrentlyOnline = await apiService.checkServerConnection();
@@ -63,7 +85,7 @@ export const useProjects = () => {
         setSharedError(null);
       }
     } catch (err) {
-      console.error('❌ Error loading shared projects:', err);
+      console.error('Error loading shared projects:', err);
       setSharedError('Failed to load shared projects. Please check your connection.');
       setSharedProjects([]);
       setIsOffline(true);
@@ -79,6 +101,7 @@ export const useProjects = () => {
       const newCount = response.data?.length || 0;
 
       setSharedProjects(response.data || []);
+      lastSharedLoadTime.current = Date.now();
 
       // Show notification if requested and there are changes
       if (showNotification && previousCount !== newCount) {
@@ -88,7 +111,6 @@ export const useProjects = () => {
     } catch (err) {
       console.error('Error refreshing shared projects:', err);
       // Don't set error state for refresh operations to avoid disrupting UI
-      return null;
     }
   }, [sharedProjects.length]);
 
@@ -97,12 +119,16 @@ export const useProjects = () => {
       setError(null);
       const response = await apiService.createProject(projectData);
       setProjects(prev => [...prev, response.data]);
+
+      // Refresh shared projects to reflect any changes
+      await refreshSharedProjects();
+
       return response.data;
     } catch (err) {
       setError('Failed to create project. Please try again.');
       throw err;
     }
-  }, []);
+  }, [refreshSharedProjects]);
 
   const updateProject = useCallback(async (id, projectData) => {
     try {
@@ -138,11 +164,15 @@ export const useProjects = () => {
     }
   }, [refreshSharedProjects]);
 
-  // Initial data load
+  // Initial data load - only load once on mount
   useEffect(() => {
-    loadProjects();
-    loadSharedProjects();
-  }, [loadProjects, loadSharedProjects]);
+    if (!hasLoadedProjects.current) {
+      loadProjects();
+    }
+    if (!hasLoadedSharedProjects.current) {
+      loadSharedProjects();
+    }
+  }, []); // Empty dependency array to only run once on mount
 
   return {
     projects,
