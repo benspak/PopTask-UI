@@ -21,7 +21,6 @@ class StatePersistence {
         }
       }
     } catch (error) {
-      console.warn('Failed to load persisted state:', error);
       this.state = {};
     }
   }
@@ -36,7 +35,7 @@ class StatePersistence {
       };
       localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (error) {
-      console.warn('Failed to save state:', error);
+      // Failed to save state silently
     }
   }
 
@@ -82,7 +81,7 @@ class StatePersistence {
       try {
         listener(key, value, this.state);
       } catch (error) {
-        console.warn('State listener error:', error);
+        // State listener error handled silently
       }
     });
   }

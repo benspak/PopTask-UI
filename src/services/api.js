@@ -26,7 +26,7 @@ const OfflineNotifications = {
       try {
         callback(type, data);
       } catch (error) {
-        console.error('Error in notification listener:', error);
+        // Error in notification listener handled silently
       }
     });
   },
@@ -267,7 +267,7 @@ class ApiService {
         method: 'POST',
       });
     } catch (error) {
-      console.error('Logout request failed:', error);
+      // Logout request failed silently
     } finally {
       this.clearSession();
     }

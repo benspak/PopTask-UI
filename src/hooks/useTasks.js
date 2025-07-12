@@ -50,7 +50,6 @@ export const useTasks = () => {
         setError(null);
       }
     } catch (err) {
-      console.error('Error loading tasks:', err);
       setError('Failed to load tasks. Please check your connection.');
       setTasks([]);
       setIsOffline(true);
@@ -85,7 +84,6 @@ export const useTasks = () => {
         setSharedError(null);
       }
     } catch (err) {
-      console.error('❌ Error loading shared tasks:', err);
       setSharedError('Failed to load shared tasks. Please check your connection.');
       setSharedTasks([]);
       setIsOffline(true);
@@ -109,7 +107,6 @@ export const useTasks = () => {
         return { previousCount, newCount };
       }
     } catch (err) {
-      console.error('Error refreshing shared tasks:', err);
       // Don't set error state for refresh operations to avoid disrupting UI
     }
   }, [sharedTasks.length]);

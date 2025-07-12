@@ -90,14 +90,15 @@ const TopBar = ({
         closeMobileMenu();
       },
     },
-    {
+    // Only show Teams for pro users
+    ...(isProUser ? [{
       label: 'Teams',
       icon: <ViewIcon />,
       onClick: () => {
         window.location.href = '/teams';
         closeMobileMenu();
       },
-    },
+    }] : []),
     {
       label: 'Companies',
       icon: <AtSignIcon />,
@@ -106,14 +107,15 @@ const TopBar = ({
         closeMobileMenu();
       },
     },
-    {
+    // Only show Templates for pro users
+    ...(isProUser ? [{
       label: 'Templates',
       icon: <EditIcon />,
       onClick: () => {
         window.location.href = '/proposal-templates';
         closeMobileMenu();
       },
-    },
+    }] : []),
     {
       label: 'Invoices',
       icon: <DownloadIcon />,
@@ -167,16 +169,19 @@ const TopBar = ({
               >
                 Clients
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/teams'}
-                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                leftIcon={<ViewIcon />}
-              >
-                Teams
-              </Button>
+              {/* Only show Teams for pro users */}
+              {isProUser && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.location.href = '/teams'}
+                  color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                  leftIcon={<ViewIcon />}
+                >
+                  Teams
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -197,16 +202,19 @@ const TopBar = ({
               >
                 Companies
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/proposal-templates'}
-                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                leftIcon={<EditIcon />}
-              >
-                Templates
-              </Button>
+              {/* Only show Templates for pro users */}
+              {isProUser && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.location.href = '/proposal-templates'}
+                  color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                  leftIcon={<EditIcon />}
+                >
+                  Templates
+                </Button>
+              )}
             </>
           )}
         </Flex>

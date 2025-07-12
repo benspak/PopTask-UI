@@ -68,13 +68,10 @@ export const InvoiceDetail = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log('Loading invoice:', invoiceId);
         const response = await apiService.getInvoice(invoiceId);
         const invoiceData = response?.data || response;
-        console.log('Invoice data:', invoiceData);
         setInvoice(invoiceData);
       } catch (error) {
-        console.error('Error loading invoice:', error);
         let errorMessage = 'Failed to load invoice';
 
         if (error.response) {
@@ -114,7 +111,6 @@ export const InvoiceDetail = () => {
         throw new Error('No payment URL received');
       }
     } catch (error) {
-      console.error('Error creating payment link:', error);
       toast({ title: 'Failed to create payment link', status: 'error' });
     } finally {
       setPaying(false);
@@ -133,7 +129,6 @@ export const InvoiceDetail = () => {
         isClosable: true
       });
     } catch (error) {
-      console.error('Error sending invoice email:', error);
       let errorMessage = 'Failed to send invoice';
 
       if (error.message?.includes('Client email is required')) {
@@ -163,7 +158,6 @@ export const InvoiceDetail = () => {
       toast({ title: 'Invoice deleted', status: 'success' });
       navigate('/invoices');
     } catch (error) {
-      console.error('Error deleting invoice:', error);
       toast({ title: 'Failed to delete invoice', status: 'error' });
     } finally {
       setDeleting(false);

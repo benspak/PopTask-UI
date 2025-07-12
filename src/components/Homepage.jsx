@@ -32,6 +32,7 @@ import {
   TriangleDownIcon,
   SettingsIcon,
   LockIcon,
+  EditIcon,
 } from '@chakra-ui/icons';
 import { Input } from '@chakra-ui/react';
 import apiService from '../services/api';
@@ -87,6 +88,20 @@ const Homepage = () => {
       description: 'Built-in time tracking with session management',
       benefit: 'Eliminate 25% time waste'
     },
+    {
+      icon: ViewIcon,
+      title: 'Team Management',
+      description: 'Create and manage teams with up to 5 members',
+      benefit: 'Improve collaboration by 60%',
+      isPro: true
+    },
+    {
+      icon: EditIcon,
+      title: 'Proposal Templates',
+      description: 'Create professional proposal templates with variables',
+      benefit: 'Save 3-4 hours per proposal',
+      isPro: true
+    },
   ];
 
   const handleSignup = () => {
@@ -121,7 +136,6 @@ const Homepage = () => {
         });
       }
     } catch (error) {
-      console.error('Payment link creation error:', error);
       let errorMessage = 'Failed to create payment link. Please try again.';
 
       if (error.message && error.message.includes('Invalid email address')) {
@@ -268,7 +282,23 @@ const Homepage = () => {
                   borderColor={useColorModeValue('gray.200', 'gray.700')}
                   _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
                   transition="all 0.3s"
+                  position="relative"
                 >
+                  {feature.isPro && (
+                    <Badge
+                      colorScheme="blue"
+                      position="absolute"
+                      top={4}
+                      right={4}
+                      px={2}
+                      py={1}
+                      borderRadius="full"
+                      fontSize="xs"
+                    >
+                      <StarIcon boxSize={2} mr={1} />
+                      Pro
+                    </Badge>
+                  )}
                   <VStack spacing={4} align="start">
                     <Box
                       p={3}
@@ -532,6 +562,14 @@ const Homepage = () => {
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
                         <Text fontSize="sm" color={textColor}>Unlimited everything</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Team management</Text>
+                      </HStack>
+                      <HStack spacing={3}>
+                        <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                        <Text fontSize="sm" color={textColor}>Proposal templates</Text>
                       </HStack>
                       <HStack spacing={3}>
                         <Icon as={CheckCircleIcon} color="green.500" boxSize={4} />

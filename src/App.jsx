@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useTabPersistence } from './hooks/useTabPersistence';
 import AuthGuard from './components/AuthGuard';
+import ProGuard from './components/ProGuard';
 import Login from './views/Login';
 import Register from './views/Register';
 import ForgotPassword from './views/ForgotPassword';
@@ -27,24 +28,40 @@ import TeamList from './components/TeamList';
 import ProposalTemplateList from './components/ProposalTemplateList';
 
 export default function App() {
-  const { isAuthenticated, isLoading } = useAuth();
+  // Wrap useAuth in a try-catch to handle any context errors
+  let authContext;
+  try {
+    authContext = useAuth();
+  } catch (error) {
+    // Return a loading state if auth context is not available
+    return (
+      <Center h="100vh">
+        <VStack spacing={4}>
+          <Spinner size="xl" />
+          <Text>Loading authentication...</Text>
+        </VStack>
+      </Center>
+    );
+  }
+
+  const { isAuthenticated, isLoading } = authContext;
 
   // Initialize tab persistence
   useTabPersistence();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
-      return (
+    return (
       <Center h="100vh">
-                  <VStack spacing={4}>
+        <VStack spacing={4}>
           <Spinner size="xl" />
           <Text>Loading...</Text>
-                  </VStack>
+        </VStack>
       </Center>
-                      );
-                    }
+    );
+  }
 
-                    return (
+  return (
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Homepage />} />
@@ -117,12 +134,16 @@ export default function App() {
       } />
       <Route path="/teams" element={
         <AuthGuard>
-          <TeamList />
+          <ProGuard>
+            <TeamList />
+          </ProGuard>
         </AuthGuard>
       } />
       <Route path="/proposal-templates" element={
         <AuthGuard>
-          <ProposalTemplateList />
+          <ProGuard>
+            <ProposalTemplateList />
+          </ProGuard>
         </AuthGuard>
       } />
 

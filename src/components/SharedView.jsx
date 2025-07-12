@@ -79,24 +79,7 @@ const SharedView = () => {
         const tasks = response.data.tasks || [];
         const projectStats = response.data.projectStats || null;
 
-        // Debug logging for shared projects
-        if (type === 'project') {
-          console.log('Shared project data received:', {
-            project: itemData,
-            tasksCount: tasks.length,
-            projectStats: projectStats,
-            sharePermission,
-            shareStats
-          });
-
-          if (tasks.length > 0) {
-            console.log('Sample task data:', tasks[0]);
-          }
-
-          if (projectStats) {
-            console.log('Project statistics:', projectStats);
-          }
-        }
+        // Debug logging removed for production
 
         setData({
           [type]: itemData,
@@ -110,7 +93,6 @@ const SharedView = () => {
         throw new Error('Invalid response format from server');
       }
     } catch (error) {
-      console.error('Error loading shared data:', error);
       setError(error.message || 'Failed to load shared content');
     } finally {
       setLoading(false);
@@ -146,8 +128,6 @@ const SharedView = () => {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Error updating shared content:', error);
-
       // Check if it's an authentication error and redirect
       if (error.message && error.message.includes('Authentication required')) {
         const currentUrl = location.pathname + location.search;

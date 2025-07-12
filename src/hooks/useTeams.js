@@ -15,7 +15,6 @@ export const useTeams = () => {
       setTeams(teamsData);
     } catch (err) {
       setError(err.message || 'Failed to load teams');
-      console.error('Error loading teams:', err);
     } finally {
       setLoading(false);
     }
@@ -31,7 +30,6 @@ export const useTeams = () => {
       return newTeam;
     } catch (err) {
       setError(err.message || 'Failed to create team');
-      console.error('Error creating team:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -50,7 +48,6 @@ export const useTeams = () => {
       return updatedTeam;
     } catch (err) {
       setError(err.message || 'Failed to update team');
-      console.error('Error updating team:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -65,7 +62,6 @@ export const useTeams = () => {
       setTeams(prev => prev.filter(team => team._id !== teamId));
     } catch (err) {
       setError(err.message || 'Failed to delete team');
-      console.error('Error deleting team:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -84,7 +80,6 @@ export const useTeams = () => {
       return updatedTeam;
     } catch (err) {
       setError(err.message || 'Failed to add member');
-      console.error('Error adding member:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -103,7 +98,6 @@ export const useTeams = () => {
       return updatedTeam;
     } catch (err) {
       setError(err.message || 'Failed to remove member');
-      console.error('Error removing member:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -122,7 +116,6 @@ export const useTeams = () => {
       return updatedTeam;
     } catch (err) {
       setError(err.message || 'Failed to update member role');
-      console.error('Error updating member role:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -141,7 +134,6 @@ export const useTeams = () => {
       return updatedTeam;
     } catch (err) {
       setError(err.message || 'Failed to add project to team');
-      console.error('Error adding project to team:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -160,7 +152,6 @@ export const useTeams = () => {
       return updatedTeam;
     } catch (err) {
       setError(err.message || 'Failed to remove project from team');
-      console.error('Error removing project from team:', err);
       throw err;
     } finally {
       setLoading(false);

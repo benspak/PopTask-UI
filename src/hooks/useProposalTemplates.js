@@ -33,7 +33,6 @@ export const useProposalTemplates = () => {
         setPagination(response.pagination);
       }
     } catch (error) {
-      console.error('Failed to load templates:', error);
       setError('Failed to load templates');
       throw error;
     } finally {
@@ -62,7 +61,6 @@ export const useProposalTemplates = () => {
         setPagination(response.pagination);
       }
     } catch (error) {
-      console.error('Failed to load public templates:', error);
       setError('Failed to load public templates');
       throw error;
     } finally {
@@ -83,7 +81,6 @@ export const useProposalTemplates = () => {
         return response.data;
       }
     } catch (error) {
-      console.error('Failed to create template:', error);
       setError('Failed to create template');
       throw error;
     } finally {
@@ -108,7 +105,6 @@ export const useProposalTemplates = () => {
         return response.data;
       }
     } catch (error) {
-      console.error('Failed to update template:', error);
       setError('Failed to update template');
       throw error;
     } finally {
@@ -129,7 +125,6 @@ export const useProposalTemplates = () => {
         return response;
       }
     } catch (error) {
-      console.error('Failed to delete template:', error);
       setError('Failed to delete template');
       throw error;
     } finally {
@@ -150,7 +145,6 @@ export const useProposalTemplates = () => {
         return response.data;
       }
     } catch (error) {
-      console.error('Failed to duplicate template:', error);
       setError('Failed to duplicate template');
       throw error;
     } finally {
@@ -171,7 +165,6 @@ export const useProposalTemplates = () => {
         return response.data;
       }
     } catch (error) {
-      console.error('Failed to generate proposal:', error);
       setError('Failed to generate proposal');
       throw error;
     } finally {
@@ -190,7 +183,6 @@ export const useProposalTemplates = () => {
         return response.data;
       }
     } catch (error) {
-      console.error('Failed to get template:', error);
       setError('Failed to get template');
       throw error;
     } finally {
@@ -206,7 +198,6 @@ export const useProposalTemplates = () => {
         return response.data;
       }
     } catch (error) {
-      console.error('Failed to get categories:', error);
       throw error;
     }
   }, []);

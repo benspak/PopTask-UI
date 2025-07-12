@@ -28,7 +28,6 @@ export const useClients = () => {
       lastLoadTime.current = now;
     } catch (err) {
       setError(err.message || 'Failed to load clients');
-      console.error('Error loading clients:', err);
     } finally {
       setLoading(false);
     }
@@ -45,7 +44,6 @@ export const useClients = () => {
       return newClient;
     } catch (err) {
       setError(err.message || 'Failed to create client');
-      console.error('Error creating client:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -65,7 +63,6 @@ export const useClients = () => {
       return updatedClient;
     } catch (err) {
       setError(err.message || 'Failed to update client');
-      console.error('Error updating client:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -80,7 +77,6 @@ export const useClients = () => {
       setClients(prev => prev.filter(client => client._id !== clientId));
     } catch (err) {
       setError(err.message || 'Failed to delete client');
-      console.error('Error deleting client:', err);
       throw err;
     } finally {
       setLoading(false);

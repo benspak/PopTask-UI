@@ -56,7 +56,6 @@ const ProjectsPanel = ({
         }
       } catch (err) {
         // Silently handle errors - don't show anything if we can't fetch limits
-        console.log('Could not fetch project limits for alert');
       }
     };
 

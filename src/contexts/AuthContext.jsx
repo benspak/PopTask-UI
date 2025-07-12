@@ -1,7 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import apiService from '../services/api';
 
-const AuthContext = createContext();
+// Create context with a default value to prevent the error
+const AuthContext = createContext({
+  isAuthenticated: false,
+  isLoading: true,
+  user: null,
+  login: async () => {},
+  register: async () => {},
+  logout: async () => {},
+  refreshUser: async () => {},
+});
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -262,7 +271,7 @@ export const AuthProvider = ({ children }) => {
         setUser(result.user);
       }
     } catch (error) {
-      console.error('Error refreshing user:', error);
+      // Error refreshing user
     }
   };
 

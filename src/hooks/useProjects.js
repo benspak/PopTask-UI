@@ -50,7 +50,6 @@ export const useProjects = () => {
         setError(null);
       }
     } catch (err) {
-      console.error('Error loading projects:', err);
       setError('Failed to load projects. Please check your connection.');
       setProjects([]);
       setIsOffline(true);
@@ -85,7 +84,6 @@ export const useProjects = () => {
         setSharedError(null);
       }
     } catch (err) {
-      console.error('Error loading shared projects:', err);
       setSharedError('Failed to load shared projects. Please check your connection.');
       setSharedProjects([]);
       setIsOffline(true);
@@ -109,7 +107,6 @@ export const useProjects = () => {
         return { previousCount, newCount };
       }
     } catch (err) {
-      console.error('Error refreshing shared projects:', err);
       // Don't set error state for refresh operations to avoid disrupting UI
     }
   }, [sharedProjects.length]);

@@ -27,18 +27,56 @@ const updateSW = registerSW({
   },
   onOfflineReady() {
     // App ready to work offline
-    console.log('App is ready to work offline');
   },
   onRegisterError(error) {
     // Service worker registration error handled silently in production
-    console.warn('Service worker registration failed:', error);
   },
   // Add immediate update option for better UX
   immediate: true
 });
 
+// Error boundary component to catch any provider errors
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // Error logged silently in production
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          flexDirection: 'column',
+          padding: '20px',
+          textAlign: 'center'
+        }}>
+          <h1>Something went wrong</h1>
+          <p>Please refresh the page to try again.</p>
+          <button onClick={() => window.location.reload()}>
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <>
+  <ErrorBoundary>
     <ColorModeScript initialColorMode="dark" />
     <ChakraProvider theme={theme}>
       <BrowserRouter>
@@ -49,5 +87,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </AuthProvider>
       </BrowserRouter>
     </ChakraProvider>
-  </>
+  </ErrorBoundary>
 );

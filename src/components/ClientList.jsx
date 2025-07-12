@@ -98,12 +98,7 @@ export const ClientList = () => {
     }
   }, [isCreateOpen, toast]);
 
-  // Debug: Log clients data
-  useEffect(() => {
-    console.log('Clients data:', clients);
-    console.log('Loading:', loading);
-    console.log('Error:', error);
-  }, [clients, loading, error]);
+  // Debug logging removed for production
 
   const handleAdd = async () => {
     if (!newClient.name.trim()) {
@@ -125,7 +120,6 @@ export const ClientList = () => {
             status: 'success'
           });
         } catch (assignError) {
-          console.error('Failed to assign projects:', assignError);
           toast({
             title: 'Client added but project assignment failed',
             description: 'You can assign projects later in the project details',
@@ -217,7 +211,6 @@ export const ClientList = () => {
       await logout();
       navigate('/login');
     } catch (error) {
-      console.error('Logout error:', error);
       toast({ title: 'Logout failed', status: 'error' });
     }
   };

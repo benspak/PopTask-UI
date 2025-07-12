@@ -53,6 +53,7 @@ import {
 } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTeams } from '../hooks/useTeams';
+import { useAuth } from '../contexts/AuthContext';
 import TeamCreatePanel from './TeamCreatePanel';
 import TeamEditPanel from './TeamEditPanel';
 import LimitsDisplay from './LimitsDisplay';
@@ -60,6 +61,8 @@ import TopBar from './TopBar';
 
 const TeamList = () => {
   const { teams, loading, error, loadTeams, createTeam, updateTeam, deleteTeam } = useTeams();
+  const { user } = useAuth();
+  const isProUser = user?.userType === 'pro';
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('all');
@@ -260,13 +263,15 @@ const TeamList = () => {
                   />
                   <Heading size="lg" color={textColor}>Teams</Heading>
                 </HStack>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="blue"
-                  onClick={openCreate}
-                >
-                  Create Team
-                </Button>
+                {isProUser && (
+                  <Button
+                    leftIcon={<AddIcon />}
+                    colorScheme="blue"
+                    onClick={openCreate}
+                  >
+                    Create Team
+                  </Button>
+                )}
               </Flex>
 
               {/* Stats */}
@@ -322,7 +327,11 @@ const TeamList = () => {
               {filteredTeams.length === 0 ? (
                 <Box textAlign="center" py={8}>
                   <Text color={emptyTextColor}>
-                    {teams.length === 0 ? 'No teams yet. Create your first team!' : 'No teams match your search.'}
+                    {teams.length === 0
+                      ? (isProUser
+                          ? 'No teams yet. Create your first team!'
+                          : 'No teams available. Upgrade to Pro to create teams.')
+                      : 'No teams match your search.'}
                   </Text>
                 </Box>
               ) : (

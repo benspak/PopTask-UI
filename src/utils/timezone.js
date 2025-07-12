@@ -28,7 +28,6 @@ export const getUserTimezone = () => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     return timezone || 'UTC';
   } catch (error) {
-    console.error('Error getting user timezone:', error);
     return 'UTC';
   }
 };
@@ -38,7 +37,6 @@ export const formatInUserTimezone = (date, timezone, formatString = 'PPpp') => {
   try {
     return formatInTimeZone(new Date(date), timezone, formatString);
   } catch (error) {
-    console.error('Error formatting date in timezone:', error);
     return format(new Date(date), formatString);
   }
 };
@@ -48,7 +46,6 @@ export const convertUTCToUserTimezone = (utcDate, timezone) => {
   try {
     return toZonedTime(new Date(utcDate), timezone);
   } catch (error) {
-    console.error('Error converting UTC to timezone:', error);
     return new Date(utcDate);
   }
 };
@@ -58,7 +55,6 @@ export const convertUserTimezoneToUTC = (zonedDate, timezone) => {
   try {
     return fromZonedTime(new Date(zonedDate), timezone);
   } catch (error) {
-    console.error('Error converting timezone to UTC:', error);
     return new Date(zonedDate);
   }
 };
@@ -81,7 +77,6 @@ export const getTimezoneOffsetString = (timezone) => {
     const timeString = `${sign}${Math.abs(hours).toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     return `UTC${timeString}`;
   } catch (error) {
-    console.error('Error getting timezone offset:', error);
     return 'UTC';
   }
 };
@@ -98,7 +93,6 @@ export const formatTimezoneForDisplay = (timezone) => {
     const timezoneName = timezone.split('/').pop().replace('_', ' ');
     return `${timezoneName} (${currentTime})`;
   } catch (error) {
-    console.error('Error formatting timezone for display:', error);
     return 'Not set';
   }
 };

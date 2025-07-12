@@ -229,7 +229,6 @@ export default function Dashboard() {
       const isCurrentlyOnline = await apiService.checkServerConnection();
       setIsOnline(isCurrentlyOnline);
     } catch (error) {
-      console.error('Failed to check online status:', error);
       setIsOnline(false);
     }
   };
@@ -363,7 +362,6 @@ export default function Dashboard() {
             window.history.replaceState({}, '', newUrl);
           }
         } catch (error) {
-          console.error('Payment verification error:', error);
           toast({
             title: 'Payment Verification Error',
             description: 'There was an issue verifying your payment. Please contact support if you were charged.',
@@ -688,7 +686,6 @@ export default function Dashboard() {
       // Don't close the detail panel or clear selected task - keep it open to show updated data
       setIsEditing(false);
     } catch (error) {
-      console.error('Failed to update task:', error);
       // Handle limit errors specifically
       if (error.isLimitError) {
         toast({
@@ -793,7 +790,6 @@ export default function Dashboard() {
       }
       setSelectedTask(null);
     } catch (error) {
-      console.error('Failed to delete task:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete task. Please try again.',
@@ -819,7 +815,6 @@ export default function Dashboard() {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Failed to leave task:', error);
       toast({
         title: 'Error',
         description: 'Failed to leave task. Please try again.',
@@ -848,7 +843,6 @@ export default function Dashboard() {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Failed to leave project:', error);
       toast({
         title: 'Error',
         description: 'Failed to leave project. Please try again.',
@@ -874,7 +868,6 @@ export default function Dashboard() {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Failed to toggle task completion:', error);
       toast({
         title: 'Error',
         description: 'Failed to update task status. Please try again.',
@@ -912,7 +905,6 @@ export default function Dashboard() {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Logout failed:', error);
       toast({
         title: 'Logout Error',
         description: 'Failed to logout. Please try again.',
@@ -950,7 +942,6 @@ export default function Dashboard() {
       setIsDeleteProjectDialogOpen(false);
       setProjectToDelete(null);
     } catch (error) {
-      console.error('Failed to delete project:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete project. Please try again.',
@@ -997,7 +988,6 @@ export default function Dashboard() {
         loadTasks();
       }
     } catch (error) {
-      console.error('File upload failed:', error);
       toast({
         title: 'Upload Failed',
         description: 'Failed to upload files. Please try again.',
@@ -1026,7 +1016,6 @@ export default function Dashboard() {
 
       loadTasks();
     } catch (error) {
-      console.error('File deletion failed:', error);
       toast({
         title: 'Deletion Failed',
         description: 'Failed to delete file. Please try again.',
@@ -1053,7 +1042,6 @@ export default function Dashboard() {
 
       loadTasks();
     } catch (error) {
-      console.error('File deletion failed:', error);
       toast({
         title: 'Deletion Failed',
         description: 'Failed to delete file. Please try again.',
@@ -1089,7 +1077,6 @@ export default function Dashboard() {
       const files = await apiService.getTaskFiles(taskId);
       return files;
     } catch (error) {
-      console.error('Failed to load task files:', error);
       return [];
     }
   };
@@ -1206,7 +1193,6 @@ export default function Dashboard() {
         });
       }
     } catch (error) {
-      console.error('Failed to refresh shared content:', error);
       toast({
         title: 'Refresh Failed',
         description: 'Failed to refresh shared content. Please try again.',
@@ -1280,7 +1266,6 @@ export default function Dashboard() {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Test sharing failed:', error);
       toast({
         title: 'Test Failed',
         description: 'Failed to create test share.',

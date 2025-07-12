@@ -62,7 +62,6 @@ const TaskList = ({
         }
       } catch (err) {
         // Silently handle errors - don't show anything if we can't fetch limits
-        console.log('Could not fetch task limits for alert');
       }
     };
 

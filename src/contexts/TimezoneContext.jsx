@@ -1,7 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getUserTimezone, isValidTimezone } from '../utils/timezone';
 
-const TimezoneContext = createContext();
+// Create context with a default value to prevent the error
+const TimezoneContext = createContext({
+  userTimezone: 'UTC',
+  updateTimezone: () => {},
+});
 
 export const useTimezone = () => {
   const context = useContext(TimezoneContext);
