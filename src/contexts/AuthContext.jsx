@@ -202,6 +202,23 @@ export const AuthProvider = ({ children }) => {
       lastAuthCheck.current = Date.now();
       return result;
     } catch (error) {
+      // Handle email verification required error
+      if (error.response?.status === 403 && error.response?.data?.requiresEmailVerification) {
+        // Store tokens even for unverified users so they can access the verification prompt
+        if (error.response.data.token) {
+          localStorage.setItem(apiService.tokenKey, error.response.data.token);
+        }
+        if (error.response.data.refreshToken) {
+          localStorage.setItem(apiService.refreshTokenKey, error.response.data.refreshToken);
+        }
+
+        setIsAuthenticated(true);
+        setUser(error.response.data.user);
+        setHasAttemptedAutoLogin(false);
+        setHasExplicitlyLoggedOut(false);
+        lastAuthCheck.current = Date.now();
+        return error.response.data;
+      }
       throw error;
     }
   };

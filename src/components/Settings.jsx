@@ -36,15 +36,13 @@ import {
   AddIcon,
   ArrowBackIcon,
 } from '@chakra-ui/icons';
-import { useAuth } from '../contexts/AuthContext';
-import { useTimezone } from '../contexts/TimezoneContext';
+import { useAuthWithTimezone } from '../hooks/useAuthWithTimezone';
 import apiService from '../services/api';
 import { TIMEZONE_OPTIONS, getUserTimezone } from '../utils/timezone';
 import TopBar from './TopBar';
 
 const Settings = () => {
-  const { user, refreshUser, logout } = useAuth();
-  const { updateTimezone } = useTimezone();
+  const { user, refreshUser, logout, updateTimezone } = useAuthWithTimezone();
   const { colorMode, toggleColorMode } = useColorMode();
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);

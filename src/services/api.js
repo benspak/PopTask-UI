@@ -178,6 +178,7 @@ class ApiService {
         error.errorType = data.error;
         error.message = data.message || data.error || `Server error: ${response.status}`;
         error.isLimitError = data.error === 'Task limit reached' || data.error === 'Project limit reached';
+        error.response = { data, status: response.status };
 
         throw error;
       } else {
@@ -290,6 +291,13 @@ class ApiService {
     return await this.request('/auth/verify-email', {
       method: 'POST',
       body: JSON.stringify({ token }),
+    });
+  }
+
+  async resendVerification(emailData) {
+    return await this.request('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify(emailData),
     });
   }
 

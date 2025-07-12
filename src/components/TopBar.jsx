@@ -40,8 +40,7 @@ import {
   ViewIcon,
   EditIcon,
 } from '@chakra-ui/icons';
-import { useAuth } from '../contexts/AuthContext';
-import { useTimezone } from '../contexts/TimezoneContext';
+import { useAuthWithTimezone } from '../hooks/useAuthWithTimezone';
 import { formatInUserTimezone } from '../utils/timezone';
 import { Link as RouterLink } from 'react-router-dom';
 import PopTaskLogo from './PopTaskLogo';
@@ -58,8 +57,7 @@ const TopBar = ({
   isCenterOpen,
   onLogout,
 }) => {
-  const { user } = useAuth();
-  const { userTimezone } = useTimezone();
+  const { user, userTimezone } = useAuthWithTimezone();
   const isProUser = user?.userType === 'pro';
 
   // Mobile responsive breakpoints
