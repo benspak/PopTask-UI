@@ -107,7 +107,7 @@ const Homepage = () => {
 
     try {
       const userEmail = anonymousEmail.trim() || undefined;
-      const response = await apiService.createPaymentLink('subscription', userEmail);
+      const response = await apiService.createProPaymentLink('subscription', userEmail);
 
       if (response.success && response.url) {
         window.location.href = response.url;
@@ -298,7 +298,16 @@ const Homepage = () => {
       {/* ROI Section */}
       <Box py={20} bg={bgColor}>
         <Container maxW="7xl">
-          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} maxW="6xl" mx="auto">
+          <VStack spacing={8} maxW="4xl" mx="auto">
+            <VStack spacing={4} textAlign="center">
+              <Heading size="xl" color={textColor}>
+                Your Business ROI
+              </Heading>
+              <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
+                See how much time and money you'll save with PopTask
+              </Text>
+            </VStack>
+
             {/* ROI Calculator */}
             <Box
               bg={cardBg}
@@ -307,6 +316,7 @@ const Homepage = () => {
               border="1px"
               borderColor={useColorModeValue('gray.200', 'gray.700')}
               boxShadow="lg"
+              w="full"
             >
               <VStack spacing={6}>
                 <Heading size="md" color={textColor} textAlign="center">
@@ -399,42 +409,10 @@ const Homepage = () => {
                       at $35/hour rate
                     </Text>
                   </VStack>
-
                 </SimpleGrid>
               </VStack>
             </Box>
-
-            {/* CTA Section */}
-            <VStack spacing={6} p={8} bg={accentColor} borderRadius="xl" textAlign="center" justify="center">
-              <VStack spacing={4}>
-                <Heading size="md" color="white">
-                  Ready to Get Paid Faster?
-                </Heading>
-                <Text color="blue.100" fontSize="sm">
-                  Start with our Pro plan and see the difference in your first month.
-                </Text>
-              </VStack>
-
-              <VStack spacing={4} w="full">
-                <Button
-                  size="lg"
-                  bg="white"
-                  color={accentColor}
-                  _hover={{ bg: 'gray.100' }}
-                  onClick={handleGetProNow}
-                  rightIcon={isCreatingPaymentLink ? <Spinner size="sm" /> : <ArrowForwardIcon />}
-                  isLoading={isCreatingPaymentLink}
-                  loadingText="Setting up..."
-                  w="full"
-                >
-                  Get Pro Now
-                </Button>
-                <Text fontSize="xs" color="blue.100">
-                  30-day money-back guarantee • Cancel anytime
-                </Text>
-              </VStack>
-            </VStack>
-          </SimpleGrid>
+          </VStack>
         </Container>
       </Box>
 

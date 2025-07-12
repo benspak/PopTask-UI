@@ -635,16 +635,44 @@ class ApiService {
   }
 
   // Payment API methods
-  async createPaymentLink(type = 'subscription', email = undefined) {
+  async createProPaymentLink(type = 'subscription', email = undefined) {
     const payload = { type };
     if (email) {
       payload.email = email;
     }
 
-    return await this.request('/payments/create-link', {
+    // For payment links, we don't need authentication
+    const url = `${this.baseURL}/payments/create-link`;
+    const config = {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(payload)
-    });
+    };
+
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        const error = new Error(data.message || data.error || `Server error: ${response.status}`);
+        error.status = response.status;
+        error.errorType = data.error;
+        error.message = data.message || data.error || `Server error: ${response.status}`;
+        throw error;
+      } else {
+        throw new Error(`Server error: ${response.status}`);
+      }
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    } else {
+      return { success: true };
+    }
   }
 
   async verifyPaymentSession(sessionId) {
