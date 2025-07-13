@@ -142,7 +142,6 @@ const Register = ({ onSwitchToLogin }) => {
       // Navigate to the original destination or dashboard
       navigate(from);
     } catch (error) {
-      console.error('Registration error:', error);
       const errorMessage = error.message || 'Registration failed. Please try again.';
 
       toast({

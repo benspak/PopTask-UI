@@ -72,8 +72,7 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
           } else {
             setShareUrl('');
           }
-        } catch (error) {
-          console.error('Failed to fetch latest item data:', error);
+            } catch (error) {
           // Fallback to using the provided item data
           const existingUsernames = item.sharedUsernames || [];
           setSharedUsernames(existingUsernames);
@@ -193,7 +192,6 @@ const ShareDialog = ({ isOpen, onClose, type, item, onShareCreated }) => {
       }
       setSharingLimits(response.data);
     } catch (error) {
-      console.error('Failed to fetch sharing limits:', error);
     }
   };
 

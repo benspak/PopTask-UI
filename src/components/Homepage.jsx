@@ -232,11 +232,11 @@ const Homepage = () => {
             maxW="4xl"
             lineHeight="1.2"
           >
-            Complete Business Management
-            <Text as="span" color={accentColor}> for Teams & Freelancers</Text>
+            Business Management Software
+            <Text as="span" color={accentColor}> for Freelancers and Small Businesses</Text>
           </Heading>
           <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-            Task management, time tracking, invoicing, and payment collection. Everything you need to run your business efficiently.
+            Task management, time tracking, invoicing, and payment collection.
           </Text>
           <Text fontSize="md" color={useColorModeValue('gray.500', 'gray.400')} maxW="2xl">
             🚀 Currently in beta - Join early users and help shape the future of business management
@@ -260,10 +260,10 @@ const Homepage = () => {
           <VStack spacing={16}>
             <VStack spacing={4} textAlign="center">
               <Heading size="xl" color={textColor}>
-                Everything You Need
+                Need Billing and Collaboration?
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-                From task management to payment collection. Complete business solution.
+                From task management to payment collection.
               </Text>
               <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} maxW="2xl">
                 🧪 Beta features available to early adopters

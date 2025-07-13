@@ -31,6 +31,7 @@ import {
   Checkbox,
   Divider,
   useColorMode,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import { EditIcon, DeleteIcon, AddIcon, ChevronLeftIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
@@ -38,9 +39,27 @@ import { useClients } from '../hooks/useClients';
 import apiService from '../services/api';
 import ClientLimitsDisplay from './ClientLimitsDisplay';
 import TopBar from './TopBar';
+import Sidebar from './Sidebar';
+import BottomNav from './BottomNav';
+import MobileBackdropOverlay from './MobileBackdropOverlay';
+import FeedbackModal from './FeedbackModal';
 import { useAuth } from '../contexts/AuthContext';
 
 export const ClientList = () => {
+  const isMobile = useBreakpointValue({ base: true, md: false });
+
+  // Initialize sidebar state from localStorage
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
+
+  // Initialize center panel state from localStorage
+  const [isCenterOpen, setIsCenterOpen] = useState(() => {
+    const saved = localStorage.getItem('centerOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
+
   const { clients, loading, error, loadClients, createClient, updateClient, deleteClient } = useClients();
   const [newClient, setNewClient] = useState({ name: '', email: '', company: '', notes: '' });
   const [editingClient, setEditingClient] = useState(null);
@@ -58,13 +77,24 @@ export const ClientList = () => {
   const { isOpen: isCreateOpen, onOpen: openCreate, onClose: closeCreate } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: openEdit, onClose: closeEdit } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: openDelete, onClose: closeDelete } = useDisclosure();
-  const { logout } = useAuth();
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure();
+  const { logout, user } = useAuth();
+
+  // Toggle functions with localStorage persistence
+  const toggleSidebar = () => {
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    localStorage.setItem('sidebarOpen', JSON.stringify(newState));
+  };
+
+  const toggleCenter = () => {
+    const newState = !isCenterOpen;
+    setIsCenterOpen(newState);
+    localStorage.setItem('centerOpen', JSON.stringify(newState));
+  };
 
   // TopBar state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCenterOpen, setIsCenterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -79,7 +109,6 @@ export const ClientList = () => {
         const projectsData = response?.data || [];
         setProjects(projectsData);
       } catch (error) {
-        console.error('Failed to load projects:', error);
         toast({
           title: 'Error',
           description: 'Failed to load projects',
@@ -200,12 +229,8 @@ export const ClientList = () => {
   };
 
   // TopBar handlers
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const toggleCenter = () => setIsCenterOpen(!isCenterOpen);
   const handleSearch = (value) => setSearchQuery(value);
   const resetToAllTasks = () => navigate('/dashboard');
-  const openFeedbackModal = () => setIsFeedbackModalOpen(true);
-  const closeFeedbackModal = () => setIsFeedbackModalOpen(false);
   const handleLogout = async () => {
     try {
       await logout();
@@ -218,6 +243,36 @@ export const ClientList = () => {
   return (
     <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
       <Flex h="100vh" overflow="hidden">
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
+          colorMode={colorMode}
+          dayTasks={() => []}
+          expandedDays={{}}
+          getCurrentDay={() => new Date()}
+          toggleSidebar={toggleSidebar}
+          handleDayClick={() => {}}
+          handleWeeklyTaskClick={() => {}}
+          toggleTaskCompleted={() => {}}
+          renderFileAttachmentIndicator={() => null}
+          // Shared content props
+          sharedTasks={[]}
+          sharedProjects={[]}
+          sharedTasksLoading={false}
+          sharedProjectsLoading={false}
+          sharedTasksError={null}
+          sharedProjectsError={null}
+          isSharedContentExpanded={false}
+          toggleSharedContentExpanded={() => {}}
+          onSharedTaskClick={() => {}}
+          onSharedProjectClick={() => {}}
+          refreshSharedContent={() => {}}
+          dismissSharedTasksError={() => {}}
+          // Navigation props
+          resetToAllTasks={resetToAllTasks}
+          isProUser={user?.userType === 'pro'}
+        />
+
         <Flex flex="1" direction="column">
           <TopBar
             colorMode={colorMode}
@@ -232,29 +287,8 @@ export const ClientList = () => {
             onLogout={handleLogout}
           />
 
-          <Box flex="1" overflowY="auto" p={4}>
+          <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
             <Box maxW="4xl" mx="auto">
-              <Flex justify="space-between" align="center" mb={6}>
-                <HStack spacing={4} align="center">
-                  <IconButton
-                    icon={<ChevronLeftIcon />}
-                    aria-label="Go back"
-                    onClick={() => navigate('/dashboard')}
-                    size="sm"
-                    variant="ghost"
-                    color="gray.300"
-                    _hover={{ bg: 'gray.700' }}
-                  />
-                  <Heading size="lg" color="white">Clients</Heading>
-                </HStack>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="blue"
-                  onClick={openCreate}
-                >
-                  Add Client
-                </Button>
-              </Flex>
 
       {/* Client Limits Display */}
       <ClientLimitsDisplay showNotification={true} />
@@ -522,35 +556,60 @@ export const ClientList = () => {
             </Box>
           </Box>
 
-          {/* Delete Confirmation Dialog */}
-          <AlertDialog isOpen={isDeleteOpen} onClose={closeDelete}>
-            <AlertDialogOverlay>
-              <AlertDialogContent bg="gray.800">
-                <AlertDialogHeader color="white">
-                  Delete Client
-                </AlertDialogHeader>
-                <AlertDialogBody color="gray.300">
-                  Are you sure you want to delete "{clientToDelete?.name}"? This action cannot be undone.
-                </AlertDialogBody>
-                <AlertDialogFooter>
-                  <Button onClick={closeDelete} variant="ghost">
-                    Cancel
-                  </Button>
-                  <Button
-                    colorScheme="red"
-                    ml={3}
-                    onClick={handleDelete}
-                    isLoading={deleting}
-                  >
-                    Delete
-                  </Button>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialogOverlay>
-          </AlertDialog>
-
+          <BottomNav
+            isSidebarOpen={isSidebarOpen}
+            isCenterOpen={isCenterOpen}
+            isAddMode={false}
+            isFooterOpen={isFeedbackModalOpen}
+            toggleSidebar={toggleSidebar}
+            toggleCenter={toggleCenter}
+            handleAddTask={() => {}}
+            handleAddProject={() => {}}
+            handleAddClient={openCreate}
+            toggleDetail={() => {}}
+            toggleFooter={openFeedbackModal}
+            handleMobileTaskEdit={() => {}}
+            isMobileTaskEditOpen={false}
+          />
         </Flex>
       </Flex>
+
+      <MobileBackdropOverlay
+        isOpen={isSidebarOpen && isMobile}
+        onClose={toggleSidebar}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog isOpen={isDeleteOpen} onClose={closeDelete}>
+        <AlertDialogOverlay>
+          <AlertDialogContent bg="gray.800">
+            <AlertDialogHeader color="white">
+              Delete Client
+            </AlertDialogHeader>
+            <AlertDialogBody color="gray.300">
+              Are you sure you want to delete "{clientToDelete?.name}"? This action cannot be undone.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button onClick={closeDelete} variant="ghost">
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                ml={3}
+                onClick={handleDelete}
+                isLoading={deleting}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={closeFeedbackModal}
+      />
     </Box>
   );
 };
@@ -572,7 +631,6 @@ export const ClientCreateModal = ({ isOpen, onClose, onClientAdded }) => {
         const projectsData = response?.data || [];
         setProjects(projectsData);
       } catch (error) {
-        console.error('Failed to load projects:', error);
         toast({
           title: 'Error',
           description: 'Failed to load projects',

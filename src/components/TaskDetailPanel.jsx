@@ -251,7 +251,6 @@ const TaskDetailPanel = ({
         await onTaskUpdate(task._id, updatedTask.data);
       }
     } catch (error) {
-      console.error('Failed to refresh task data after time tracking update:', error);
     }
   };
 

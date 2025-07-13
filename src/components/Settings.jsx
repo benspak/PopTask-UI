@@ -28,6 +28,7 @@ import {
   Image,
   Select,
   useColorMode,
+  useDisclosure,
 } from '@chakra-ui/react';
 import {
   EditIcon,
@@ -40,6 +41,8 @@ import { useAuthWithTimezone } from '../hooks/useAuthWithTimezone';
 import apiService from '../services/api';
 import { TIMEZONE_OPTIONS, getUserTimezone } from '../utils/timezone';
 import TopBar from './TopBar';
+import BottomNav from './BottomNav';
+import FeedbackModal from './FeedbackModal';
 
 const Settings = () => {
   const { user, refreshUser, logout, updateTimezone } = useAuthWithTimezone();
@@ -49,6 +52,9 @@ const Settings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Feedback modal state
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -77,7 +83,6 @@ const Settings = () => {
     try {
       await logout();
     } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 
@@ -208,7 +213,6 @@ const Settings = () => {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Avatar upload error:', error);
       toast({
         title: 'Upload failed',
         description: error.message || 'Failed to upload avatar. Please try again.',
@@ -301,7 +305,6 @@ const Settings = () => {
       // Hide success message after 3 seconds
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
-      console.error('Profile update error:', error);
       toast({
         title: 'Update failed',
         description: error.message || 'Failed to update profile. Please try again.',
@@ -624,6 +627,24 @@ const Settings = () => {
           </VStack>
         </Box>
       </Box>
+
+      <BottomNav
+        isSidebarOpen={false}
+        isCenterOpen={false}
+        isAddMode={false}
+        isFooterOpen={isFeedbackModalOpen}
+        toggleSidebar={() => {}}
+        toggleCenter={() => {}}
+        handleAddTask={() => {}}
+        handleAddProject={() => {}}
+        handleAddClient={() => {}}
+        toggleDetail={() => {}}
+        toggleFooter={openFeedbackModal}
+        handleMobileTaskEdit={() => {}}
+        isMobileTaskEditOpen={false}
+      />
+
+      <FeedbackModal isOpen={isFeedbackModalOpen} onClose={closeFeedbackModal} />
     </Box>
   );
 };

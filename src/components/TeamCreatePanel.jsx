@@ -133,7 +133,6 @@ const TeamCreatePanel = ({ isOpen, onClose, onCreateTeam, loading = false }) => 
       onClose();
     } catch (error) {
       // Error handling is done in the parent component
-      console.error('Failed to create team:', error);
     }
   };
 

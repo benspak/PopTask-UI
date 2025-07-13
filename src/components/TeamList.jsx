@@ -58,6 +58,8 @@ import TeamCreatePanel from './TeamCreatePanel';
 import TeamEditPanel from './TeamEditPanel';
 import LimitsDisplay from './LimitsDisplay';
 import TopBar from './TopBar';
+import BottomNav from './BottomNav';
+import FeedbackModal from './FeedbackModal';
 
 const TeamList = () => {
   const { teams, loading, error, loadTeams, createTeam, updateTeam, deleteTeam } = useTeams();
@@ -78,6 +80,9 @@ const TeamList = () => {
   // TopBar state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCenterOpen, setIsCenterOpen] = useState(false);
+
+  // Feedback modal state
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -184,7 +189,6 @@ const TeamList = () => {
       // Handle logout logic here
       navigate('/login');
     } catch (error) {
-      console.error('Logout error:', error);
       toast({ title: 'Logout failed', status: 'error' });
     }
   };
@@ -488,6 +492,23 @@ const TeamList = () => {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+            <BottomNav
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
+          isAddMode={false}
+          toggleSidebar={toggleSidebar}
+          toggleCenter={toggleCenter}
+          handleAddTask={() => {}}
+          handleAddProject={() => {}}
+          handleAddClient={() => {}}
+          toggleDetail={() => {}}
+          toggleFooter={openFeedbackModal}
+          handleMobileTaskEdit={() => {}}
+          isMobileTaskEditOpen={false}
+        />
+
+    <FeedbackModal isOpen={isFeedbackModalOpen} onClose={closeFeedbackModal} />
   </>
   );
 };

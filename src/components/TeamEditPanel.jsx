@@ -125,7 +125,6 @@ const TeamEditPanel = ({ isOpen, onClose, team, onUpdateTeam, loading = false })
       });
       setMemberInput({ email: '', role: 'member' });
     } catch (error) {
-      console.error('Failed to add member:', error);
     }
   };
 
@@ -136,7 +135,6 @@ const TeamEditPanel = ({ isOpen, onClose, team, onUpdateTeam, loading = false })
         userId
       });
     } catch (error) {
-      console.error('Failed to remove member:', error);
     }
   };
 
@@ -148,7 +146,6 @@ const TeamEditPanel = ({ isOpen, onClose, team, onUpdateTeam, loading = false })
         role
       });
     } catch (error) {
-      console.error('Failed to update member role:', error);
     }
   };
 
@@ -181,7 +178,6 @@ const TeamEditPanel = ({ isOpen, onClose, team, onUpdateTeam, loading = false })
       });
       onClose();
     } catch (error) {
-      console.error('Failed to update team:', error);
     }
   };
 

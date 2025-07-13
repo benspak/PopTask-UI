@@ -83,7 +83,6 @@ const PublicCompanyDetail = () => {
         }
       } catch (err) {
         setError('Failed to fetch company details');
-        console.error('Error fetching company:', err);
       } finally {
         setLoading(false);
       }

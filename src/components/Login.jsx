@@ -90,7 +90,6 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
       // Navigate to the original destination or dashboard
       navigate(from);
     } catch (error) {
-      console.error('Login error:', error);
       const errorMessage = error.message || 'Login failed. Please try again.';
 
       toast({

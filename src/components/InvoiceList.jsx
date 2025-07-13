@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Spinner, Heading, List, ListItem, VStack, HStack, Text, Badge, Button, useToast, IconButton, useColorMode, Flex } from '@chakra-ui/react';
+import { Box, Spinner, Heading, List, ListItem, VStack, HStack, Text, Badge, Button, useToast, IconButton, useColorMode, Flex, useDisclosure, useBreakpointValue } from '@chakra-ui/react';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
 import apiService from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import TopBar from './TopBar';
+import BottomNav from './BottomNav';
+import FeedbackModal from './FeedbackModal';
+import Sidebar from './Sidebar';
+import MobileBackdropOverlay from './MobileBackdropOverlay';
 import { useAuth } from '../contexts/AuthContext';
 
 export const InvoiceList = () => {
@@ -13,13 +17,54 @@ export const InvoiceList = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isMobile = useBreakpointValue({ base: true, md: false });
+
+  // Sidebar and layout state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
+  const [isCenterOpen, setIsCenterOpen] = useState(() => {
+    const saved = localStorage.getItem('centerOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
 
   // TopBar state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCenterOpen, setIsCenterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+
+  // Feedback modal state
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
+
+  // Toggle functions with localStorage persistence
+  const toggleSidebar = () => {
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    localStorage.setItem('sidebarOpen', JSON.stringify(newState));
+  };
+
+  const toggleCenter = () => {
+    const newState = !isCenterOpen;
+    setIsCenterOpen(newState);
+    localStorage.setItem('centerOpen', JSON.stringify(newState));
+  };
+
+  // TopBar handlers - defined early to avoid hoisting issues
+  const handleSearch = (value) => setSearchQuery(value);
+  const resetToAllTasks = () => navigate('/dashboard');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({ title: 'Logout failed', status: 'error' });
+    }
+  };
+
+  const handleCreateInvoice = () => {
+    navigate('/invoices/create');
+  };
 
   useEffect(() => {
     const loadInvoices = async () => {
@@ -43,37 +88,60 @@ export const InvoiceList = () => {
 
   if (loading) {
     return (
-      <Box maxW="lg" mx="auto" mt={8} p={4} textAlign="center">
-        <Spinner size="xl" color="white" />
-        <Text color="white" mt={4}>Loading invoices...</Text>
+      <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
+        <Flex h="100vh" overflow="hidden">
+          <Flex flex="1" direction="column">
+            <TopBar
+              colorMode={colorMode}
+              toggleColorMode={toggleColorMode}
+              isOnline={true}
+              currentView="invoices"
+              searchTerm={searchQuery}
+              handleSearch={() => {}}
+              resetToAllTasks={resetToAllTasks}
+              isSidebarOpen={isSidebarOpen}
+              isCenterOpen={isCenterOpen}
+              onLogout={handleLogout}
+            />
+            <Box flex="1" overflowY="auto" p={4}>
+              <Box maxW="lg" mx="auto" mt={8} p={4} textAlign="center">
+                <Spinner size="xl" color="white" />
+                <Text color="white" mt={4}>Loading invoices...</Text>
+              </Box>
+            </Box>
+          </Flex>
+        </Flex>
       </Box>
     );
   }
 
-  // TopBar handlers
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const toggleCenter = () => setIsCenterOpen(!isCenterOpen);
-  const handleSearch = (value) => setSearchQuery(value);
-  const resetToAllTasks = () => navigate('/dashboard');
-  const openFeedbackModal = () => setIsFeedbackModalOpen(true);
-  const closeFeedbackModal = () => setIsFeedbackModalOpen(false);
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast({ title: 'Logout failed', status: 'error' });
-    }
-  };
-
   if (error) {
     return (
-      <Box maxW="lg" mx="auto" mt={8} p={4} textAlign="center">
-        <Text color="red.300" mb={4}>{error}</Text>
-        <Button onClick={() => window.location.reload()} colorScheme="blue">
-          Retry
-        </Button>
+      <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
+        <Flex h="100vh" overflow="hidden">
+          <Flex flex="1" direction="column">
+            <TopBar
+              colorMode={colorMode}
+              toggleColorMode={toggleColorMode}
+              isOnline={true}
+              currentView="invoices"
+              searchTerm={searchQuery}
+              handleSearch={handleSearch}
+              resetToAllTasks={resetToAllTasks}
+              isSidebarOpen={isSidebarOpen}
+              isCenterOpen={isCenterOpen}
+              onLogout={handleLogout}
+            />
+            <Box flex="1" overflowY="auto" p={4}>
+              <Box maxW="lg" mx="auto" mt={8} p={4} textAlign="center">
+                <Text color="red.300" mb={4}>{error}</Text>
+                <Button onClick={() => window.location.reload()} colorScheme="blue">
+                  Retry
+                </Button>
+              </Box>
+            </Box>
+          </Flex>
+        </Flex>
       </Box>
     );
   }
@@ -81,6 +149,36 @@ export const InvoiceList = () => {
   return (
     <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
       <Flex h="100vh" overflow="hidden">
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
+          colorMode={colorMode}
+          dayTasks={() => ({})}
+          expandedDays={{}}
+          getCurrentDay={() => ''}
+          toggleSidebar={toggleSidebar}
+          handleDayClick={() => {}}
+          handleWeeklyTaskClick={() => {}}
+          toggleTaskCompleted={() => {}}
+          renderFileAttachmentIndicator={() => null}
+          // Shared content props
+          sharedTasks={[]}
+          sharedProjects={[]}
+          sharedTasksLoading={false}
+          sharedProjectsLoading={false}
+          sharedTasksError={null}
+          sharedProjectsError={null}
+          isSharedContentExpanded={false}
+          toggleSharedContentExpanded={() => {}}
+          onSharedTaskClick={() => {}}
+          onSharedProjectClick={() => {}}
+          refreshSharedContent={() => {}}
+          dismissSharedTasksError={() => {}}
+          // Navigation props
+          resetToAllTasks={resetToAllTasks}
+          isProUser={user?.userType === 'pro'}
+        />
+
         <Flex flex="1" direction="column">
           <TopBar
             colorMode={colorMode}
@@ -97,27 +195,6 @@ export const InvoiceList = () => {
 
           <Box flex="1" overflowY="auto" p={4}>
             <Box maxW="lg" mx="auto" borderWidth={1} borderRadius="md" boxShadow="md" bg="gray.800" p={4}>
-              <HStack justify="space-between" mb={4}>
-                <HStack spacing={4} align="center">
-                  <IconButton
-                    icon={<ChevronLeftIcon />}
-                    aria-label="Go back"
-                    onClick={() => navigate('/dashboard')}
-                    size="sm"
-                    variant="ghost"
-                    color="gray.300"
-                    _hover={{ bg: 'gray.700' }}
-                  />
-                  <Heading size="md" color="white">Invoices</Heading>
-                </HStack>
-                <Button
-                  colorScheme="green"
-                  onClick={() => navigate('/invoices/create')}
-                  size="sm"
-                >
-                  Create Invoice
-                </Button>
-              </HStack>
               <List spacing={3}>
                 {invoices.length === 0 ? (
                   <Text color="gray.400">No invoices yet.</Text>
@@ -141,8 +218,31 @@ export const InvoiceList = () => {
               </List>
             </Box>
           </Box>
+
+          <BottomNav
+            isSidebarOpen={isSidebarOpen}
+            isCenterOpen={isCenterOpen}
+            isAddMode={false}
+            isFooterOpen={isFeedbackModalOpen}
+            toggleSidebar={toggleSidebar}
+            toggleCenter={toggleCenter}
+            handleAddTask={handleCreateInvoice}
+            handleAddProject={() => {}}
+            handleAddClient={() => {}}
+            toggleDetail={() => {}}
+            toggleFooter={openFeedbackModal}
+            handleMobileTaskEdit={() => {}}
+            isMobileTaskEditOpen={false}
+          />
         </Flex>
       </Flex>
+
+      <MobileBackdropOverlay
+        isOpen={isSidebarOpen && isMobile}
+        onClose={toggleSidebar}
+      />
+
+      <FeedbackModal isOpen={isFeedbackModalOpen} onClose={closeFeedbackModal} />
     </Box>
   );
 };

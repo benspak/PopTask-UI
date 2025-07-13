@@ -64,6 +64,10 @@ import { useCompanies } from '../hooks/useCompanies';
 import CompanyCreatePanel from './CompanyCreatePanel';
 import CompanyEditPanel from './CompanyEditPanel';
 import TopBar from './TopBar';
+import BottomNav from './BottomNav';
+import Sidebar from './Sidebar';
+import MobileBackdropOverlay from './MobileBackdropOverlay';
+import FeedbackModal from './FeedbackModal';
 
 const CompanyList = () => {
   const navigate = useNavigate();
@@ -71,9 +75,18 @@ const CompanyList = () => {
   const { logout, user } = useAuth();
 
   // TopBar state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCenterOpen, setIsCenterOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [isCenterOpen, setIsCenterOpen] = useState(() => {
+    const saved = localStorage.getItem('centerOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Feedback modal state
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
 
   const {
     companies,
@@ -172,6 +185,14 @@ const CompanyList = () => {
     onDeleteOpen();
   };
 
+  const generatePublicUrl = (company) => {
+    if (!company.isVerified || !company.publicToken) {
+      return null;
+    }
+    const companySlug = company.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return `/company/${companySlug}/${company.publicToken}`;
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -204,8 +225,16 @@ const CompanyList = () => {
   const sizes = ['1-10', '11-50', '51-200', '201-500', '500+'];
 
   // TopBar handlers
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const toggleCenter = () => setIsCenterOpen(!isCenterOpen);
+  const toggleSidebar = () => {
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    localStorage.setItem('sidebarOpen', JSON.stringify(newState));
+  };
+  const toggleCenter = () => {
+    const newState = !isCenterOpen;
+    setIsCenterOpen(newState);
+    localStorage.setItem('centerOpen', JSON.stringify(newState));
+  };
   const handleTopBarSearch = (value) => setSearchQuery(value);
   const resetToAllTasks = () => navigate('/dashboard');
   const handleLogout = async () => {
@@ -213,7 +242,6 @@ const CompanyList = () => {
       await logout();
       navigate('/login');
     } catch (error) {
-      console.error('Logout error:', error);
       toast({ title: 'Logout failed', status: 'error' });
     }
   };
@@ -221,6 +249,34 @@ const CompanyList = () => {
   return (
     <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
       <Flex h="100vh" overflow="hidden">
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
+          colorMode={colorMode}
+          dayTasks={() => ({})}
+          expandedDays={{}}
+          getCurrentDay={() => 'Monday'}
+          toggleSidebar={toggleSidebar}
+          handleDayClick={() => {}}
+          handleWeeklyTaskClick={() => {}}
+          toggleTaskCompleted={() => {}}
+          renderFileAttachmentIndicator={() => null}
+          sharedTasks={[]}
+          sharedProjects={[]}
+          sharedTasksLoading={false}
+          sharedProjectsLoading={false}
+          sharedTasksError={null}
+          sharedProjectsError={null}
+          isSharedContentExpanded={false}
+          toggleSharedContentExpanded={() => {}}
+          onSharedTaskClick={() => {}}
+          onSharedProjectClick={() => {}}
+          refreshSharedContent={() => {}}
+          dismissSharedTasksError={() => {}}
+          resetToAllTasks={() => navigate('/dashboard')}
+          isProUser={user?.userType === 'pro'}
+        />
+
         <Flex flex="1" direction="column">
           <TopBar
             colorMode={colorMode}
@@ -235,32 +291,8 @@ const CompanyList = () => {
             onLogout={handleLogout}
           />
 
-          <Box flex="1" overflowY="auto" p={4}>
+          <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
             <Box maxW="4xl" mx="auto">
-              <Flex justify="space-between" align="center" mb={6}>
-                <HStack spacing={4} align="center">
-                  <IconButton
-                    icon={<ChevronLeftIcon />}
-                    aria-label="Go back"
-                    onClick={() => navigate('/dashboard')}
-                    size="sm"
-                    variant="ghost"
-                    color="gray.300"
-                    _hover={{ bg: 'gray.700' }}
-                  />
-                  <Heading size="lg" color="white">Companies</Heading>
-                </HStack>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="blue"
-                  onClick={onCreateOpen}
-                >
-                  Add Company
-                </Button>
-              </Flex>
-
-
-
               {/* Search and Filters */}
               <Card bg={cardBg} mb={4}>
                 <CardBody>
@@ -305,8 +337,6 @@ const CompanyList = () => {
                         ))}
                       </Select>
 
-
-
                       <Button
                         onClick={handleSearch}
                         colorScheme="blue"
@@ -315,8 +345,6 @@ const CompanyList = () => {
                         Filter
                       </Button>
                     </HStack>
-
-
                   </VStack>
                 </CardBody>
               </Card>
@@ -341,206 +369,163 @@ const CompanyList = () => {
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                   {companies.map((company) => (
                     <Card key={company._id} bg={cardBg} border="1px" borderColor={borderColor}>
-                                    <CardHeader pb={2}>
-                <Flex align="center" justify="space-between">
-                  <HStack spacing={3} align="center" flex="1">
-                    {company.logo && company.logo.dataUrl ? (
-                      <Image
-                        src={company.logo.dataUrl}
-                        alt={`${company.name} logo`}
-                        boxSize="40px"
-                        objectFit="contain"
-                        borderRadius="md"
-                        border="1px solid"
-                        borderColor="gray.200"
-                        fallbackSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAxMEMxNC40NzcgMTAgMTAgMTQuNDc3IDEwIDIwQzEwIDI1LjUyMyAxNC40NzcgMzAgMjAgMzBDMjUuNTIzIDMwIDMwIDI1LjUyMyAzMCAyMEMzMCAxNC40NzcgMjAgMTBaIiBmaWxsPSIjOUI5QkFCIi8+Cjwvc3ZnPgo="
-                      />
-                    ) : (
-                      <Box
-                        boxSize="40px"
-                        bg="gray.100"
-                        borderRadius="md"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        border="1px solid"
-                        borderColor="gray.200"
-                      >
-                        <Text fontSize="xs" color="gray.500" fontWeight="bold">
-                          {company.name.charAt(0).toUpperCase()}
-                        </Text>
-                      </Box>
-                    )}
-                    <Box flex="1">
-                      <HStack spacing={2} mb={2}>
-                        <Text fontWeight="bold" fontSize="lg" noOfLines={1}>
-                          {company.name}
-                        </Text>
-                        {company.isVerified ? (
-                          <Tooltip label="Verified Company">
-                            <Badge colorScheme="green" variant="solid">
-                              <CheckCircleIcon />
-                            </Badge>
-                          </Tooltip>
-                        ) : (
-                          <Tooltip label="Not Verified - Hidden from default view">
-                            <Badge colorScheme="red" variant="outline">
-                              <CloseIcon />
-                            </Badge>
-                          </Tooltip>
-                        )}
-                        {/* Show ownership indicator */}
-                        {company.createdBy === user?._id ? (
-                          <Tooltip label="Your Company">
-                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">
-                              Mine
-                            </Badge>
-                          </Tooltip>
-                        ) : (
-                          <Tooltip label="Verified Company from Another User">
-                            <Badge colorScheme="purple" variant="subtle" fontSize="xs">
-                              Verified
-                            </Badge>
-                          </Tooltip>
-                        )}
-                      </HStack>
-                      {company.industry && (
-                        <Badge colorScheme="blue" variant="subtle" fontSize="xs">
-                          {company.industry}
-                        </Badge>
-                      )}
-                    </Box>
-                  </HStack>
-                </Flex>
-              </CardHeader>
+                      <CardHeader pb={2}>
+                        <Flex align="center" justify="space-between">
+                          <HStack spacing={3} align="center" flex="1">
+                            {company.logo && company.logo.dataUrl ? (
+                              <Image
+                                src={company.logo.dataUrl}
+                                alt={`${company.name} logo`}
+                                boxSize="40px"
+                                objectFit="contain"
+                                borderRadius="md"
+                                border="1px solid"
+                                borderColor="gray.200"
+                                fallbackSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAxMEMxNC40NzcgMTAgMTAgMTQuNDc3IDEwIDIwQzEwIDI1LjUyMyAxNC40NzcgMzAgMjAgMzBDMjUuNTIzIDMwIDMwIDI1LjUyMyAzMCAyMEMzMCAxNC40NzcgMjAgMTBaIiBmaWxsPSIjOUI5QkFCIi8+Cjwvc3ZnPgo="
+                              />
+                            ) : (
+                              <Box
+                                boxSize="40px"
+                                bg="gray.100"
+                                borderRadius="md"
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                                border="1px solid"
+                                borderColor="gray.200"
+                              >
+                                <Text fontSize="xs" color="gray.500" fontWeight="bold">
+                                  {company.name.charAt(0).toUpperCase()}
+                                </Text>
+                              </Box>
+                            )}
+                            <Box flex="1">
+                              <HStack spacing={2} mb={2}>
+                                <Text fontWeight="bold" fontSize="lg" noOfLines={1}>
+                                  {company.name}
+                                </Text>
+                                {company.isVerified ? (
+                                  <Tooltip label="Verified Company">
+                                    <Badge colorScheme="green" variant="solid">
+                                      <CheckCircleIcon />
+                                    </Badge>
+                                  </Tooltip>
+                                ) : (
+                                  <Tooltip label="Not Verified - Hidden from default view">
+                                    <Badge colorScheme="gray" variant="solid">
+                                      <CloseIcon />
+                                    </Badge>
+                                  </Tooltip>
+                                )}
+                              </HStack>
+                              {company.industry && (
+                                <Text fontSize="sm" color="gray.500" noOfLines={1}>
+                                  {company.industry}
+                                </Text>
+                              )}
+                            </Box>
+                          </HStack>
+                        </Flex>
+                      </CardHeader>
 
                       <CardBody pt={0}>
-                        <VStack align="stretch" spacing={3}>
-                          {company.description && (
-                            <Text fontSize="sm" color="white" noOfLines={2}>
-                              {company.description}
-                            </Text>
+                        {company.description && (
+                          <Text fontSize="sm" color="gray.600" mb={3} noOfLines={2}>
+                            {company.description}
+                          </Text>
+                        )}
+
+                        <VStack spacing={2} align="stretch">
+                          {company.size && (
+                            <HStack spacing={2}>
+                              <Text fontSize="xs" color="gray.500" fontWeight="medium">
+                                Size:
+                              </Text>
+                              <Badge colorScheme={getSizeColor(company.size)} variant="subtle" fontSize="xs">
+                                {company.size} employees
+                              </Badge>
+                            </HStack>
                           )}
 
-                          <VStack align="stretch" spacing={2}>
-                            {company.location.city || company.location.country ? (
-                              <HStack spacing={2} fontSize="sm">
-                                <AtSignIcon color="white" />
-                                <Text color="white">
-                                  {[company.location.city, company.location.state, company.location.country]
-                                    .filter(Boolean)
-                                    .join(', ')}
-                                </Text>
-                              </HStack>
-                            ) : null}
-
-                            {company.website && (
-                              <HStack spacing={2} fontSize="sm">
-                                <ExternalLinkIcon color="white" />
-                                <Text color="white" noOfLines={1}>
-                                  {company.website}
-                                </Text>
-                              </HStack>
-                            )}
-
-                            <HStack spacing={2} fontSize="sm">
-                              <StarIcon color="white" />
-                              <Text color="white">
-                                {company.size} employees
+                          {company.location && (company.location.city || company.location.country) && (
+                            <HStack spacing={2}>
+                              <Text fontSize="xs" color="gray.500" fontWeight="medium">
+                                Location:
+                              </Text>
+                              <Text fontSize="xs" color="gray.600">
+                                {[company.location.city, company.location.state, company.location.country].filter(Boolean).join(', ')}
                               </Text>
                             </HStack>
+                          )}
 
-                            {company.founded && (
-                              <HStack spacing={2} fontSize="sm">
-                                <CalendarIcon color="white" />
-                                <Text color="white">
-                                  Founded {company.founded}
-                                </Text>
-                              </HStack>
-                            )}
-                          </VStack>
+                          {company.contact && company.contact.email && (
+                            <HStack spacing={2}>
+                              <EmailIcon boxSize={3} color="gray.400" />
+                              <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                                {company.contact.email}
+                              </Text>
+                            </HStack>
+                          )}
+
+                          {company.website && (
+                            <HStack spacing={2}>
+                              <ExternalLinkIcon boxSize={3} color="gray.400" />
+                              <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                                {company.website}
+                              </Text>
+                            </HStack>
+                          )}
+
+                          {company.founded && (
+                            <HStack spacing={2}>
+                              <CalendarIcon boxSize={3} color="gray.400" />
+                              <Text fontSize="xs" color="gray.600">
+                                Founded {company.founded}
+                              </Text>
+                            </HStack>
+                          )}
                         </VStack>
                       </CardBody>
 
                       <CardFooter pt={0}>
                         <Flex w="full" justify="space-between" align="center">
-                          {/* Only show edit/delete buttons for user's own companies */}
-                          {company.createdBy === user?._id ? (
-                            <HStack spacing={2}>
+                          <HStack spacing={2}>
+                            <IconButton
+                              size="sm"
+                              icon={<EditIcon />}
+                              onClick={() => handleEdit(company)}
+                              colorScheme="blue"
+                              variant="ghost"
+                              aria-label="Edit company"
+                            />
+                            <IconButton
+                              size="sm"
+                              icon={<DeleteIcon />}
+                              onClick={() => handleDeleteClick(company)}
+                              colorScheme="red"
+                              variant="ghost"
+                              aria-label="Delete company"
+                            />
+                            {!company.isVerified && (
                               <IconButton
-                                icon={<EditIcon />}
                                 size="sm"
+                                icon={<EmailIcon />}
+                                onClick={() => handleRequestVerification(company)}
+                                colorScheme="orange"
                                 variant="ghost"
-                                onClick={() => handleEdit(company)}
-                                aria-label="Edit company"
+                                aria-label="Request verification"
                               />
-                              <IconButton
-                                icon={<DeleteIcon />}
-                                size="sm"
-                                variant="ghost"
-                                colorScheme="red"
-                                onClick={() => handleDeleteClick(company)}
-                                aria-label="Delete company"
-                              />
-                              {company.isVerified && (
-                                <IconButton
-                                  icon={<LinkIcon />}
-                                  size="sm"
-                                  variant="ghost"
-                                  colorScheme="purple"
-                                  onClick={async () => {
-                                    const result = await generatePublicLink(company._id);
-                                    if (result.success) {
-                                      try {
-                                        await navigator.clipboard.writeText(result.data.publicUrl);
-                                        toast({
-                                          title: 'Public Link Copied',
-                                          description: `Public link for "${company.name}" copied to clipboard.`,
-                                          status: 'success',
-                                          duration: 5000,
-                                          isClosable: true,
-                                        });
-                                      } catch (err) {
-                                        toast({
-                                          title: 'Link Generated',
-                                          description: `Public link: ${result.data.publicUrl}`,
-                                          status: 'success',
-                                          duration: 10000,
-                                          isClosable: true,
-                                        });
-                                      }
-                                    } else {
-                                      toast({
-                                        title: 'Error Generating Link',
-                                        description: result.error || 'Failed to generate public link for this company.',
-                                        status: 'error',
-                                        duration: 5000,
-                                        isClosable: true,
-                                      });
-                                    }
-                                  }}
-                                  aria-label="Share company"
-                                />
-                              )}
-                            </HStack>
-                          ) : (
-                            <HStack spacing={2}>
-                              <Text fontSize="xs" color="gray.400">
-                                Verified by community
-                              </Text>
-                            </HStack>
-                          )}
-
-                          {/* Only show verification request for user's own unverified companies */}
-                          {company.createdBy === user?._id && !company.isVerified && company.contact.email && (
+                            )}
+                          </HStack>
+                          {company.isVerified && generatePublicUrl(company) && (
                             <Button
                               size="sm"
-                              colorScheme="green"
+                              colorScheme="blue"
                               variant="outline"
-                              leftIcon={<EmailIcon />}
-                              onClick={() => handleRequestVerification(company)}
+                              leftIcon={<ViewIcon />}
+                              onClick={() => navigate(generatePublicUrl(company))}
                             >
-                              Request Verification
+                              View Public Page
                             </Button>
                           )}
                         </Flex>
@@ -627,7 +612,6 @@ const CompanyList = () => {
                 <ModalOverlay />
                 <ModalContent>
                   <ModalHeader>Delete Company</ModalHeader>
-                  <ModalCloseButton />
                   <ModalBody>
                     <Text>
                       Are you sure you want to delete "{deleteConfirm?.name}"? This action cannot be undone.
@@ -645,8 +629,31 @@ const CompanyList = () => {
               </Modal>
             </Box>
           </Box>
+
+          <BottomNav
+            isSidebarOpen={isSidebarOpen}
+            isAddMode={isCreateOpen}
+            isFooterOpen={isFeedbackModalOpen}
+            toggleSidebar={toggleSidebar}
+            handleAddTask={onCreateOpen}
+            handleAddProject={onCreateOpen}
+            handleAddClient={onCreateOpen}
+            toggleFooter={openFeedbackModal}
+          />
         </Flex>
       </Flex>
+
+      {/* Mobile backdrop overlay */}
+      <MobileBackdropOverlay
+        isOpen={isSidebarOpen}
+        onClose={toggleSidebar}
+      />
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={closeFeedbackModal}
+      />
     </Box>
   );
 };

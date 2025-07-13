@@ -55,7 +55,6 @@ const ForgotPassword = ({ onBackToLogin }) => {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Forgot password error:', error);
       const errorMessage = error.message || 'Failed to send reset email. Please try again.';
       setError(errorMessage);
     } finally {

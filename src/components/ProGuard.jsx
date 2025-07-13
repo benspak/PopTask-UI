@@ -29,7 +29,6 @@ const ProGuard = ({ children }) => {
         window.location.href = response.url;
       }
     } catch (error) {
-      console.error('Failed to create payment link:', error);
     }
   };
 

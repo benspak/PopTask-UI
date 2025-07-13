@@ -84,7 +84,6 @@ const FeedbackModal = ({ isOpen, onClose }) => {
         throw new Error(response.message || 'Failed to send feedback');
       }
     } catch (error) {
-      console.error('Feedback submission error:', error);
       setError(error.message || 'Failed to send feedback. Please try again.');
     } finally {
       setIsSubmitting(false);

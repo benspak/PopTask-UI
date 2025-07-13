@@ -15,25 +15,55 @@ import {
   Text,
   useToast,
   Spinner,
-  useColorMode
+  useColorMode,
+  useDisclosure,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
 import apiService from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import TopBar from './TopBar';
+import BottomNav from './BottomNav';
+import FeedbackModal from './FeedbackModal';
+import Sidebar from './Sidebar';
+import MobileBackdropOverlay from './MobileBackdropOverlay';
 import { useAuth } from '../contexts/AuthContext';
 
 export const InvoiceCreatePanel = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isMobile = useBreakpointValue({ base: true, md: false });
+
+  // Sidebar and layout state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
+  const [isCenterOpen, setIsCenterOpen] = useState(() => {
+    const saved = localStorage.getItem('centerOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
 
   // TopBar state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCenterOpen, setIsCenterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+
+  // Feedback modal state
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
+
+  // Toggle functions with localStorage persistence
+  const toggleSidebar = () => {
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    localStorage.setItem('sidebarOpen', JSON.stringify(newState));
+  };
+
+  const toggleCenter = () => {
+    const newState = !isCenterOpen;
+    setIsCenterOpen(newState);
+    localStorage.setItem('centerOpen', JSON.stringify(newState));
+  };
 
   const [clients, setClients] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -63,8 +93,15 @@ export const InvoiceCreatePanel = () => {
 
         setClients(clientsData || []);
         setProjects(projectsData || []);
-      } catch (error) {
-        console.error('Error loading data:', error);
+
+        // Check for state from navigation (e.g., from project detail)
+        const state = window.history.state?.usr;
+        if (state) {
+          if (state.projectId) setProjectId(state.projectId);
+          if (state.clientId) setClientId(state.clientId);
+          if (state.lineItems) setLineItems(state.lineItems);
+        }
+          } catch (error) {
         setError('Failed to load data. Please try again.');
         toast({ title: 'Failed to load data', status: 'error' });
       } finally {
@@ -122,7 +159,6 @@ export const InvoiceCreatePanel = () => {
       toast({ title: 'Invoice created', status: 'success' });
       navigate(`/invoices/${response.data._id || response._id}`);
     } catch (error) {
-      console.error('Error creating invoice:', error);
       toast({ title: 'Failed to create invoice', status: 'error' });
     } finally {
       setSubmitting(false);
@@ -130,18 +166,13 @@ export const InvoiceCreatePanel = () => {
   };
 
   // TopBar handlers
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const toggleCenter = () => setIsCenterOpen(!isCenterOpen);
   const handleSearch = (value) => setSearchQuery(value);
   const resetToAllTasks = () => navigate('/dashboard');
-  const openFeedbackModal = () => setIsFeedbackModalOpen(true);
-  const closeFeedbackModal = () => setIsFeedbackModalOpen(false);
   const handleLogout = async () => {
     try {
       await logout();
       navigate('/login');
     } catch (error) {
-      console.error('Logout error:', error);
       toast({ title: 'Logout failed', status: 'error' });
     }
   };
@@ -157,7 +188,7 @@ export const InvoiceCreatePanel = () => {
               isOnline={true}
               currentView="invoices"
               searchTerm={searchQuery}
-              handleSearch={handleSearch}
+              handleSearch={() => {}}
               resetToAllTasks={resetToAllTasks}
               isSidebarOpen={isSidebarOpen}
               isCenterOpen={isCenterOpen}
@@ -209,6 +240,36 @@ export const InvoiceCreatePanel = () => {
   return (
     <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
       <Flex h="100vh" overflow="hidden">
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
+          colorMode={colorMode}
+          dayTasks={() => ({})}
+          expandedDays={{}}
+          getCurrentDay={() => ''}
+          toggleSidebar={toggleSidebar}
+          handleDayClick={() => {}}
+          handleWeeklyTaskClick={() => {}}
+          toggleTaskCompleted={() => {}}
+          renderFileAttachmentIndicator={() => null}
+          // Shared content props
+          sharedTasks={[]}
+          sharedProjects={[]}
+          sharedTasksLoading={false}
+          sharedProjectsLoading={false}
+          sharedTasksError={null}
+          sharedProjectsError={null}
+          isSharedContentExpanded={false}
+          toggleSharedContentExpanded={() => {}}
+          onSharedTaskClick={() => {}}
+          onSharedProjectClick={() => {}}
+          refreshSharedContent={() => {}}
+          dismissSharedTasksError={() => {}}
+          // Navigation props
+          resetToAllTasks={resetToAllTasks}
+          isProUser={user?.userType === 'pro'}
+        />
+
         <Flex flex="1" direction="column">
           <TopBar
             colorMode={colorMode}
@@ -240,28 +301,13 @@ export const InvoiceCreatePanel = () => {
                 </HStack>
               </HStack>
 
-              <VStack spacing={4} align="stretch">
-                <Select
-                  placeholder="Select client"
-                  value={clientId}
-                  onChange={e => setClientId(e.target.value)}
-                  bg="gray.700"
-                  color="white"
-                  borderColor="gray.600"
-                >
+              <VStack spacing={2} align="stretch" mb={4}>
+                <Select placeholder="Select client" value={clientId} onChange={e => setClientId(e.target.value)} bg="gray.700" color="white">
                   {(clients || []).map(client => (
                     <option key={client._id} value={client._id}>{client.name}</option>
                   ))}
                 </Select>
-
-                <Select
-                  placeholder="Select project"
-                  value={projectId}
-                  onChange={e => setProjectId(e.target.value)}
-                  bg="gray.700"
-                  color="white"
-                  borderColor="gray.600"
-                >
+                <Select placeholder="Select project" value={projectId} onChange={e => setProjectId(e.target.value)} bg="gray.700" color="white">
                   {(projects || []).filter(p => {
                     // Handle both populated clientId object and string clientId
                     const projectClientId = p.clientId?._id || p.clientId;
@@ -270,121 +316,87 @@ export const InvoiceCreatePanel = () => {
                     <option key={project._id} value={project._id}>{project.name}</option>
                   ))}
                 </Select>
-
-                <Box>
-                  <HStack gap={2} mb={2}>
-                    <Text color="gray.300" fontSize="sm" w="180px">Task Name</Text>
-                    <Text color="gray.300" fontSize="sm" w="120px">Hours</Text>
-                    <Text color="gray.300" fontSize="sm" w="120px">Rate</Text>
-                    <Text color="gray.300" fontSize="sm" w="100px">Amount</Text>
+                <HStack gap={2} mb={1}>
+                  <Text color="gray.300" fontSize="sm" w="180px">Task Name</Text>
+                  <Text color="gray.300" fontSize="sm" w="120px">Hours</Text>
+                  <Text color="gray.300" fontSize="sm" w="120px">Rate</Text>
+                </HStack>
+                {lineItems.map((item, idx) => (
+                  <HStack key={idx} gap={2} mb={2} wrap="wrap">
+                    <Input
+                      placeholder="Description"
+                      value={item.description}
+                      onChange={e => updateLineItem(idx, 'description', e.target.value)}
+                      bg="gray.700" color="white"
+                      w="180px"
+                    />
+                    <Input
+                      value={item.hours || 0}
+                      onChange={e => updateLineItem(idx, 'hours', Number(e.target.value))}
+                      placeholder="Hours"
+                      bg="gray.700"
+                      color="white"
+                      w="120px"
+                    />
+                    <NumberInput value={item.rate} min={0} onChange={val => updateLineItem(idx, 'rate', Number(val))} w="120px">
+                      <NumberInputField placeholder="Rate" />
+                    </NumberInput>
+                    <Button onClick={() => removeLineItem(idx)} colorScheme="red" size="sm">Remove</Button>
                   </HStack>
-
-                  <VStack spacing={2} align="stretch">
-                    {lineItems.map((item, idx) => (
-                      <HStack key={idx} gap={2}>
-                        <Input
-                          value={item.description}
-                          onChange={e => updateLineItem(idx, 'description', e.target.value)}
-                          placeholder="Task description"
-                          bg="gray.700"
-                          color="white"
-                          borderColor="gray.600"
-                          w="180px"
-                        />
-                        <NumberInput
-                          value={item.hours}
-                          onChange={(value) => updateLineItem(idx, 'hours', parseFloat(value) || 0)}
-                          min={0}
-                          bg="gray.700"
-                          borderColor="gray.600"
-                          w="120px"
-                        >
-                          <NumberInputField color="white" />
-                        </NumberInput>
-                        <NumberInput
-                          value={item.rate}
-                          onChange={(value) => updateLineItem(idx, 'rate', parseFloat(value) || 0)}
-                          min={0}
-                          bg="gray.700"
-                          borderColor="gray.600"
-                          w="120px"
-                        >
-                          <NumberInputField color="white" />
-                        </NumberInput>
-                        <Text color="gray.300" w="100px">${(item.hours * item.rate).toFixed(2)}</Text>
-                        <Button
-                          size="sm"
-                          colorScheme="red"
-                          onClick={() => removeLineItem(idx)}
-                        >
-                          Remove
-                        </Button>
-                      </HStack>
-                    ))}
-
-                    <HStack gap={2}>
-                      <Input
-                        value={newItem.description}
-                        onChange={e => setNewItem({ ...newItem, description: e.target.value })}
-                        placeholder="New task description"
-                        bg="gray.700"
-                        color="white"
-                        borderColor="gray.600"
-                        w="180px"
-                      />
-                      <NumberInput
-                        value={newItem.hours}
-                        onChange={(value) => setNewItem({ ...newItem, hours: parseFloat(value) || 0 })}
-                        min={0}
-                        bg="gray.700"
-                        borderColor="gray.600"
-                        w="120px"
-                      >
-                        <NumberInputField color="white" />
-                      </NumberInput>
-                      <NumberInput
-                        value={newItem.rate}
-                        onChange={(value) => setNewItem({ ...newItem, rate: parseFloat(value) || 0 })}
-                        min={0}
-                        bg="gray.700"
-                        borderColor="gray.600"
-                        w="120px"
-                      >
-                        <NumberInputField color="white" />
-                      </NumberInput>
-                      <Text color="gray.300" w="100px">${(newItem.hours * newItem.rate).toFixed(2)}</Text>
-                      <Button
-                        size="sm"
-                        colorScheme="green"
-                        onClick={addLineItem}
-                        isDisabled={!newItem.description.trim()}
-                      >
-                        Add
-                      </Button>
-                    </HStack>
-                  </VStack>
-                </Box>
-
-                <Box p={4} bg="gray.700" borderRadius="md">
-                  <Text color="white" fontSize="lg" fontWeight="bold">
-                    Total: ${total.toFixed(2)}
-                  </Text>
-                </Box>
-
-                <Button
-                  colorScheme="blue"
-                  onClick={handleSubmit}
-                  isLoading={submitting}
-                  isDisabled={!clientId || !projectId || lineItems.length === 0}
-                  size="lg"
-                >
+                ))}
+                <Flex gap={2} mb={2} wrap="wrap">
+                  <Input
+                    placeholder="Description"
+                    value={newItem.description}
+                    onChange={e => setNewItem({ ...newItem, description: e.target.value })}
+                    bg="gray.700" color="white"
+                    w="180px"
+                  />
+                  <Input
+                    value={newItem.hours}
+                    onChange={e => setNewItem({ ...newItem, hours: Number(e.target.value) })}
+                    placeholder="Hours"
+                    bg="gray.700"
+                    color="white"
+                    w="120px"
+                  />
+                  <NumberInput value={newItem.rate} min={0} onChange={val => setNewItem({ ...newItem, rate: Number(val) })} w="120px">
+                    <NumberInputField placeholder="Rate" />
+                  </NumberInput>
+                  <Button onClick={addLineItem} colorScheme="blue">Add</Button>
+                </Flex>
+                <Box fontWeight="bold" mb={2} color="white">Total: ${total.toFixed(2)}</Box>
+                <Button onClick={handleSubmit} colorScheme="green" isLoading={submitting}>
                   Create Invoice
                 </Button>
               </VStack>
             </Box>
           </Box>
+
+          <BottomNav
+            isSidebarOpen={isSidebarOpen}
+            isCenterOpen={isCenterOpen}
+            isAddMode={false}
+            isFooterOpen={isFeedbackModalOpen}
+            toggleSidebar={toggleSidebar}
+            toggleCenter={toggleCenter}
+            handleAddTask={() => {}}
+            handleAddProject={() => {}}
+            handleAddClient={() => {}}
+            toggleDetail={() => {}}
+            toggleFooter={openFeedbackModal}
+            handleMobileTaskEdit={() => {}}
+            isMobileTaskEditOpen={false}
+          />
         </Flex>
       </Flex>
+
+      <MobileBackdropOverlay
+        isOpen={isSidebarOpen && isMobile}
+        onClose={toggleSidebar}
+      />
+
+      <FeedbackModal isOpen={isFeedbackModalOpen} onClose={closeFeedbackModal} />
     </Box>
   );
 };

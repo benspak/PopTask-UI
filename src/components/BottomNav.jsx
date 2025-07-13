@@ -1,17 +1,31 @@
 import React from 'react';
 import { Flex, IconButton, Tooltip } from '@chakra-ui/react';
-import { CalendarIcon, StarIcon, AddIcon, CloseIcon, ChatIcon } from '@chakra-ui/icons';
+import { HamburgerIcon, AddIcon, CloseIcon, ChatIcon } from '@chakra-ui/icons';
+import { useLocation } from 'react-router-dom';
 
 export default function BottomNav({
   isSidebarOpen,
-  isCenterOpen,
   isAddMode,
   isFooterOpen,
   toggleSidebar,
-  toggleCenter,
   handleAddTask,
+  handleAddProject,
+  handleAddClient,
   toggleFooter
 }) {
+  const location = useLocation();
+  const isOnProjectsPage = location.pathname === '/projects';
+  const isOnClientsPage = location.pathname === '/clients';
+  const isOnInvoicesPage = location.pathname === '/invoices';
+  const isOnCompaniesPage = location.pathname === '/companies';
+  const isOnDashboard = location.pathname === '/dashboard';
+
+  // Determine the appropriate handler and labels based on current route
+  const handleAddAction = isOnProjectsPage ? handleAddProject : isOnClientsPage ? handleAddClient : isOnCompaniesPage ? handleAddClient : isOnInvoicesPage ? handleAddTask : handleAddTask;
+  const addButtonLabel = isOnProjectsPage ? "Add New Project" : isOnClientsPage ? "Add New Client" : isOnCompaniesPage ? "Add New Company" : isOnInvoicesPage ? "Create Invoice" : "Add New Task";
+  const closeButtonLabel = isOnProjectsPage ? "Close Add Project" : isOnClientsPage ? "Close Add Client" : isOnCompaniesPage ? "Close Add Company" : isOnInvoicesPage ? "Close Create Invoice" : "Close Add Task";
+  const ariaLabel = isAddMode ? (isOnProjectsPage ? "Close Add Project" : isOnClientsPage ? "Close Add Client" : isOnCompaniesPage ? "Close Add Company" : isOnInvoicesPage ? "Close Create Invoice" : "Close Add Task") : (isOnProjectsPage ? "Add New Project" : isOnClientsPage ? "Add New Client" : isOnCompaniesPage ? "Add New Company" : isOnInvoicesPage ? "Create Invoice" : "Add New Task");
+
   return (
     <Flex
       position="fixed"
@@ -35,7 +49,7 @@ export default function BottomNav({
         gap={{ base: 4, md: 2 }}
       >
         <IconButton
-          icon={<CalendarIcon />}
+          icon={<HamburgerIcon />}
           aria-label="Toggle Sidebar"
           onClick={toggleSidebar}
           size={{ base: "md", md: "sm" }}
@@ -44,32 +58,24 @@ export default function BottomNav({
           borderRadius="full"
           _hover={{ bg: 'gray.700' }}
         />
-        <IconButton
-          icon={<StarIcon />}
-          aria-label="Toggle Projects Panel"
-          onClick={toggleCenter}
-          size={{ base: "md", md: "sm" }}
-          colorScheme={isCenterOpen ? "blue" : "gray"}
-          variant="solid"
-          borderRadius="full"
-          _hover={{ bg: 'gray.700' }}
-        />
-        <Tooltip
-          label={isAddMode ? "Close Add Task" : "Add New Task"}
-          placement="top"
-          hasArrow
-        >
-          <IconButton
-            icon={isAddMode ? <CloseIcon /> : <AddIcon />}
-            aria-label={isAddMode ? "Close Add Task" : "Add New Task"}
-            onClick={handleAddTask}
-            size={{ base: "md", md: "sm" }}
-            colorScheme={isAddMode ? "red" : "green"}
-            variant="solid"
-            borderRadius="full"
-            _hover={{ bg: isAddMode ? 'red.600' : 'green.600' }}
-          />
-        </Tooltip>
+        {!isOnDashboard && (
+          <Tooltip
+            label={isAddMode ? closeButtonLabel : addButtonLabel}
+            placement="top"
+            hasArrow
+          >
+            <IconButton
+              icon={isAddMode ? <CloseIcon /> : <AddIcon />}
+              aria-label={ariaLabel}
+              onClick={handleAddAction}
+              size={{ base: "md", md: "sm" }}
+              colorScheme={isAddMode ? "red" : "green"}
+              variant="solid"
+              borderRadius="full"
+              _hover={{ bg: isAddMode ? 'red.600' : 'green.600' }}
+            />
+          </Tooltip>
+        )}
         <Tooltip
           label="Send Feedback"
           placement="top"

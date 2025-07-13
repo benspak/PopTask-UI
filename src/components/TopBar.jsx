@@ -139,84 +139,12 @@ const TopBar = ({
       <Flex justify="space-between" align="center" p={{ base: 2, md: 4 }}>
         {/* Left Section */}
         <Flex align="center" gap={{ base: 2, md: 3 }} flex="1">
-                    <Flex align="center" mr={{ base: 2, md: 4 }}>
+          <Flex align="center" mr={{ base: 2, md: 4 }}>
             <PopTaskLogo
               size={{ base: 120, md: 140 }}
               colorMode={colorMode}
             />
           </Flex>
-
-          {/* Desktop Navigation */}
-          {!isMobile && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={resetToAllTasks}
-                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                leftIcon={<CheckCircleIcon />}
-              >
-                Tasks
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/clients'}
-                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                leftIcon={<AtSignIcon />}
-              >
-                Clients
-              </Button>
-              {/* Only show Teams for pro users */}
-              {isProUser && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => window.location.href = '/teams'}
-                  color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                  leftIcon={<ViewIcon />}
-                >
-                  Teams
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/invoices'}
-                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                leftIcon={<DownloadIcon />}
-              >
-                Invoices
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/companies'}
-                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                leftIcon={<AtSignIcon />}
-              >
-                Companies
-              </Button>
-              {/* Only show Templates for pro users */}
-              {isProUser && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => window.location.href = '/proposal-templates'}
-                  color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
-                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
-                  leftIcon={<EditIcon />}
-                >
-                  Templates
-                </Button>
-              )}
-            </>
-          )}
         </Flex>
 
 

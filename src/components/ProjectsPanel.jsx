@@ -80,10 +80,8 @@ const ProjectsPanel = ({
         right={{ base: 0, md: 'auto' }}
         bottom={{ base: 0, md: 'auto' }}
         zIndex={{ base: 70, md: 'auto' }}
-        bg={colorMode === 'light' ? 'white' : 'gray.800'}
         p={4}
         overflowY={{ base: 'auto', md: 'visible' }}
-        boxShadow={{ base: 'lg', md: 'none' }}
         display={{ base: 'block', md: 'none' }}
       >
         <Flex justify="space-between" align="center" mb={4}>
@@ -222,7 +220,7 @@ const ProjectsPanel = ({
 
     {/* Projects Section - Desktop view (above tasks) */}
     <Collapse in={isCenterOpen} animateOpacity>
-      <Box mb={2} display={{ base: 'none', md: 'block' }} p={8}>
+      <Box mb={2} display={{ base: 'none', md: 'block' }}>
         <Text fontSize="sm" mb={3} color="gray.400" fontWeight="medium">Projects</Text>
 
         {/* Project Limit Alert - Show when user has only 1 project remaining */}

@@ -65,8 +65,7 @@ const EmailVerification = () => {
             isClosable: true,
           });
         }
-      } catch (error) {
-        console.error('Email verification error:', error);
+          } catch (error) {
         setVerificationStatus('error');
         setErrorMessage(
           error.response?.data?.message ||

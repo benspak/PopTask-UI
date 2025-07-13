@@ -67,6 +67,8 @@ import {
 import apiService from '../services/api';
 import ProposalTemplateEditor from './ProposalTemplateEditor';
 import ProposalTemplateViewer from './ProposalTemplateViewer';
+import BottomNav from './BottomNav';
+import FeedbackModal from './FeedbackModal';
 
 const ProposalTemplateList = () => {
   const [templates, setTemplates] = useState([]);
@@ -82,6 +84,13 @@ const ProposalTemplateList = () => {
   const toast = useToast();
   const { isOpen: isEditorOpen, onOpen: onEditorOpen, onClose: onEditorClose } = useDisclosure();
   const { isOpen: isViewerOpen, onOpen: onViewerOpen, onClose: onViewerClose } = useDisclosure();
+
+  // TopBar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCenterOpen, setIsCenterOpen] = useState(false);
+
+  // Feedback modal state
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -122,7 +131,6 @@ const ProposalTemplateList = () => {
         setTotalPages(response.pagination.pages);
       }
     } catch (error) {
-      console.error('Failed to load templates:', error);
       setError('Failed to load templates');
       toast({
         title: 'Error',
@@ -165,7 +173,6 @@ const ProposalTemplateList = () => {
         loadTemplates();
       }
     } catch (error) {
-      console.error('Failed to delete template:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete template',
@@ -190,7 +197,6 @@ const ProposalTemplateList = () => {
         loadTemplates();
       }
     } catch (error) {
-      console.error('Failed to duplicate template:', error);
       toast({
         title: 'Error',
         description: 'Failed to duplicate template',
@@ -471,6 +477,24 @@ const ProposalTemplateList = () => {
         onClose={onViewerClose}
         template={selectedTemplate}
       />
+
+      <BottomNav
+        isSidebarOpen={isSidebarOpen}
+        isCenterOpen={isCenterOpen}
+        isAddMode={false}
+        isFooterOpen={isFeedbackModalOpen}
+        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        toggleCenter={() => setIsCenterOpen(!isCenterOpen)}
+        handleAddTask={() => {}}
+        handleAddProject={() => {}}
+        handleAddClient={() => {}}
+        toggleDetail={() => {}}
+        toggleFooter={openFeedbackModal}
+        handleMobileTaskEdit={() => {}}
+        isMobileTaskEditOpen={false}
+      />
+
+      <FeedbackModal isOpen={isFeedbackModalOpen} onClose={closeFeedbackModal} />
     </Box>
   );
 };

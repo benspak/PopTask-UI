@@ -73,8 +73,7 @@ export const InvoiceEditPanel = () => {
           setLineItems(invoiceData.lineItems || []);
           setTotal(invoiceData.total || 0);
         }
-      } catch (error) {
-        console.error('Error loading data:', error);
+          } catch (error) {
         setError('Failed to load data. Please try again.');
         toast({ title: 'Failed to load data', status: 'error' });
       } finally {
@@ -134,7 +133,6 @@ export const InvoiceEditPanel = () => {
       toast({ title: 'Invoice updated', status: 'success' });
       navigate(`/invoices/${invoiceId}`);
     } catch (error) {
-      console.error('Error updating invoice:', error);
       toast({ title: 'Failed to update invoice', status: 'error' });
     } finally {
       setSubmitting(false);
@@ -148,7 +146,6 @@ export const InvoiceEditPanel = () => {
       toast({ title: 'Invoice deleted', status: 'success' });
       navigate('/invoices');
     } catch (error) {
-      console.error('Error deleting invoice:', error);
       toast({ title: 'Failed to delete invoice', status: 'error' });
     } finally {
       setDeleting(false);

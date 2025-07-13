@@ -10,6 +10,7 @@ import ForgotPassword from './views/ForgotPassword';
 import ResetPassword from './views/ResetPassword';
 import EmailVerification from './components/EmailVerification';
 import Dashboard from './components/Dashboard';
+import TaskDashboard from './components/TaskDashboard';
 import SharedView from './components/SharedView';
 import Homepage from './components/Homepage';
 import { Spinner, Center, VStack, Text, HStack, Link, Box } from '@chakra-ui/react';
@@ -90,6 +91,11 @@ export default function App() {
       <Route path="/dashboard" element={
         <AuthGuard>
           <Dashboard />
+        </AuthGuard>
+      } />
+      <Route path="/tasks" element={
+        <AuthGuard>
+          <TaskDashboard />
         </AuthGuard>
       } />
       <Route path="/clients" element={

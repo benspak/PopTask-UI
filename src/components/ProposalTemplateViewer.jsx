@@ -122,7 +122,6 @@ const ProposalTemplateViewer = ({ isOpen, onClose, template }) => {
         });
       }
     } catch (error) {
-      console.error('Failed to generate proposal:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to generate proposal',
@@ -146,7 +145,6 @@ const ProposalTemplateViewer = ({ isOpen, onClose, template }) => {
         isClosable: true,
       });
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
       toast({
         title: 'Error',
         description: 'Failed to copy to clipboard',
