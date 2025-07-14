@@ -198,43 +198,35 @@ const CompanyList = () => {
   };
 
   const getSizeColor = (size) => {
-    const colors = {
+    const sizeColors = {
       '1-10': 'green',
       '11-50': 'blue',
       '51-200': 'purple',
       '201-500': 'orange',
       '500+': 'red'
     };
-    return colors[size] || 'gray';
+    return sizeColors[size] || 'gray';
   };
 
-  const industries = [
-    'Technology',
-    'Healthcare',
-    'Finance',
-    'Education',
-    'Retail',
-    'Manufacturing',
-    'Consulting',
-    'Real Estate',
-    'Entertainment',
-    'Non-profit',
-    'Other'
-  ];
+  // Check if current user owns the company
+  const isCompanyOwner = (company) => {
+    if (!user || !company.createdBy) return false;
+    return company.createdBy === user._id || company.createdBy === user._id.toString();
+  };
 
-  const sizes = ['1-10', '11-50', '51-200', '201-500', '500+'];
-
-  // TopBar handlers
+  // Toggle functions with localStorage persistence
   const toggleSidebar = () => {
     const newState = !isSidebarOpen;
     setIsSidebarOpen(newState);
     localStorage.setItem('sidebarOpen', JSON.stringify(newState));
   };
+
   const toggleCenter = () => {
     const newState = !isCenterOpen;
     setIsCenterOpen(newState);
     localStorage.setItem('centerOpen', JSON.stringify(newState));
   };
+
   const handleTopBarSearch = (value) => setSearchQuery(value);
   const resetToAllTasks = () => navigate('/dashboard');
   const handleLogout = async () => {
@@ -242,59 +234,83 @@ const CompanyList = () => {
       await logout();
       navigate('/login');
     } catch (error) {
-      toast({ title: 'Logout failed', status: 'error' });
+      // Logout error handled silently
     }
   };
 
   return (
-    <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
-      <Flex h="100vh" overflow="hidden">
+    <Box minH="100vh" bg={bgColor}>
+      <Flex>
+        {/* Sidebar */}
         <Sidebar
-          isSidebarOpen={isSidebarOpen}
-          isCenterOpen={isCenterOpen}
+          isOpen={isSidebarOpen}
+          onToggle={toggleSidebar}
+          user={user}
+          onLogout={handleLogout}
           colorMode={colorMode}
-          dayTasks={() => ({})}
-          expandedDays={{}}
-          getCurrentDay={() => 'Monday'}
-          toggleSidebar={toggleSidebar}
-          handleDayClick={() => {}}
-          handleWeeklyTaskClick={() => {}}
-          toggleTaskCompleted={() => {}}
-          renderFileAttachmentIndicator={() => null}
-          sharedTasks={[]}
-          sharedProjects={[]}
-          sharedTasksLoading={false}
-          sharedProjectsLoading={false}
-          sharedTasksError={null}
-          sharedProjectsError={null}
-          isSharedContentExpanded={false}
-          toggleSharedContentExpanded={() => {}}
-          onSharedTaskClick={() => {}}
-          onSharedProjectClick={() => {}}
-          refreshSharedContent={() => {}}
-          dismissSharedTasksError={() => {}}
-          resetToAllTasks={() => navigate('/dashboard')}
-          isProUser={user?.userType === 'pro'}
+          toggleColorMode={toggleColorMode}
         />
 
+        {/* Main Content */}
         <Flex flex="1" direction="column">
+          {/* TopBar */}
           <TopBar
-            colorMode={colorMode}
-            toggleColorMode={toggleColorMode}
-            isOnline={true}
-            currentView="companies"
-            searchTerm={searchQuery}
-            handleSearch={handleTopBarSearch}
-            resetToAllTasks={resetToAllTasks}
             isSidebarOpen={isSidebarOpen}
             isCenterOpen={isCenterOpen}
+            onToggleSidebar={toggleSidebar}
+            onToggleCenter={toggleCenter}
+            searchQuery={searchQuery}
+            onSearchChange={handleTopBarSearch}
+            onResetToAllTasks={resetToAllTasks}
             onLogout={handleLogout}
+            user={user}
+            colorMode={colorMode}
+            toggleColorMode={toggleColorMode}
           />
 
-          <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
-            <Box maxW="4xl" mx="auto">
+          {/* Main Content Area */}
+          <Box flex="1" p={4}>
+            <Box maxW="7xl" mx="auto">
+              {/* Header */}
+              <Flex justify="space-between" align="center" mb={6}>
+                <VStack align="start" spacing={1}>
+                  <Heading size="lg" color={useColorModeValue('gray.800', 'white')}>
+                    Companies
+                  </Heading>
+                  <Text color={useColorModeValue('gray.600', 'gray.400')}>
+                    Manage your companies and discover verified companies
+                  </Text>
+                </VStack>
+                <Button
+                  leftIcon={<AddIcon />}
+                  colorScheme="blue"
+                  onClick={onCreateOpen}
+                >
+                  Add Company
+                </Button>
+              </Flex>
+
+              {/* Info Alert */}
+              <Alert status="info" mb={6}>
+                <AlertIcon />
+                <VStack align="start" spacing={1}>
+                  <Text fontWeight="semibold">
+                    Company Permissions
+                  </Text>
+                  <Text fontSize="sm">
+                    • You can edit and delete only your own companies (marked with "OWNED" badge)
+                  </Text>
+                  <Text fontSize="sm">
+                    • Verified companies from other users are shown for reference (marked with "OTHER" badge)
+                  </Text>
+                  <Text fontSize="sm">
+                    • All users can view public pages of verified companies
+                  </Text>
+                </VStack>
+              </Alert>
+
               {/* Search and Filters */}
-              <Card bg={cardBg} mb={4}>
+              <Card mb={6} bg={cardBg}>
                 <CardBody>
                   <VStack spacing={4}>
                     <HStack w="full" spacing={4}>
@@ -304,84 +320,67 @@ const CompanyList = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                       />
-                      <IconButton
-                        icon={<SearchIcon />}
-                        onClick={handleSearch}
-                        colorScheme="blue"
-                        aria-label="Search"
-                      />
+                      <Button colorScheme="blue" onClick={handleSearch}>
+                        Search
+                      </Button>
                     </HStack>
-
                     <HStack w="full" spacing={4}>
                       <Select
-                        placeholder="Filter by industry"
+                        placeholder="All Industries"
                         value={industryFilter}
                         onChange={(e) => setIndustryFilter(e.target.value)}
                       >
-                        {industries.map(industry => (
-                          <option key={industry} value={industry}>
-                            {industry}
-                          </option>
-                        ))}
+                        <option value="Technology">Technology</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Education">Education</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Consulting">Consulting</option>
+                        <option value="Real Estate">Real Estate</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Non-profit">Non-profit</option>
+                        <option value="Other">Other</option>
                       </Select>
-
                       <Select
-                        placeholder="Filter by size"
+                        placeholder="All Sizes"
                         value={sizeFilter}
                         onChange={(e) => setSizeFilter(e.target.value)}
                       >
-                        {sizes.map(size => (
-                          <option key={size} value={size}>
-                            {size} employees
-                          </option>
-                        ))}
+                        <option value="1-10">1-10 employees</option>
+                        <option value="11-50">11-50 employees</option>
+                        <option value="51-200">51-200 employees</option>
+                        <option value="201-500">201-500 employees</option>
+                        <option value="500+">500+ employees</option>
                       </Select>
-
-                      <Button
-                        onClick={handleSearch}
-                        colorScheme="blue"
-                        variant="outline"
-                      >
-                        Filter
-                      </Button>
                     </HStack>
                   </VStack>
                 </CardBody>
               </Card>
 
-              {/* Loading State */}
-              {loading && (
-                <Center py={8}>
-                  <Spinner size="lg" />
-                </Center>
-              )}
-
-              {/* Error State */}
-              {error && (
-                <Alert status="error" mb={4}>
-                  <AlertIcon />
-                  {error}
-                </Alert>
-              )}
-
               {/* Companies Grid */}
-              {!loading && companies.length > 0 && (
+              {loading ? (
+                <Center py={12}>
+                  <VStack spacing={4}>
+                    <Spinner size="xl" />
+                    <Text>Loading companies...</Text>
+                  </VStack>
+                </Center>
+              ) : companies.length > 0 ? (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                  {companies.map((company) => (
-                    <Card key={company._id} bg={cardBg} border="1px" borderColor={borderColor}>
-                      <CardHeader pb={2}>
-                        <Flex align="center" justify="space-between">
-                          <HStack spacing={3} align="center" flex="1">
-                            {company.logo && company.logo.dataUrl ? (
+                  {companies.map((company) => {
+                    const isOwner = isCompanyOwner(company);
+                    return (
+                      <Card key={company._id} bg={cardBg} border="1px solid" borderColor={borderColor}>
+                        <CardHeader pb={2}>
+                          <HStack spacing={3}>
+                            {company.logo?.dataUrl ? (
                               <Image
                                 src={company.logo.dataUrl}
-                                alt={`${company.name} logo`}
+                                alt={company.name}
                                 boxSize="40px"
-                                objectFit="contain"
                                 borderRadius="md"
-                                border="1px solid"
-                                borderColor="gray.200"
-                                fallbackSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAxMEMxNC40NzcgMTAgMTAgMTQuNDc3IDEwIDIwQzEwIDI1LjUyMyAxNC40NzcgMzAgMjAgMzBDMjUuNTIzIDMwIDMwIDI1LjUyMyAzMCAyMEMzMCAxNC40NzcgMjAgMTBaIiBmaWxsPSIjOUI5QkFCIi8+Cjwvc3ZnPgo="
+                                objectFit="cover"
                               />
                             ) : (
                               <Box
@@ -417,126 +416,140 @@ const CompanyList = () => {
                                     </Badge>
                                   </Tooltip>
                                 )}
+                                {/* Ownership indicator */}
+                                {isOwner ? (
+                                  <Tooltip label="Your Company">
+                                    <Badge colorScheme="blue" variant="solid">
+                                      <Text fontSize="xs">OWNED</Text>
+                                    </Badge>
+                                  </Tooltip>
+                                ) : (
+                                  <Tooltip label="Other User's Company">
+                                    <Badge colorScheme="gray" variant="outline">
+                                      <Text fontSize="xs">OTHER</Text>
+                                    </Badge>
+                                  </Tooltip>
+                                )}
                               </HStack>
                               {company.industry && (
-                                <Text fontSize="sm" color="gray.500" noOfLines={1}>
+                                <Badge colorScheme={getSizeColor(company.size)} variant="subtle" mb={1}>
                                   {company.industry}
-                                </Text>
+                                </Badge>
+                              )}
+                              {company.size && (
+                                <Badge colorScheme="gray" variant="subtle">
+                                  {company.size} employees
+                                </Badge>
                               )}
                             </Box>
                           </HStack>
-                        </Flex>
-                      </CardHeader>
+                        </CardHeader>
 
-                      <CardBody pt={0}>
-                        {company.description && (
-                          <Text fontSize="sm" color="gray.600" mb={3} noOfLines={2}>
-                            {company.description}
-                          </Text>
-                        )}
-
-                        <VStack spacing={2} align="stretch">
-                          {company.size && (
-                            <HStack spacing={2}>
-                              <Text fontSize="xs" color="gray.500" fontWeight="medium">
-                                Size:
+                        <CardBody pt={0}>
+                          <VStack spacing={3} align="stretch">
+                            {company.description && (
+                              <Text fontSize="sm" color="white" noOfLines={2}>
+                                {company.description}
                               </Text>
-                              <Badge colorScheme={getSizeColor(company.size)} variant="subtle" fontSize="xs">
-                                {company.size} employees
-                              </Badge>
-                            </HStack>
-                          )}
-
-                          {company.location && (company.location.city || company.location.country) && (
-                            <HStack spacing={2}>
-                              <Text fontSize="xs" color="gray.500" fontWeight="medium">
-                                Location:
-                              </Text>
-                              <Text fontSize="xs" color="gray.600">
-                                {[company.location.city, company.location.state, company.location.country].filter(Boolean).join(', ')}
-                              </Text>
-                            </HStack>
-                          )}
-
-                          {company.contact && company.contact.email && (
-                            <HStack spacing={2}>
-                              <EmailIcon boxSize={3} color="gray.400" />
-                              <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                                {company.contact.email}
-                              </Text>
-                            </HStack>
-                          )}
-
-                          {company.website && (
-                            <HStack spacing={2}>
-                              <ExternalLinkIcon boxSize={3} color="gray.400" />
-                              <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                                {company.website}
-                              </Text>
-                            </HStack>
-                          )}
-
-                          {company.founded && (
-                            <HStack spacing={2}>
-                              <CalendarIcon boxSize={3} color="gray.400" />
-                              <Text fontSize="xs" color="gray.600">
-                                Founded {company.founded}
-                              </Text>
-                            </HStack>
-                          )}
-                        </VStack>
-                      </CardBody>
-
-                      <CardFooter pt={0}>
-                        <Flex w="full" justify="space-between" align="center">
-                          <HStack spacing={2}>
-                            <IconButton
-                              size="sm"
-                              icon={<EditIcon />}
-                              onClick={() => handleEdit(company)}
-                              colorScheme="blue"
-                              variant="ghost"
-                              aria-label="Edit company"
-                            />
-                            <IconButton
-                              size="sm"
-                              icon={<DeleteIcon />}
-                              onClick={() => handleDeleteClick(company)}
-                              colorScheme="red"
-                              variant="ghost"
-                              aria-label="Delete company"
-                            />
-                            {!company.isVerified && (
-                              <IconButton
-                                size="sm"
-                                icon={<EmailIcon />}
-                                onClick={() => handleRequestVerification(company)}
-                                colorScheme="orange"
-                                variant="ghost"
-                                aria-label="Request verification"
-                              />
                             )}
-                          </HStack>
-                          {company.isVerified && generatePublicUrl(company) && (
-                            <Button
-                              size="sm"
-                              colorScheme="blue"
-                              variant="outline"
-                              leftIcon={<ViewIcon />}
-                              onClick={() => navigate(generatePublicUrl(company))}
-                            >
-                              View Public Page
-                            </Button>
-                          )}
-                        </Flex>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </SimpleGrid>
-              )}
 
-              {/* Empty State */}
-              {!loading && companies.length === 0 && (
+                            {company.location?.city && (
+                              <HStack spacing={2}>
+                                <AtSignIcon boxSize={3} color="gray.400" />
+                                <Text fontSize="xs" color="white" noOfLines={1}>
+                                  {[company.location.city, company.location.state, company.location.country]
+                                    .filter(Boolean)
+                                    .join(', ')}
+                                </Text>
+                              </HStack>
+                            )}
+
+                            {company.contact?.email && (
+                              <HStack spacing={2}>
+                                <EmailIcon boxSize={3} color="gray.400" />
+                                <Text fontSize="xs" color="white" noOfLines={1}>
+                                  {company.contact.email}
+                                </Text>
+                              </HStack>
+                            )}
+
+                            {company.website && (
+                              <HStack spacing={2}>
+                                <ExternalLinkIcon boxSize={3} color="gray.400" />
+                                <Text fontSize="xs" color="white" noOfLines={1}>
+                                  {company.website}
+                                </Text>
+                              </HStack>
+                            )}
+
+                            {company.founded && (
+                              <HStack spacing={2}>
+                                <CalendarIcon boxSize={3} color="gray.400" />
+                                <Text fontSize="xs" color="white">
+                                  Founded {company.founded}
+                                </Text>
+                              </HStack>
+                            )}
+                          </VStack>
+                        </CardBody>
+
+                        <CardFooter pt={0}>
+                          <Flex w="full" justify="space-between" align="center">
+                            <HStack spacing={2}>
+                              {/* Only show edit/delete buttons if user owns the company */}
+                              {isOwner ? (
+                                <>
+                                  <IconButton
+                                    size="sm"
+                                    icon={<EditIcon />}
+                                    onClick={() => handleEdit(company)}
+                                    colorScheme="blue"
+                                    variant="ghost"
+                                    aria-label="Edit company"
+                                  />
+                                  <IconButton
+                                    size="sm"
+                                    icon={<DeleteIcon />}
+                                    onClick={() => handleDeleteClick(company)}
+                                    colorScheme="red"
+                                    variant="ghost"
+                                    aria-label="Delete company"
+                                  />
+                                  {!company.isVerified && (
+                                    <IconButton
+                                      size="sm"
+                                      icon={<EmailIcon />}
+                                      onClick={() => handleRequestVerification(company)}
+                                      colorScheme="orange"
+                                      variant="ghost"
+                                      aria-label="Request verification"
+                                    />
+                                  )}
+                                </>
+                              ) : (
+                                <Text fontSize="xs" color="gray.500">
+                                  Read-only access
+                                </Text>
+                              )}
+                            </HStack>
+                            {company.isVerified && generatePublicUrl(company) && (
+                              <Button
+                                size="sm"
+                                colorScheme="blue"
+                                variant="outline"
+                                leftIcon={<ViewIcon />}
+                                onClick={() => navigate(generatePublicUrl(company))}
+                              >
+                                View Public Page
+                              </Button>
+                            )}
+                          </Flex>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </SimpleGrid>
+              ) : (
                 <Center py={12}>
                   <VStack spacing={4}>
                     <Text fontSize="lg" color="gray.500">

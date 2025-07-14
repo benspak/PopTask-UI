@@ -28,6 +28,7 @@ import {
   DownloadIcon,
   EditIcon,
   SettingsIcon,
+  ExternalLinkIcon,
 } from '@chakra-ui/icons';
 import { useLocation } from 'react-router-dom';
 import SharedContentPanel from './SharedContentPanel';
@@ -213,6 +214,21 @@ const Sidebar = ({
               >
                 Companies
               </Button>
+              {/* Only show Jobs for pro users */}
+              {isProUser && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.location.href = '/jobs/manage'}
+                  color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                  _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+                  leftIcon={<ExternalLinkIcon />}
+                  justifyContent="flex-start"
+                  w="full"
+                >
+                  Jobs
+                </Button>
+              )}
               {/* Only show Templates for pro users */}
               {isProUser && (
                 <Button

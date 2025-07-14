@@ -305,6 +305,7 @@ const Settings = () => {
       // Hide success message after 3 seconds
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
+      console.error('Settings update error:', error);
       toast({
         title: 'Update failed',
         description: error.message || 'Failed to update profile. Please try again.',

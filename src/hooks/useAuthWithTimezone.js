@@ -4,7 +4,7 @@ import { useTimezone } from '../contexts/TimezoneContext';
 import { isValidTimezone } from '../utils/timezone';
 
 export const useAuthWithTimezone = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { userTimezone, updateTimezone } = useTimezone();
 
   // Update timezone when user data becomes available
@@ -14,5 +14,5 @@ export const useAuthWithTimezone = () => {
     }
   }, [user?.timezone, updateTimezone]);
 
-  return { user, userTimezone, updateTimezone };
+  return { user, userTimezone, updateTimezone, refreshUser };
 };

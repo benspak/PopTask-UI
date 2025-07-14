@@ -271,7 +271,8 @@ export const AuthProvider = ({ children }) => {
         setUser(result.user);
       }
     } catch (error) {
-      // Error refreshing user
+      console.error('Error refreshing user:', error);
+      // Error refreshing user - don't throw to avoid breaking the UI
     }
   };
 

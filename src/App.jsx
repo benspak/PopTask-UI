@@ -27,6 +27,8 @@ import CompanyList from './components/CompanyList';
 import PublicCompanyDetail from './components/PublicCompanyDetail';
 import TeamList from './components/TeamList';
 import ProposalTemplateList from './components/ProposalTemplateList';
+import JobList from './components/JobList';
+import PublicJobBoard from './components/PublicJobBoard';
 
 export default function App() {
   // Wrap useAuth in a try-catch to handle any context errors
@@ -86,6 +88,8 @@ export default function App() {
       <Route path="/profile/:username" element={<PublicProfile />} />
       <Route path="/users/:username" element={<PublicProfile />} />
       <Route path="/company/:slug/:token" element={<PublicCompanyDetail />} />
+      <Route path="/jobs" element={<PublicJobBoard />} />
+      <Route path="/jobs/:slug" element={<PublicJobBoard />} />
 
       {/* Protected routes */}
       <Route path="/dashboard" element={
@@ -149,6 +153,13 @@ export default function App() {
         <AuthGuard>
           <ProGuard>
             <ProposalTemplateList />
+          </ProGuard>
+        </AuthGuard>
+      } />
+      <Route path="/jobs/manage" element={
+        <AuthGuard>
+          <ProGuard>
+            <JobList />
           </ProGuard>
         </AuthGuard>
       } />

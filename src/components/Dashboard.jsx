@@ -35,6 +35,7 @@ import {
   EditIcon,
   SettingsIcon,
   AddIcon,
+  ExternalLinkIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useTasks } from '../hooks/useTasks';
@@ -153,6 +154,13 @@ export default function Dashboard() {
       href: '/invoices',
       description: 'Generate an invoice'
     },
+    ...(user?.userType === 'pro' ? [{
+      title: 'Post Job',
+      icon: ExternalLinkIcon,
+      color: 'cyan',
+      href: '/jobs/manage',
+      description: 'Post a new job opening'
+    }] : []),
     {
       title: 'View Tasks',
       icon: CheckCircleIcon,

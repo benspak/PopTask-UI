@@ -19,12 +19,14 @@ export default function BottomNav({
   const isOnInvoicesPage = location.pathname === '/invoices';
   const isOnCompaniesPage = location.pathname === '/companies';
   const isOnDashboard = location.pathname === '/dashboard';
+  const isOnTeamsPage = location.pathname === '/teams';
+  const isOnJobsPage = location.pathname === '/jobs/manage';
 
   // Determine the appropriate handler and labels based on current route
-  const handleAddAction = isOnProjectsPage ? handleAddProject : isOnClientsPage ? handleAddClient : isOnCompaniesPage ? handleAddClient : isOnInvoicesPage ? handleAddTask : handleAddTask;
-  const addButtonLabel = isOnProjectsPage ? "Add New Project" : isOnClientsPage ? "Add New Client" : isOnCompaniesPage ? "Add New Company" : isOnInvoicesPage ? "Create Invoice" : "Add New Task";
-  const closeButtonLabel = isOnProjectsPage ? "Close Add Project" : isOnClientsPage ? "Close Add Client" : isOnCompaniesPage ? "Close Add Company" : isOnInvoicesPage ? "Close Create Invoice" : "Close Add Task";
-  const ariaLabel = isAddMode ? (isOnProjectsPage ? "Close Add Project" : isOnClientsPage ? "Close Add Client" : isOnCompaniesPage ? "Close Add Company" : isOnInvoicesPage ? "Close Create Invoice" : "Close Add Task") : (isOnProjectsPage ? "Add New Project" : isOnClientsPage ? "Add New Client" : isOnCompaniesPage ? "Add New Company" : isOnInvoicesPage ? "Create Invoice" : "Add New Task");
+  const handleAddAction = isOnProjectsPage ? handleAddProject : isOnClientsPage ? handleAddClient : isOnCompaniesPage ? handleAddClient : isOnInvoicesPage ? handleAddTask : isOnTeamsPage ? handleAddTask : isOnJobsPage ? handleAddTask : handleAddTask;
+  const addButtonLabel = isOnProjectsPage ? "Add New Project" : isOnClientsPage ? "Add New Client" : isOnCompaniesPage ? "Add New Company" : isOnInvoicesPage ? "Create Invoice" : isOnTeamsPage ? "Create Team" : isOnJobsPage ? "Post New Job" : "Add New Task";
+  const closeButtonLabel = isOnProjectsPage ? "Close Add Project" : isOnClientsPage ? "Close Add Client" : isOnCompaniesPage ? "Close Add Company" : isOnInvoicesPage ? "Close Create Invoice" : isOnTeamsPage ? "Close Create Team" : isOnJobsPage ? "Close Post Job" : "Close Add Task";
+  const ariaLabel = isAddMode ? (isOnProjectsPage ? "Close Add Project" : isOnClientsPage ? "Close Add Client" : isOnCompaniesPage ? "Close Add Company" : isOnInvoicesPage ? "Close Create Invoice" : isOnTeamsPage ? "Close Create Team" : isOnJobsPage ? "Close Post Job" : "Close Add Task") : (isOnProjectsPage ? "Add New Project" : isOnClientsPage ? "Add New Client" : isOnCompaniesPage ? "Add New Company" : isOnInvoicesPage ? "Create Invoice" : isOnTeamsPage ? "Create Team" : isOnJobsPage ? "Post New Job" : "Add New Task");
 
   return (
     <Flex

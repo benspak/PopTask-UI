@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
+import apiService from '../services/api';
 
 export const useCompanies = () => {
   const [companies, setCompanies] = useState([]);
@@ -27,7 +27,7 @@ export const useCompanies = () => {
         includeVerified: params.includeVerified !== false ? 'true' : 'false' // Default to true
       });
 
-      const response = await api.getCompanies({
+      const response = await apiService.getCompanies({
         page: params.page || 1,
         limit: params.limit || 10,
         search: params.search,
@@ -53,7 +53,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.createCompany(companyData);
+      const response = await apiService.createCompany(companyData);
 
       if (response.success) {
         setCompanies(prev => [response.data, ...prev]);
@@ -74,7 +74,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.updateCompany(id, companyData);
+      const response = await apiService.updateCompany(id, companyData);
 
       if (response.success) {
         setCompanies(prev =>
@@ -99,7 +99,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.deleteCompany(id);
+      const response = await apiService.deleteCompany(id);
 
       if (response.success) {
         setCompanies(prev => prev.filter(company => company._id !== id));
@@ -120,7 +120,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.requestCompanyVerification(id);
+      const response = await apiService.requestCompanyVerification(id);
 
       if (response.success) {
         return { success: true, message: response.message };
@@ -140,7 +140,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.generateCompanyPublicLink(id);
+      const response = await apiService.generateCompanyPublicLink(id);
 
       if (response.success) {
         return { success: true, data: response.data };
@@ -160,7 +160,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.getCompany(id);
+      const response = await apiService.getCompany(id);
 
       if (response.success) {
         return { success: true, data: response.data };
@@ -180,7 +180,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.getCompanyStats();
+      const response = await apiService.getCompanyStats();
 
       if (response.success) {
         return { success: true, data: response.data };
@@ -208,7 +208,7 @@ export const useCompanies = () => {
         ...(params.country && { country: params.country })
       });
 
-      const response = await api.getVerifiedCompanies({
+      const response = await apiService.getVerifiedCompanies({
         page: params.page || 1,
         limit: params.limit || 20,
         search: params.search,
@@ -238,7 +238,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.verifyCompany(token);
+      const response = await apiService.verifyCompany(token);
 
       if (response.success) {
         return { success: true, data: response.data };
@@ -258,7 +258,7 @@ export const useCompanies = () => {
     setError(null);
 
     try {
-      const response = await api.getPublicCompany(slug, token);
+      const response = await apiService.getPublicCompany(slug, token);
 
       if (response.success) {
         return { success: true, data: response.data };

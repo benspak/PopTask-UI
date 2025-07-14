@@ -882,6 +882,70 @@ class ApiService {
   async getTeamLimits() {
     return this.request('/teams/limits');
   }
+
+  // Jobs methods
+  async getJobs(filters = {}) {
+    const queryString = this.buildQueryString(filters);
+    return this.request(`/jobs${queryString}`);
+  }
+
+  async getPublicJobs(filters = {}) {
+    const queryString = this.buildQueryString(filters);
+    return this.request(`/jobs/public${queryString}`);
+  }
+
+  async getJob(jobId) {
+    return this.request(`/jobs/${jobId}`);
+  }
+
+  async getPublicJob(slug) {
+    return this.request(`/jobs/public/${slug}`);
+  }
+
+  async createJob(jobData) {
+    return this.request('/jobs', {
+      method: 'POST',
+      body: JSON.stringify(jobData)
+    });
+  }
+
+  async updateJob(jobId, jobData) {
+    return this.request(`/jobs/${jobId}`, {
+      method: 'PUT',
+      body: JSON.stringify(jobData)
+    });
+  }
+
+  async updateJobStatus(jobId, status) {
+    return this.request(`/jobs/${jobId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+  }
+
+  async deleteJob(jobId) {
+    return this.request(`/jobs/${jobId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async applyForJob(jobId, applicationData) {
+    return this.request(`/jobs/${jobId}/apply`, {
+      method: 'POST',
+      body: JSON.stringify(applicationData)
+    });
+  }
+
+  async getJobApplications(jobId) {
+    return this.request(`/jobs/${jobId}/applications`);
+  }
+
+  async updateJobApplication(jobId, applicationId, status) {
+    return this.request(`/jobs/${jobId}/applications/${applicationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+  }
 }
 
 // Create and export a singleton instance
