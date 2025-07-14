@@ -38,10 +38,7 @@ import {
   ExternalLinkIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
-import { useTasks } from '../hooks/useTasks';
-import { useProjects } from '../hooks/useProjects';
-import { useClients } from '../hooks/useClients';
-import { useCompanies } from '../hooks/useCompanies';
+import { useDashboardData } from '../hooks/useDashboardData';
 import TopBar from './TopBar';
 import BottomNav from './BottomNav';
 import Sidebar from './Sidebar';
@@ -91,29 +88,20 @@ export default function Dashboard() {
     }
   };
 
+  // Use optimized dashboard data hook
   const {
     tasks: backendTasks,
-    loading: tasksLoading,
-    error: tasksError,
-  } = useTasks();
-
-  const {
     projects,
-    loading: projectsLoading,
-    error: projectsError,
-  } = useProjects();
-
-  const {
+    sharedTasks,
+    sharedProjects,
     clients,
-    loading: clientsLoading,
-    error: clientsError,
-  } = useClients();
-
-  const {
     companies,
-    loading: companiesLoading,
-    error: companiesError,
-  } = useCompanies();
+    loading: dashboardLoading,
+    error: dashboardError,
+    isOffline,
+    dismissError,
+    refreshData
+  } = useDashboardData();
 
   // Calculate dashboard stats
   const totalTasks = backendTasks?.length || 0;
@@ -194,18 +182,18 @@ export default function Dashboard() {
           handleWeeklyTaskClick={() => {}}
           toggleTaskCompleted={() => {}}
           renderFileAttachmentIndicator={() => null}
-          sharedTasks={[]}
-          sharedProjects={[]}
-          sharedTasksLoading={false}
-          sharedProjectsLoading={false}
-          sharedTasksError={null}
-          sharedProjectsError={null}
+          sharedTasks={sharedTasks}
+          sharedProjects={sharedProjects}
+          sharedTasksLoading={dashboardLoading}
+          sharedProjectsLoading={dashboardLoading}
+          sharedTasksError={dashboardError}
+          sharedProjectsError={dashboardError}
           isSharedContentExpanded={false}
           toggleSharedContentExpanded={() => {}}
           onSharedTaskClick={() => {}}
           onSharedProjectClick={() => {}}
-          refreshSharedContent={() => {}}
-          dismissSharedTasksError={() => {}}
+          refreshSharedContent={refreshData}
+          dismissSharedTasksError={dismissError}
           resetToAllTasks={() => window.location.href = '/tasks'}
           isProUser={user?.userType === 'pro'}
         />
@@ -330,7 +318,7 @@ export default function Dashboard() {
                 </Heading>
                 <Card>
                   <CardBody>
-                    {tasksLoading ? (
+                    {dashboardLoading ? (
                       <Flex justify="center" p={4}>
                         <Spinner />
                       </Flex>

@@ -69,6 +69,8 @@ class ApiService {
 
   // Start periodic online status check
   startPeriodicOnlineCheck() {
+    const interval = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+
     this.onlineCheckInterval = setInterval(async () => {
       const wasOnline = this.isOnline;
       const isNowOnline = await this.checkServerConnection();
@@ -81,7 +83,7 @@ class ApiService {
           OfflineNotifications.notifyGoingOffline();
         }
       }
-    }, 30000); // 30 seconds
+    }, interval);
   }
 
   // Stop periodic online status check
@@ -100,7 +102,7 @@ class ApiService {
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), import.meta.env.DEV ? 5000 : 3000); // 5s in dev, 3s in prod
 
       const response = await fetch(`${this.baseURL}/health`, {
         method: 'GET',
@@ -122,6 +124,17 @@ class ApiService {
     } catch (error) {
       return false;
     }
+  }
+
+  // Add batch request method for better performance
+  async batchRequests(requests) {
+    const promises = requests.map(req => req());
+    return Promise.allSettled(promises);
+  }
+
+  // Add method to get initial dashboard data in one call
+  async getDashboardData() {
+    return this.request('/dashboard/initial-data');
   }
 
   // Simple request method

@@ -5,10 +5,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
+    // Only enable PWA in production
+    ...(import.meta.env.PROD ? [VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true,
+        enabled: false, // Disable in development
         type: 'module'
       },
       workbox: {
@@ -18,25 +19,19 @@ export default defineConfig({
           '**/api/**',
           'sw.js',
           'workbox-*.js',
-          '**/node_modules/**'
+          '**/node_modules/**',
+          '**/dev-dist/**' // Add development build exclusion
         ],
-        // Runtime caching for API requests with better tab switching support
+        // Simplified runtime caching for production
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/localhost:3001\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
-              networkTimeoutSeconds: 5,
+              networkTimeoutSeconds: 3, // Reduced timeout
               cacheableResponse: {
                 statuses: [0, 200]
-              },
-              // Add background sync for better offline support
-              backgroundSync: {
-                name: 'api-queue',
-                options: {
-                  maxRetentionTime: 24 * 60 // 24 hours
-                }
               }
             }
           },
@@ -51,8 +46,8 @@ export default defineConfig({
             }
           }
         ],
-        // Improved service worker behavior for tab switching
-        skipWaiting: false, // Don't skip waiting to prevent disruption
+        // Simplified service worker behavior
+        skipWaiting: true,
         clientsClaim: true,
         // Handle fetch errors gracefully
         navigateFallback: '/index.html',
@@ -60,11 +55,7 @@ export default defineConfig({
         // Clean up old caches
         cleanupOutdatedCaches: true,
         // Disable precaching in development to avoid issues
-        disableDevLogs: true,
-        // Add custom service worker events for better tab management
-        additionalManifestEntries: [
-          { url: '/', revision: '1' }
-        ]
+        disableDevLogs: true
       },
       manifest: {
         name: 'Task Dashboard',
@@ -153,6 +144,20 @@ export default defineConfig({
           }
         ]
       }
-    })
+    })] : [])
   ],
+  // Add development optimizations
+  server: {
+    hmr: {
+      overlay: false // Disable error overlay for faster reloads
+    }
+  },
+  // Optimize build for development
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined // Disable chunk splitting in dev
+      }
+    }
+  }
 })

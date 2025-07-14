@@ -42,7 +42,8 @@ export const AuthProvider = ({ children }) => {
 
       // Throttle auth checks to prevent excessive API calls
       const now = Date.now();
-      if (now - lastAuthCheck.current < 30000) { // 30 second throttle
+      const throttleTime = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+      if (now - lastAuthCheck.current < throttleTime) {
         return;
       }
 
@@ -140,7 +141,7 @@ export const AuthProvider = ({ children }) => {
           }
           visibilityChangeTimeout.current = setTimeout(() => {
             checkAuthStatus();
-          }, 3000);
+          }, import.meta.env.DEV ? 5000 : 3000); // 5s in dev, 3s in prod
         }
       }
     };
@@ -150,14 +151,15 @@ export const AuthProvider = ({ children }) => {
       if (!document.hidden && !hasExplicitlyLoggedOut) {
         // Only check auth if we haven't checked recently
         const now = Date.now();
-        if (now - lastAuthCheck.current > 300000) { // 5 minute minimum interval
+        const minInterval = import.meta.env.DEV ? 600000 : 300000; // 10 min in dev, 5 min in prod
+        if (now - lastAuthCheck.current > minInterval) {
           // Debounce visibility changes
           if (visibilityChangeTimeout.current) {
             clearTimeout(visibilityChangeTimeout.current);
           }
           visibilityChangeTimeout.current = setTimeout(() => {
             checkAuthStatus();
-          }, 5000); // 5 second delay
+          }, import.meta.env.DEV ? 10000 : 5000); // 10s delay in dev, 5s in prod
         }
       }
     };
@@ -166,13 +168,14 @@ export const AuthProvider = ({ children }) => {
     const handlePageFocus = () => {
       if (!hasExplicitlyLoggedOut) {
         const now = Date.now();
-        if (now - lastAuthCheck.current > 600000) { // 10 minute minimum interval
+        const minInterval = import.meta.env.DEV ? 900000 : 600000; // 15 min in dev, 10 min in prod
+        if (now - lastAuthCheck.current > minInterval) {
           if (visibilityChangeTimeout.current) {
             clearTimeout(visibilityChangeTimeout.current);
           }
           visibilityChangeTimeout.current = setTimeout(() => {
             checkAuthStatus();
-          }, 2000);
+          }, import.meta.env.DEV ? 5000 : 2000); // 5s in dev, 2s in prod
         }
       }
     };

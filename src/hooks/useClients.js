@@ -11,9 +11,11 @@ export const useClients = () => {
   const lastLoadTime = useRef(0);
 
   const loadClients = useCallback(async (forceRefresh = false) => {
-    // Don't reload if data was loaded recently (within 30 seconds) unless forced
+    // Don't reload if data was loaded recently (within cache time) unless forced
     const now = Date.now();
-    if (!forceRefresh && hasLoadedClients.current && (now - lastLoadTime.current) < 30000) {
+    const cacheTime = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+
+    if (!forceRefresh && hasLoadedClients.current && (now - lastLoadTime.current) < cacheTime) {
       return;
     }
 

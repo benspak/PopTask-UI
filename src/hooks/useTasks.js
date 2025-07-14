@@ -25,9 +25,11 @@ export const useTasks = () => {
   }, []);
 
   const loadTasks = useCallback(async (filters = {}, forceRefresh = false) => {
-    // Don't reload if data was loaded recently (within 30 seconds) unless forced
+    // Don't reload if data was loaded recently (within cache time) unless forced
     const now = Date.now();
-    if (!forceRefresh && hasLoadedTasks.current && (now - lastLoadTime.current) < 30000) {
+    const cacheTime = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+
+    if (!forceRefresh && hasLoadedTasks.current && (now - lastLoadTime.current) < cacheTime) {
       return;
     }
 

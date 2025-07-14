@@ -15,25 +15,26 @@ const theme = extendTheme({
   },
 });
 
-// Production-ready service worker handling with improved tab switching support
-
-// Register PWA service worker with better error handling
-const updateSW = registerSW({
-  onNeedRefresh() {
-    // Show update notification with better UX
-    if (confirm('New content available. Reload to get the latest features?')) {
-      updateSW();
-    }
-  },
-  onOfflineReady() {
-    // App ready to work offline
-  },
-  onRegisterError(error) {
-    // Service worker registration error handled silently in production
-  },
-  // Add immediate update option for better UX
-  immediate: true
-});
+// Only register PWA service worker in production
+let updateSW = null;
+if (import.meta.env.PROD) {
+  updateSW = registerSW({
+    onNeedRefresh() {
+      // Show update notification with better UX
+      if (confirm('New content available. Reload to get the latest features?')) {
+        updateSW();
+      }
+    },
+    onOfflineReady() {
+      // App ready to work offline
+    },
+    onRegisterError(error) {
+      // Service worker registration error handled silently in production
+    },
+    // Add immediate update option for better UX
+    immediate: true
+  });
+}
 
 // Error boundary component to catch any provider errors
 class ErrorBoundary extends React.Component {
