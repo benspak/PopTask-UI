@@ -2,11 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     // Only enable PWA in production
-    ...(import.meta.env.PROD ? [VitePWA({
+    ...(mode === 'production' ? [VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
         enabled: false, // Disable in development
@@ -160,4 +160,4 @@ export default defineConfig({
       }
     }
   }
-})
+}))

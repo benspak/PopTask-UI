@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
-import { registerSW } from 'virtual:pwa-register';
 import { AuthProvider } from './contexts/AuthContext';
 import { TimezoneProvider } from './contexts/TimezoneContext';
 import App from './App.jsx';
@@ -15,26 +14,8 @@ const theme = extendTheme({
   },
 });
 
-// Only register PWA service worker in production
-let updateSW = null;
-if (import.meta.env.PROD) {
-  updateSW = registerSW({
-    onNeedRefresh() {
-      // Show update notification with better UX
-      if (confirm('New content available. Reload to get the latest features?')) {
-        updateSW();
-      }
-    },
-    onOfflineReady() {
-      // App ready to work offline
-    },
-    onRegisterError(error) {
-      // Service worker registration error handled silently in production
-    },
-    // Add immediate update option for better UX
-    immediate: true
-  });
-}
+// PWA registration is handled by the VitePWA plugin in production
+// No manual registration needed in main.jsx
 
 // Error boundary component to catch any provider errors
 class ErrorBoundary extends React.Component {
