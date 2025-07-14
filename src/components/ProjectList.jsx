@@ -313,7 +313,10 @@ export const ProjectList = () => {
   };
 
   const openEditModal = (project) => {
-    setEditingProject({ ...project });
+    setEditingProject({
+      ...project,
+      clientId: project.clientId?._id || project.clientId || ''
+    });
     setIsEditModalOpen(true);
   };
 
@@ -324,8 +327,16 @@ export const ProjectList = () => {
 
   const getClientName = (clientId) => {
     if (!clientId) return 'No client assigned';
+
+    // Handle both populated client object and client ID string
+    if (typeof clientId === 'object') {
+      // Prioritize company name over contact name
+      return clientId.company || clientId.name || 'Unknown client';
+    }
+
+    // If it's a string ID, try to find the client in the clients array
     const client = clients.find(c => c._id === clientId);
-    return client ? client.name : 'Unknown client';
+    return client ? (client.company || client.name) : 'Unknown client';
   };
 
   const resetToAllTasks = () => {
@@ -502,7 +513,7 @@ export const ProjectList = () => {
                             size="sm"
                             variant="outline"
                             leftIcon={<StarIcon />}
-                            onClick={() => navigate('/dashboard')}
+                            onClick={() => navigate('/tasks', { state: { selectedProject: project.name } })}
                             flex={1}
                           >
                             View Tasks
@@ -582,7 +593,7 @@ export const ProjectList = () => {
                 >
                   {clients.map((client) => (
                     <option key={client._id} value={client._id}>
-                      {client.name}
+                      {client.company || client.name} {client.company && client.name ? `(${client.name})` : ''}
                     </option>
                   ))}
                 </Select>
@@ -635,9 +646,10 @@ export const ProjectList = () => {
                   onChange={(e) => setEditingProject({ ...editingProject, clientId: e.target.value })}
                   placeholder="Select a client"
                 >
+                  <option value="">No client assigned</option>
                   {clients.map((client) => (
                     <option key={client._id} value={client._id}>
-                      {client.name}
+                      {client.company || client.name} {client.company && client.name ? `(${client.name})` : ''}
                     </option>
                   ))}
                 </Select>

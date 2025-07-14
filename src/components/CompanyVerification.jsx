@@ -236,7 +236,7 @@ const CompanyVerification = () => {
               <Divider />
 
               {/* Social Media Links */}
-              {(company.social.linkedin || company.social.twitter || company.social.facebook) && (
+              {(company.social.linkedin || company.social.twitter || company.social.facebook || company.social.github || company.social.x || company.social.instagram) && (
                 <Box>
                   <Text fontSize="lg" fontWeight="semibold" mb={3}>
                     Social Media
@@ -260,6 +260,27 @@ const CompanyVerification = () => {
                       <Link href={company.social.facebook} isExternal>
                         <Button size="sm" colorScheme="blue" variant="outline">
                           Facebook
+                        </Button>
+                      </Link>
+                    )}
+                    {company.social.github && (
+                      <Link href={company.social.github} isExternal>
+                        <Button size="sm" colorScheme="gray" variant="outline">
+                          GitHub
+                        </Button>
+                      </Link>
+                    )}
+                    {company.social.x && (
+                      <Link href={company.social.x} isExternal>
+                        <Button size="sm" colorScheme="blackAlpha" variant="outline">
+                          X (Twitter)
+                        </Button>
+                      </Link>
+                    )}
+                    {company.social.instagram && (
+                      <Link href={company.social.instagram} isExternal>
+                        <Button size="sm" colorScheme="pink" variant="outline">
+                          Instagram
                         </Button>
                       </Link>
                     )}

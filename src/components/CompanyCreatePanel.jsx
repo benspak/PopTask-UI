@@ -61,7 +61,10 @@ const CompanyCreatePanel = ({ isOpen, onClose, onSuccess }) => {
     social: {
       linkedin: '',
       twitter: '',
-      facebook: ''
+      facebook: '',
+      github: '',
+      x: '',
+      instagram: ''
     },
     logo: {
       dataUrl: '',
@@ -255,7 +258,10 @@ const CompanyCreatePanel = ({ isOpen, onClose, onSuccess }) => {
           social: {
             linkedin: '',
             twitter: '',
-            facebook: ''
+            facebook: '',
+            github: '',
+            x: '',
+            instagram: ''
           },
           logo: {
             dataUrl: '',
@@ -271,18 +277,49 @@ const CompanyCreatePanel = ({ isOpen, onClose, onSuccess }) => {
 
         onSuccess();
       } else {
+        // Handle specific error cases
+        let errorTitle = 'Error';
+        let errorDescription = result.error || 'Failed to create company';
+
+        if (result.error === 'Company name already exists for this user') {
+          errorTitle = 'Duplicate Company Name';
+          errorDescription = 'You already have a company with this name. Please choose a different name or add a suffix like "Inc.", "LLC", or "(New Location)".';
+          // Set the error on the name field
+          setErrors(prev => ({
+            ...prev,
+            name: 'Company name already exists'
+          }));
+        }
+
         toast({
-          title: 'Error',
-          description: result.error || 'Failed to create company',
+          title: errorTitle,
+          description: errorDescription,
           status: 'error',
           duration: 5000,
           isClosable: true,
         });
       }
     } catch (error) {
+      console.error('Company creation error:', error);
+
+      let errorTitle = 'Error';
+      let errorDescription = 'Failed to create company';
+
+      // Handle specific error cases from the API response
+      if (error.response?.data?.error === 'Company name already exists for this user') {
+        errorTitle = 'Duplicate Company Name';
+        errorDescription = 'You already have a company with this name. Please choose a different name or add a suffix like "Inc.", "LLC", or "(New Location)".';
+        setErrors(prev => ({
+          ...prev,
+          name: 'Company name already exists'
+        }));
+      } else if (error.response?.data?.error) {
+        errorDescription = error.response.data.error;
+      }
+
       toast({
-        title: 'Error',
-        description: 'Failed to create company',
+        title: errorTitle,
+        description: errorDescription,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -569,6 +606,33 @@ const CompanyCreatePanel = ({ isOpen, onClose, onSuccess }) => {
                     value={formData.social.facebook}
                     onChange={(e) => handleInputChange('social.facebook', e.target.value)}
                     placeholder="https://facebook.com/..."
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>GitHub</FormLabel>
+                  <Input
+                    value={formData.social.github}
+                    onChange={(e) => handleInputChange('social.github', e.target.value)}
+                    placeholder="https://github.com/..."
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>X (Twitter)</FormLabel>
+                  <Input
+                    value={formData.social.x}
+                    onChange={(e) => handleInputChange('social.x', e.target.value)}
+                    placeholder="https://x.com/..."
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Instagram</FormLabel>
+                  <Input
+                    value={formData.social.instagram}
+                    onChange={(e) => handleInputChange('social.instagram', e.target.value)}
+                    placeholder="https://instagram.com/..."
                   />
                 </FormControl>
               </VStack>

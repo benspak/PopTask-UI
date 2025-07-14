@@ -229,6 +229,18 @@ export default function Dashboard() {
                 <Card>
                   <CardBody>
                     <Stat>
+                      <StatLabel>Projects</StatLabel>
+                      <StatNumber>{totalProjects}</StatNumber>
+                      <StatHelpText>
+                        <StatArrow type="increase" />
+                        Active projects
+                      </StatHelpText>
+                    </Stat>
+                  </CardBody>
+                </Card>
+                <Card>
+                  <CardBody>
+                    <Stat>
                       <StatLabel>Total Tasks</StatLabel>
                       <StatNumber>{totalTasks}</StatNumber>
                       <StatHelpText>
@@ -260,19 +272,6 @@ export default function Dashboard() {
                       <StatHelpText>
                         <StatArrow type="decrease" />
                         {totalTasks > 0 ? Math.round((pendingTasks / totalTasks) * 100) : 0}% remaining
-                      </StatHelpText>
-                    </Stat>
-                  </CardBody>
-                </Card>
-
-                <Card>
-                  <CardBody>
-                    <Stat>
-                      <StatLabel>Projects</StatLabel>
-                      <StatNumber>{totalProjects}</StatNumber>
-                      <StatHelpText>
-                        <StatArrow type="increase" />
-                        Active projects
                       </StatHelpText>
                     </Stat>
                   </CardBody>

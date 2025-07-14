@@ -118,6 +118,13 @@ const TaskList = ({
       );
     }
 
+    // Filter by project
+    if (selectedProject) {
+      filtered = filtered.filter(task =>
+        task.project && task.project.toLowerCase() === selectedProject.toLowerCase()
+      );
+    }
+
     // Filter by status
     if (statusFilter !== 'all') {
       filtered = filtered.filter(task => {
@@ -155,7 +162,7 @@ const TaskList = ({
     });
 
     return filtered;
-  }, [tasks, searchTerm, statusFilter, sortBy, sortOrder]);
+  }, [tasks, searchTerm, selectedProject, statusFilter, sortBy, sortOrder]);
 
   const handleTaskClick = (task) => {
     if (onTaskSelect) {

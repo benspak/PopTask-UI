@@ -188,6 +188,9 @@ const Homepage = () => {
                 <Link href="#pricing" color={textColor} _hover={{ color: accentColor }}>
                   Pricing
                 </Link>
+                <Link href="/jobs" color={textColor} _hover={{ color: accentColor }}>
+                  Jobs
+                </Link>
               </HStack>
             </HStack>
             <HStack spacing={4}>
@@ -708,6 +711,9 @@ const Homepage = () => {
               </Link>
               <Link href="#pricing" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
                 Pricing
+              </Link>
+              <Link href="/jobs" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
+                Jobs
               </Link>
             </HStack>
           </Flex>

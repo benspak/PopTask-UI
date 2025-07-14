@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   Flex,
@@ -66,6 +67,7 @@ import TopBar from './TopBar';
 
 export default function TaskDashboard() {
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const location = useLocation();
 
   // Initialize sidebar state from localStorage
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -169,6 +171,13 @@ export default function TaskDashboard() {
   // Add local state for shared projects
   const [localSharedProjects, setLocalSharedProjects] = React.useState(sharedProjects);
   React.useEffect(() => { setLocalSharedProjects(sharedProjects); }, [sharedProjects]);
+
+  // Handle navigation state for project filtering
+  useEffect(() => {
+    if (location.state?.selectedProject) {
+      setSelectedProject(location.state.selectedProject);
+    }
+  }, [location.state]);
 
   // Data loading is now handled by the hooks themselves with smart caching
   // No need to manually trigger loads here as they're handled on mount

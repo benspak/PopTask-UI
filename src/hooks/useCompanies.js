@@ -62,7 +62,13 @@ export const useCompanies = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Failed to create company';
       setError(errorMsg);
-      return { success: false, error: errorMsg };
+
+      // Return the specific error for better handling in components
+      return {
+        success: false,
+        error: errorMsg,
+        isDuplicateError: errorMsg === 'Company name already exists for this user'
+      };
     } finally {
       setLoading(false);
     }
@@ -87,7 +93,13 @@ export const useCompanies = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.error || 'Failed to update company';
       setError(errorMsg);
-      return { success: false, error: errorMsg };
+
+      // Return the specific error for better handling in components
+      return {
+        success: false,
+        error: errorMsg,
+        isDuplicateError: errorMsg === 'Company name already exists for this user'
+      };
     } finally {
       setLoading(false);
     }
@@ -233,7 +245,7 @@ export const useCompanies = () => {
   };
 
   // Verify company by token
-  const verifyCompany = async (token) => {
+  const verifyCompany = useCallback(async (token) => {
     setLoading(true);
     setError(null);
 
@@ -250,10 +262,10 @@ export const useCompanies = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Get public company by slug and token
-  const getPublicCompany = async (slug, token) => {
+  const getPublicCompany = useCallback(async (slug, token) => {
     setLoading(true);
     setError(null);
 
@@ -270,12 +282,12 @@ export const useCompanies = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Clear error
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, []);
 
   return {
     companies,

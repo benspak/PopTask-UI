@@ -108,7 +108,7 @@ const ProjectDetailPanel = ({
         name: project.name || '',
         description: project.description || '',
         active: project.active !== undefined ? project.active : true,
-        clientId: project.clientId || '',
+        clientId: project.clientId?._id || project.clientId || '',
       });
     }
   }, [project]);

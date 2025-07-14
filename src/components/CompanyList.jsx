@@ -239,37 +239,53 @@ const CompanyList = () => {
   };
 
   return (
-    <Box minH="100vh" bg={bgColor}>
-      <Flex>
-        {/* Sidebar */}
+    <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
+      <Flex h="100vh" overflow="hidden">
         <Sidebar
-          isOpen={isSidebarOpen}
-          onToggle={toggleSidebar}
-          user={user}
-          onLogout={handleLogout}
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
           colorMode={colorMode}
-          toggleColorMode={toggleColorMode}
+          dayTasks={{}}
+          expandedDays={{}}
+          getCurrentDay={() => ''}
+          toggleSidebar={toggleSidebar}
+          handleDayClick={() => {}}
+          handleWeeklyTaskClick={() => {}}
+          toggleTaskCompleted={() => {}}
+          renderFileAttachmentIndicator={() => null}
+          // Shared content props
+          sharedTasks={[]}
+          sharedProjects={[]}
+          sharedTasksLoading={false}
+          sharedProjectsLoading={false}
+          sharedTasksError={null}
+          sharedProjectsError={null}
+          isSharedContentExpanded={false}
+          toggleSharedContentExpanded={() => {}}
+          onSharedTaskClick={() => {}}
+          onSharedProjectClick={() => {}}
+          refreshSharedContent={() => {}}
+          dismissSharedTasksError={() => {}}
+          // Navigation props
+          resetToAllTasks={resetToAllTasks}
+          isProUser={user?.userType === 'pro'}
         />
 
-        {/* Main Content */}
         <Flex flex="1" direction="column">
-          {/* TopBar */}
           <TopBar
-            isSidebarOpen={isSidebarOpen}
-            isCenterOpen={isCenterOpen}
-            onToggleSidebar={toggleSidebar}
-            onToggleCenter={toggleCenter}
-            searchQuery={searchQuery}
-            onSearchChange={handleTopBarSearch}
-            onResetToAllTasks={resetToAllTasks}
-            onLogout={handleLogout}
-            user={user}
             colorMode={colorMode}
             toggleColorMode={toggleColorMode}
+            isOnline={true}
+            currentView="companies"
+            searchTerm={searchQuery}
+            handleSearch={handleTopBarSearch}
+            resetToAllTasks={resetToAllTasks}
+            isSidebarOpen={isSidebarOpen}
+            isCenterOpen={isCenterOpen}
+            onLogout={handleLogout}
           />
 
-          {/* Main Content Area */}
-          <Box flex="1" p={4}>
+          <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
             <Box maxW="7xl" mx="auto">
               {/* Header */}
               <Flex justify="space-between" align="center" mb={6}>
@@ -281,13 +297,6 @@ const CompanyList = () => {
                     Manage your companies and discover verified companies
                   </Text>
                 </VStack>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="blue"
-                  onClick={onCreateOpen}
-                >
-                  Add Company
-                </Button>
               </Flex>
 
               {/* Info Alert */}

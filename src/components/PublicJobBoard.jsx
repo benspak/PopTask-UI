@@ -6,6 +6,8 @@ import {
   Text,
   Button,
   Input,
+  InputGroup,
+  InputLeftElement,
   Select,
   Card,
   CardBody,
@@ -41,7 +43,8 @@ import {
   CalendarIcon,
   StarIcon,
   ExternalLinkIcon,
-  EmailIcon
+  EmailIcon,
+  AtSignIcon
 } from '@chakra-ui/icons';
 import { useJobs } from '../hooks/useJobs';
 
@@ -188,12 +191,16 @@ const PublicJobBoard = () => {
           <CardBody>
             <VStack spacing={4}>
               <HStack spacing={4} w="full">
-                <Input
-                  placeholder="Search jobs..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  leftIcon={<SearchIcon />}
-                />
+                <InputGroup>
+                  <InputLeftElement>
+                    <SearchIcon />
+                  </InputLeftElement>
+                  <Input
+                    placeholder="Search jobs..."
+                    value={filters.search}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
+                  />
+                </InputGroup>
                 <Select
                   placeholder="Category"
                   value={filters.category}
@@ -337,7 +344,7 @@ const PublicJobBoard = () => {
                         </HStack>
                       </HStack>
 
-                      <Text noOfLines={3} color="gray.600">
+                      <Text noOfLines={3} color="white">
                         {job.description}
                       </Text>
 

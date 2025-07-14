@@ -304,7 +304,7 @@ export const InvoiceCreatePanel = () => {
               <VStack spacing={2} align="stretch" mb={4}>
                 <Select placeholder="Select client" value={clientId} onChange={e => setClientId(e.target.value)} bg="gray.700" color="white">
                   {(clients || []).map(client => (
-                    <option key={client._id} value={client._id}>{client.name}</option>
+                    <option key={client._id} value={client._id}>{client.company || client.name} {client.company && client.name ? `(${client.name})` : ''}</option>
                   ))}
                 </Select>
                 <Select placeholder="Select project" value={projectId} onChange={e => setProjectId(e.target.value)} bg="gray.700" color="white">
