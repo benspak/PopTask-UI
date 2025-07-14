@@ -29,6 +29,7 @@ import TeamList from './components/TeamList';
 import ProposalTemplateList from './components/ProposalTemplateList';
 import JobList from './components/JobList';
 import PublicJobBoard from './components/PublicJobBoard';
+import PublicJobDetail from './components/PublicJobDetail';
 
 export default function App() {
   // Wrap useAuth in a try-catch to handle any context errors
@@ -89,7 +90,7 @@ export default function App() {
       <Route path="/users/:username" element={<PublicProfile />} />
       <Route path="/company/:slug/:token" element={<PublicCompanyDetail />} />
       <Route path="/jobs" element={<PublicJobBoard />} />
-      <Route path="/jobs/:slug" element={<PublicJobBoard />} />
+      <Route path="/jobs/:slug" element={<PublicJobDetail />} />
 
       {/* Protected routes */}
       <Route path="/dashboard" element={

@@ -36,6 +36,9 @@ import {
 } from '@chakra-ui/icons';
 import { Input } from '@chakra-ui/react';
 import apiService from '../services/api';
+import dashboardImg from '../assets/dashboard-screenshot.png';
+import invoicesImg from '../assets/invoices-screenshot.png';
+import tasksImg from '../assets/tasks-screenshot.png';
 
 const Homepage = () => {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -254,6 +257,62 @@ const Homepage = () => {
               Get Started Free
             </Button>
           </HStack>
+        </VStack>
+      </Container>
+
+      {/* Screenshots Section */}
+      <Container maxW="7xl" py={10}>
+        <VStack spacing={6}>
+          <Heading size="lg" color={textColor} textAlign="center">
+            See PopTask in Action
+          </Heading>
+          <Text fontSize="md" color={useColorModeValue('gray.600', 'gray.300')} textAlign="center" maxW="2xl">
+            Real screenshots from the app—what you see is what you get.
+          </Text>
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8} w="full">
+            <VStack spacing={3}>
+              <Image
+                src={dashboardImg}
+                alt="Dashboard screenshot"
+                borderRadius="lg"
+                boxShadow="lg"
+                w="100%"
+                maxH="500px"
+                objectFit="contain"
+              />
+              <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
+                Dashboard: See your tasks, projects, and progress at a glance.
+              </Text>
+            </VStack>
+            <VStack spacing={3}>
+              <Image
+                src={invoicesImg}
+                alt="Invoices screenshot"
+                borderRadius="lg"
+                boxShadow="lg"
+                w="100%"
+                maxH="500px"
+                objectFit="contain"
+              />
+              <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
+                Invoices: Manage and track your invoices with ease.
+              </Text>
+            </VStack>
+            <VStack spacing={3}>
+              <Image
+                src={tasksImg}
+                alt="Tasks screenshot"
+                borderRadius="lg"
+                boxShadow="lg"
+                w="100%"
+                maxH="500px"
+                objectFit="contain"
+              />
+              <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
+                Tasks: Organize, complete, and track your work efficiently.
+              </Text>
+            </VStack>
+          </SimpleGrid>
         </VStack>
       </Container>
 
