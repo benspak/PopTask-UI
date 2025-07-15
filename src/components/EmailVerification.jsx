@@ -115,7 +115,7 @@ const EmailVerification = () => {
             <CheckCircleIcon w={16} h={16} color="green.500" />
             <Heading size="lg" color="green.500">Email Verified!</Heading>
             <Text textAlign="center" color="gray.600">
-              Your email address has been successfully verified. You can now log in to your PopTask account.
+              Your email address has been successfully verified. You can now log in to your PopVia account.
             </Text>
             <Button colorScheme="blue" onClick={handleGoToLogin}>
               Go to Login

@@ -89,7 +89,7 @@ const EmailVerificationPrompt = ({ user, onVerificationComplete }) => {
             <Box>
               <AlertTitle>Please verify your email</AlertTitle>
               <AlertDescription>
-                You need to verify your email address before you can access PopTask.
+                You need to verify your email address before you can access PopVia.
                 Check your email for a verification link.
               </AlertDescription>
             </Box>

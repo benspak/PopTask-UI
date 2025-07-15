@@ -116,7 +116,7 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
             </HStack>
             <Heading size="lg">Welcome Back</Heading>
             <Text color="gray.600" textAlign="center">
-              Sign in to your PopTask account
+              Sign in to your PopVia account
             </Text>
             {message && (
               <Alert status="info" borderRadius="md">

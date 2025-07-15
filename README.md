@@ -1,4 +1,4 @@
-# PopTask Frontend
+# PopVia Frontend
 
 A modern, responsive Progressive Web App (PWA) for task management with comprehensive user authentication, collaboration features, time tracking, shared content management, company verification, invoice processing, and advanced project management, built with React, Chakra UI, and Vite.
 
@@ -143,11 +143,11 @@ cp env.example .env
 VITE_API_URL=                    # Backend API URL (empty for relative URLs)
 
 # App Configuration
-VITE_APP_TITLE=PopTask
+VITE_APP_TITLE=PopVia
 VITE_APP_DESCRIPTION=A modern task management application
 
 # PWA Configuration
-VITE_PWA_NAME=PopTask
+VITE_PWA_NAME=PopVia
 VITE_PWA_SHORT_NAME=Tasks
 VITE_PWA_THEME_COLOR=#3182CE
 VITE_PWA_BACKGROUND_COLOR=#1A202C
@@ -225,13 +225,13 @@ npm run analyze
 ### Build and Run
 ```bash
 # Build the image
-docker build -t poptask-frontend .
+docker build -t popvia-frontend .
 
 # Run with nginx
 docker run -d \
-  --name poptask-frontend \
+  --name popvia-frontend \
   -p 80:80 \
-  poptask-frontend
+  popvia-frontend
 ```
 
 ### Docker Compose
@@ -292,7 +292,7 @@ aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --path
 server {
     listen 80;
     server_name yourdomain.com;
-    root /var/www/poptask/dist;
+    root /var/www/popvia/dist;
     index index.html;
 
     # Handle client-side routing
@@ -323,7 +323,7 @@ server {
 ### Manifest Configuration
 ```json
 {
-  "name": "PopTask",
+  "name": "PopVia",
   "short_name": "Tasks",
   "description": "A modern task management application",
   "start_url": "/",
@@ -522,4 +522,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **Built with ❤️ for productive task management**
 
-*PopTask Frontend - Empowering productivity since 2025*
+*PopVia Frontend - Empowering productivity since 2025*

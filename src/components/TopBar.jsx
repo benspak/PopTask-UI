@@ -45,7 +45,7 @@ import {
 import { useAuthWithTimezone } from '../hooks/useAuthWithTimezone';
 import { formatInUserTimezone } from '../utils/timezone';
 import { Link as RouterLink } from 'react-router-dom';
-import PopTaskLogo from './PopTaskLogo';
+import PopViaLogo from './PopViaLogo';
 
 const TopBar = ({
   colorMode,
@@ -144,7 +144,7 @@ const TopBar = ({
         {/* Left Section */}
         <Flex align="center" gap={{ base: 2, md: 3 }} flex="1">
           <Flex align="center" mr={{ base: 2, md: 4 }}>
-            <PopTaskLogo
+            <PopViaLogo
               size={{ base: 120, md: 140 }}
               colorMode={colorMode}
             />

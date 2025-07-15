@@ -323,7 +323,7 @@ const CompanyVerification = () => {
                     What happens now?
                   </Text>
                   <Text fontSize="sm">
-                    • This company is now marked as verified on PopTask
+                    • This company is now marked as verified on PopVia
                   </Text>
                   <Text fontSize="sm">
                     • It will appear in search results with a verified badge

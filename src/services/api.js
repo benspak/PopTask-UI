@@ -327,11 +327,11 @@ class ApiService {
 
   // Token storage keys
   get tokenKey() {
-    return 'popTask_accessToken';
+    return 'popVia_accessToken';
   }
 
   get refreshTokenKey() {
-    return 'popTask_refreshToken';
+    return 'popVia_refreshToken';
   }
 
   // Task API methods

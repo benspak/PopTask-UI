@@ -1,6 +1,6 @@
 // State persistence utility for maintaining app state across tab switches
 
-const STATE_STORAGE_KEY = 'poptask_app_state';
+const STATE_STORAGE_KEY = 'popvia_app_state';
 const STATE_VERSION = '1.0';
 
 class StatePersistence {

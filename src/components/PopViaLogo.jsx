@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box } from '@chakra-ui/react';
 
-const PopTaskLogo = ({ size = 32, colorMode = 'light' }) => {
+const PopViaLogo = ({ size = 32, colorMode = 'light' }) => {
   const isDark = colorMode === 'dark';
   const logoSrc = isDark ? '/logos/logo-dark-mode.svg' : '/logos/logo-light-mode.svg';
 
@@ -9,7 +9,7 @@ const PopTaskLogo = ({ size = 32, colorMode = 'light' }) => {
     <Box
       as="img"
       src={logoSrc}
-      alt="PopTask Logo"
+      alt="PopVia Logo"
       width={size}
       height={size * 0.24} // Maintain aspect ratio (368/1505 ≈ 0.24)
       objectFit="contain"
@@ -17,4 +17,4 @@ const PopTaskLogo = ({ size = 32, colorMode = 'light' }) => {
   );
 };
 
-export default PopTaskLogo;
+export default PopViaLogo;

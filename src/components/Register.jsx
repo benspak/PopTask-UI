@@ -181,7 +181,7 @@ const Register = ({ onSwitchToLogin }) => {
             </HStack>
             <Heading size="lg">Create Account</Heading>
             <Text color="gray.600" textAlign="center">
-              Join PopTask to organize your tasks efficiently
+              Join PopVia to organize your tasks efficiently
             </Text>
             {message && (
               <Alert status="info" borderRadius="md">

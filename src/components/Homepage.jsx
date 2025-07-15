@@ -178,7 +178,7 @@ const Homepage = () => {
             <HStack spacing={8}>
               <Image
                 src={colorMode === 'dark' ? '/logos/logo-dark-mode.svg' : '/logos/logo-light-mode.svg'}
-                alt="PopTask"
+                alt="PopVia"
                 height="32px"
                 width="auto"
                 cursor="pointer"
@@ -264,7 +264,7 @@ const Homepage = () => {
       <Container maxW="7xl" py={10}>
         <VStack spacing={6}>
           <Heading size="lg" color={textColor} textAlign="center">
-            See PopTask in Action
+            See PopVia in Action
           </Heading>
           <Text fontSize="md" color={useColorModeValue('gray.600', 'gray.300')} textAlign="center" maxW="2xl">
             Real screenshots from the app—what you see is what you get.
@@ -396,7 +396,7 @@ const Homepage = () => {
                 Your Business ROI
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-                See how much time and money you'll save with PopTask
+                See how much time and money you'll save with PopVia
               </Text>
             </VStack>
 
@@ -758,7 +758,7 @@ const Homepage = () => {
           >
             <VStack spacing={4} align={{ base: 'center', md: 'start' }}>
               <Heading size="md" color={accentColor}>
-                PopTask
+                PopVia
               </Heading>
               <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
                 Complete business management that actually works

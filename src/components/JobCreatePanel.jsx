@@ -67,7 +67,7 @@ const JobCreatePanel = ({ isOpen, onClose, onSuccess }) => {
     isAuthenticated,
     userType: user?.userType,
     userId: user?._id,
-    hasToken: !!localStorage.getItem('popTask_accessToken')
+    hasToken: !!localStorage.getItem('popVia_accessToken')
   });
 
   const [formData, setFormData] = useState({
@@ -302,7 +302,7 @@ const JobCreatePanel = ({ isOpen, onClose, onSuccess }) => {
       console.log('Form validation:', isFormValid());
       console.log('Current user:', user);
       console.log('Selected company:', companies.find(c => c._id === formData.companyId));
-      console.log('Auth token exists:', !!localStorage.getItem('popTask_accessToken'));
+      console.log('Auth token exists:', !!localStorage.getItem('popVia_accessToken'));
       console.log('User type:', user?.userType);
 
       const createdJob = await createJob(jobData);

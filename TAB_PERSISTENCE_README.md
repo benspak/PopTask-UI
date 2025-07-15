@@ -101,7 +101,7 @@ The `TabPersistenceTest` component is available in development mode to test the 
 - Service worker settings in `vite.config.js`
 
 ### LocalStorage Keys
-- `poptask_app_state`: Main state persistence
+- `popvia_app_state`: Main state persistence
 - `sidebarOpen`: Sidebar state
 - `centerOpen`: Center panel state
 - `sharedContentExpanded`: Shared content state
