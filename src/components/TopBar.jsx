@@ -39,6 +39,8 @@ import {
   DownloadIcon,
   ViewIcon,
   EditIcon,
+  ChevronRightIcon,
+  ChevronLeftIcon,
 } from '@chakra-ui/icons';
 import { useAuthWithTimezone } from '../hooks/useAuthWithTimezone';
 import { formatInUserTimezone } from '../utils/timezone';
@@ -55,6 +57,8 @@ const TopBar = ({
   resetToAllTasks,
   isSidebarOpen,
   isCenterOpen,
+  isRightSidebarOpen,
+  toggleRightSidebar,
   onLogout,
 }) => {
   const { user, userTimezone } = useAuthWithTimezone();
@@ -175,6 +179,21 @@ const TopBar = ({
           >
             {formatInUserTimezone(new Date(), userTimezone, 'EEE, MMM d')}
           </Text>
+
+          {/* Right Sidebar Toggle - Desktop only */}
+          {!isMobile && (
+            <Tooltip label={isRightSidebarOpen ? "Hide right sidebar" : "Show right sidebar"}>
+              <IconButton
+                icon={isRightSidebarOpen ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                aria-label="Toggle right sidebar"
+                onClick={toggleRightSidebar}
+                size="sm"
+                variant="ghost"
+                color={colorMode === 'light' ? 'gray.600' : 'gray.300'}
+                _hover={{ bg: colorMode === 'light' ? 'gray.100' : 'gray.700' }}
+              />
+            </Tooltip>
+          )}
 
           {/* Mobile Menu Button */}
           {isMobile && (

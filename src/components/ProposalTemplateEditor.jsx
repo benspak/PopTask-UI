@@ -79,7 +79,7 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
         }}
       />
       <Text fontSize="xs" color="gray.500" mt={1}>
-        Use {{variableName}} syntax to add variables. Example: {{clientName}}, {{projectName}}
+        Use {'{{variableName}}'} syntax to add variables. Example: {'{{clientName}}'}, {'{{projectName}}'}
       </Text>
     </Box>
   );
@@ -182,7 +182,7 @@ const ProposalTemplateEditor = ({ isOpen, onClose, template, onSuccess }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
@@ -199,7 +199,7 @@ const ProposalTemplateEditor = ({ isOpen, onClose, template, onSuccess }) => {
       };
 
       if (template) {
-        await apiService.put(`/api/proposal-templates/${template._id}`, payload);
+        await apiService.updateProposalTemplate(template._id, payload);
         toast({
           title: 'Success',
           description: 'Template updated successfully',
@@ -208,7 +208,7 @@ const ProposalTemplateEditor = ({ isOpen, onClose, template, onSuccess }) => {
           isClosable: true,
         });
       } else {
-        await apiService.post('/api/proposal-templates', payload);
+        await apiService.createProposalTemplate(payload);
         toast({
           title: 'Success',
           description: 'Template created successfully',

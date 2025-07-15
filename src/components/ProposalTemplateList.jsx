@@ -47,6 +47,8 @@ import {
   TagCloseButton,
   InputGroup,
   InputRightElement,
+  useColorMode,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import {
   AddIcon,
@@ -65,12 +67,17 @@ import {
   MenuItem,
 } from '@chakra-ui/react';
 import apiService from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import ProposalTemplateEditor from './ProposalTemplateEditor';
 import ProposalTemplateViewer from './ProposalTemplateViewer';
 import BottomNav from './BottomNav';
 import FeedbackModal from './FeedbackModal';
+import Sidebar from './Sidebar';
+import TopBar from './TopBar';
+import MobileBackdropOverlay from './MobileBackdropOverlay';
 
 const ProposalTemplateList = () => {
+  const { user, isAuthenticated } = useAuth();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -85,13 +92,21 @@ const ProposalTemplateList = () => {
   const { isOpen: isEditorOpen, onOpen: onEditorOpen, onClose: onEditorClose } = useDisclosure();
   const { isOpen: isViewerOpen, onOpen: onViewerOpen, onClose: onViewerClose } = useDisclosure();
 
-  // TopBar state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCenterOpen, setIsCenterOpen] = useState(false);
+  // Navigation state
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
+  const [isCenterOpen, setIsCenterOpen] = useState(() => {
+    const saved = localStorage.getItem('centerOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
 
   // Feedback modal state
   const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
 
+  const { colorMode, toggleColorMode } = useColorMode();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -108,23 +123,54 @@ const ProposalTemplateList = () => {
     { value: 'other', label: 'Other' }
   ];
 
+  // Toggle functions with localStorage persistence
+  const toggleSidebar = () => {
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    localStorage.setItem('sidebarOpen', JSON.stringify(newState));
+  };
+
+  const toggleCenter = () => {
+    const newState = !isCenterOpen;
+    setIsCenterOpen(newState);
+    localStorage.setItem('centerOpen', JSON.stringify(newState));
+  };
+
+  const handleLogout = async () => {
+    try {
+      await apiService.logout();
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout failed:', error);
+      window.location.href = '/login';
+    }
+  };
+
   useEffect(() => {
     loadTemplates();
-  }, [searchQuery, selectedCategory, showPublic, currentPage]);
+  }, [searchQuery, selectedCategory, showPublic, currentPage, isAuthenticated, user]);
 
   const loadTemplates = async () => {
+    if (!showPublic && user && !['pro', 'admin'].includes(user.userType)) {
+      setTemplates([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const params = new URLSearchParams({
+
+      const params = {
         page: currentPage,
         limit: 12
-      });
+      };
 
-      if (searchQuery) params.append('search', searchQuery);
-      if (selectedCategory) params.append('category', selectedCategory);
+      if (searchQuery) params.search = searchQuery;
+      if (selectedCategory) params.category = selectedCategory;
 
-      const endpoint = showPublic ? '/api/proposal-templates/public' : '/api/proposal-templates';
-      const response = await apiService.get(`${endpoint}?${params}`);
+      const response = showPublic
+        ? await apiService.getPublicProposalTemplates(params)
+        : await apiService.getProposalTemplates(params);
 
       if (response.success) {
         setTemplates(response.data);
@@ -161,7 +207,7 @@ const ProposalTemplateList = () => {
 
   const handleDeleteTemplate = async (templateId) => {
     try {
-      const response = await apiService.delete(`/api/proposal-templates/${templateId}`);
+      const response = await apiService.deleteProposalTemplate(templateId);
       if (response.success) {
         toast({
           title: 'Success',
@@ -185,7 +231,7 @@ const ProposalTemplateList = () => {
 
   const handleDuplicateTemplate = async (templateId) => {
     try {
-      const response = await apiService.post(`/api/proposal-templates/${templateId}/duplicate`);
+      const response = await apiService.duplicateProposalTemplate(templateId);
       if (response.success) {
         toast({
           title: 'Success',
@@ -240,228 +286,312 @@ const ProposalTemplateList = () => {
   }
 
   return (
-    <Box p={6}>
-      <VStack spacing={6} align="stretch">
-        {/* Header */}
-        <Flex justify="space-between" align="center">
-          <Box>
-            <Text fontSize="2xl" fontWeight="bold" color={textColor}>
-              Proposal Templates
-            </Text>
-            <Text fontSize="sm" color={mutedTextColor}>
-              Create and manage proposal templates for your projects
-            </Text>
-          </Box>
-          <Button
-            leftIcon={<AddIcon />}
-            colorScheme="blue"
-            onClick={handleCreateTemplate}
-          >
-            Create Template
-          </Button>
-        </Flex>
+    <Box minH="100vh" bg={colorMode === 'dark' ? 'gray.900' : 'gray.50'}>
+      <Flex h="100vh" overflow="hidden">
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          isCenterOpen={isCenterOpen}
+          colorMode={colorMode}
+          dayTasks={() => ({})}
+          expandedDays={{}}
+          getCurrentDay={() => 'Monday'}
+          toggleSidebar={toggleSidebar}
+          handleDayClick={() => {}}
+          handleWeeklyTaskClick={() => {}}
+          toggleTaskCompleted={() => {}}
+          renderFileAttachmentIndicator={() => null}
+          sharedTasks={[]}
+          sharedProjects={[]}
+          sharedTasksLoading={false}
+          sharedProjectsLoading={false}
+          sharedTasksError={null}
+          sharedProjectsError={null}
+          isSharedContentExpanded={false}
+          toggleSharedContentExpanded={() => {}}
+          onSharedTaskClick={() => {}}
+          onSharedProjectClick={() => {}}
+          refreshSharedContent={() => {}}
+          dismissSharedTasksError={() => {}}
+          resetToAllTasks={() => window.location.href = '/tasks'}
+          isProUser={user?.userType === 'pro'}
+        />
 
-        {/* Filters */}
-        <Card bg={bgColor} borderColor={borderColor}>
-          <CardBody>
-            <VStack spacing={4}>
-              <HStack spacing={4} w="full">
-                <InputGroup>
-                  <Input
-                    placeholder="Search templates..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <InputRightElement>
-                    <SearchIcon color={mutedTextColor} />
-                  </InputRightElement>
-                </InputGroup>
-                <Select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  w="200px"
-                >
-                  {categories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </Select>
-                <Button
-                  variant={showPublic ? 'solid' : 'outline'}
-                  onClick={() => setShowPublic(!showPublic)}
-                  size="sm"
-                >
-                  {showPublic ? 'My Templates' : 'Public Templates'}
-                </Button>
-              </HStack>
-            </VStack>
-          </CardBody>
-        </Card>
+        <Flex flex="1" direction="column">
+          <TopBar
+            colorMode={colorMode}
+            toggleColorMode={toggleColorMode}
+            isOnline={true}
+            currentView="proposal-templates"
+            searchTerm=""
+            handleSearch={() => {}}
+            resetToAllTasks={() => {}}
+            isSidebarOpen={isSidebarOpen}
+            isCenterOpen={isCenterOpen}
+            onLogout={handleLogout}
+          />
 
-        {/* Error Alert */}
-        {error && (
-          <Alert status="error">
-            <AlertIcon />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          <Box flex="1" overflowY="auto" p={4} mb={{ base: "80px", md: "60px" }}>
+            <VStack spacing={6} align="stretch">
+              {/* Header */}
+              <Flex justify="space-between" align="center">
+                <Box>
+                  <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                    Proposal Templates
+                  </Text>
+                  <Text fontSize="sm" color={mutedTextColor}>
+                    Create and manage proposal templates for your projects
+                  </Text>
+                  {user && !['pro', 'admin'].includes(user.userType) && (
+                    <Alert status="warning" mt={2}>
+                      <AlertIcon />
+                      <AlertDescription>
+                        Proposal templates require a Pro account. <Button size="sm" colorScheme="blue" variant="link">Upgrade to Pro</Button>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </Box>
+              </Flex>
 
-        {/* Templates Grid */}
-        {templates.length === 0 && !loading ? (
-          <Card bg={bgColor} borderColor={borderColor}>
-            <CardBody>
-              <VStack spacing={4} py={8}>
-                <Text fontSize="lg" color={mutedTextColor}>
-                  No templates found
-                </Text>
-                <Text fontSize="sm" color={mutedTextColor} textAlign="center">
-                  {showPublic
-                    ? 'No public templates available at the moment.'
-                    : 'Create your first proposal template to get started.'
-                  }
-                </Text>
-                {!showPublic && (
-                  <Button
-                    leftIcon={<AddIcon />}
-                    colorScheme="blue"
-                    onClick={handleCreateTemplate}
-                  >
-                    Create Your First Template
-                  </Button>
-                )}
-              </VStack>
-            </CardBody>
-          </Card>
-        ) : (
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-            {templates.map((template) => (
-              <Card key={template._id} bg={bgColor} borderColor={borderColor}>
-                <CardHeader pb={2}>
-                  <Flex justify="space-between" align="start">
-                    <Box flex={1}>
-                      <Text fontSize="lg" fontWeight="bold" color={textColor} noOfLines={2}>
-                        {template.title}
-                      </Text>
-                      <Badge colorScheme={getCategoryColor(template.category)} size="sm" mt={2}>
-                        {categories.find(c => c.value === template.category)?.label || template.category}
-                      </Badge>
-                    </Box>
-                    <HStack spacing={1}>
-                      {template.isPublic && (
-                        <Tooltip label="Public Template">
-                          <StarIcon color="yellow.400" />
-                        </Tooltip>
-                      )}
-                      <Menu>
-                        <MenuButton as={IconButton} icon={<EditIcon />} size="sm" variant="ghost" />
-                        <MenuList>
-                          <MenuItem onClick={() => handleViewTemplate(template)}>
-                            <ViewIcon mr={2} />
-                            View
-                          </MenuItem>
-                          {!showPublic && (
-                            <>
-                              <MenuItem onClick={() => handleEditTemplate(template)}>
-                                <EditIcon mr={2} />
-                                Edit
-                              </MenuItem>
-                              <MenuItem onClick={() => handleDuplicateTemplate(template._id)}>
-                                <CopyIcon mr={2} />
-                                Duplicate
-                              </MenuItem>
-                              <MenuItem onClick={() => handleDeleteTemplate(template._id)} color="red.500">
-                                <DeleteIcon mr={2} />
-                                Delete
-                              </MenuItem>
-                            </>
-                          )}
-                        </MenuList>
-                      </Menu>
-                    </HStack>
-                  </Flex>
-                </CardHeader>
-
-                <CardBody pt={0}>
-                  <VStack spacing={3} align="stretch">
-                    <Text fontSize="sm" color={mutedTextColor} noOfLines={3}>
-                      {template.description || 'No description provided'}
-                    </Text>
-
-                    {template.tags && template.tags.length > 0 && (
-                      <Wrap>
-                        {template.tags.slice(0, 3).map((tag, index) => (
-                          <WrapItem key={index}>
-                            <Tag size="sm" colorScheme="blue">
-                              <TagLabel>{tag}</TagLabel>
-                            </Tag>
-                          </WrapItem>
+              {/* Filters */}
+              <Card bg={bgColor} borderColor={borderColor}>
+                <CardBody>
+                  <VStack spacing={4}>
+                    <HStack spacing={4} w="full">
+                      <InputGroup>
+                        <Input
+                          placeholder="Search templates..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        <InputRightElement>
+                          <SearchIcon color={mutedTextColor} />
+                        </InputRightElement>
+                      </InputGroup>
+                      <Select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        w="200px"
+                      >
+                        {categories.map((category) => (
+                          <option key={category.value} value={category.value}>
+                            {category.label}
+                          </option>
                         ))}
-                        {template.tags.length > 3 && (
-                          <WrapItem>
-                            <Tag size="sm" colorScheme="gray">
-                              <TagLabel>+{template.tags.length - 3}</TagLabel>
-                            </Tag>
-                          </WrapItem>
-                        )}
-                      </Wrap>
-                    )}
-
-                    <HStack spacing={4} fontSize="sm" color={mutedTextColor}>
-                      {template.estimatedValue > 0 && (
-                        <HStack spacing={1}>
-                          <Text fontWeight="bold" color="green.500">$</Text>
-                          <Text>${template.estimatedValue.toLocaleString()}</Text>
-                        </HStack>
-                      )}
-                      {template.estimatedHours > 0 && (
-                        <HStack spacing={1}>
-                          <TimeIcon />
-                          <Text>{template.estimatedHours}h</Text>
-                        </HStack>
-                      )}
-                      {template.usageCount > 0 && (
-                        <Text>Used {template.usageCount} times</Text>
-                      )}
+                      </Select>
+                      <Button
+                        variant={showPublic ? 'solid' : 'outline'}
+                        onClick={() => setShowPublic(!showPublic)}
+                        size="sm"
+                      >
+                        {showPublic ? 'My Templates' : 'Public Templates'}
+                      </Button>
                     </HStack>
                   </VStack>
                 </CardBody>
-
-                <CardFooter pt={0}>
-                  <Text fontSize="xs" color={mutedTextColor}>
-                    Updated {formatDate(template.updatedAt)}
-                  </Text>
-                </CardFooter>
               </Card>
-            ))}
-          </SimpleGrid>
-        )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <Flex justify="center" mt={6}>
-            <HStack spacing={2}>
-              <Button
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Text fontSize="sm" color={mutedTextColor}>
-                Page {currentPage} of {totalPages}
-              </Text>
-              <Button
-                size="sm"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </HStack>
-          </Flex>
-        )}
-      </VStack>
+              {/* Error Alert */}
+              {error && (
+                <Alert status="error">
+                  <AlertIcon />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Templates Grid */}
+              {templates.length === 0 && !loading ? (
+                <Card bg={bgColor} borderColor={borderColor}>
+                  <CardBody>
+                    <VStack spacing={4} py={8}>
+                      <Text fontSize="lg" color={mutedTextColor}>
+                        {user && !['pro', 'admin'].includes(user.userType) && !showPublic
+                          ? 'Pro Account Required'
+                          : 'No templates found'
+                        }
+                      </Text>
+                      <Text fontSize="sm" color={mutedTextColor} textAlign="center">
+                        {showPublic
+                          ? 'No public templates available at the moment.'
+                          : user && !['pro', 'admin'].includes(user.userType)
+                          ? 'Proposal templates require a Pro account. Upgrade to create and manage your own templates.'
+                          : 'Create your first proposal template to get started.'
+                        }
+                      </Text>
+                      {!showPublic && user && ['pro', 'admin'].includes(user.userType) && (
+                        <Button
+                          leftIcon={<AddIcon />}
+                          colorScheme="blue"
+                          onClick={handleCreateTemplate}
+                        >
+                          Create Your First Template
+                        </Button>
+                      )}
+                      {!showPublic && user && !['pro', 'admin'].includes(user.userType) && (
+                        <Button
+                          leftIcon={<AddIcon />}
+                          colorScheme="blue"
+                          onClick={() => {/* TODO: Add upgrade to Pro functionality */}}
+                        >
+                          Upgrade to Pro
+                        </Button>
+                      )}
+                    </VStack>
+                  </CardBody>
+                </Card>
+              ) : (
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                  {templates.map((template) => (
+                    <Card key={template._id} bg={bgColor} borderColor={borderColor}>
+                      <CardHeader pb={2}>
+                        <Flex justify="space-between" align="start">
+                          <Box flex={1}>
+                            <Text fontSize="lg" fontWeight="bold" color={textColor} noOfLines={2}>
+                              {template.title}
+                            </Text>
+                            <Badge colorScheme={getCategoryColor(template.category)} size="sm" mt={2}>
+                              {categories.find(c => c.value === template.category)?.label || template.category}
+                            </Badge>
+                          </Box>
+                          <HStack spacing={1}>
+                            {template.isPublic && (
+                              <Tooltip label="Public Template">
+                                <StarIcon color="yellow.400" />
+                              </Tooltip>
+                            )}
+                            <Menu>
+                              <MenuButton as={IconButton} icon={<EditIcon />} size="sm" variant="ghost" />
+                              <MenuList>
+                                <MenuItem onClick={() => handleViewTemplate(template)}>
+                                  <ViewIcon mr={2} />
+                                  View
+                                </MenuItem>
+                                {!showPublic && (
+                                  <>
+                                    <MenuItem onClick={() => handleEditTemplate(template)}>
+                                      <EditIcon mr={2} />
+                                      Edit
+                                    </MenuItem>
+                                    <MenuItem onClick={() => handleDuplicateTemplate(template._id)}>
+                                      <CopyIcon mr={2} />
+                                      Duplicate
+                                    </MenuItem>
+                                    <MenuItem onClick={() => handleDeleteTemplate(template._id)} color="red.500">
+                                      <DeleteIcon mr={2} />
+                                      Delete
+                                    </MenuItem>
+                                  </>
+                                )}
+                              </MenuList>
+                            </Menu>
+                          </HStack>
+                        </Flex>
+                      </CardHeader>
+
+                      <CardBody pt={0}>
+                        <VStack spacing={3} align="stretch">
+                          <Text fontSize="sm" color={mutedTextColor} noOfLines={3}>
+                            {template.description || 'No description provided'}
+                          </Text>
+
+                          {template.tags && template.tags.length > 0 && (
+                            <Wrap>
+                              {template.tags.slice(0, 3).map((tag, index) => (
+                                <WrapItem key={index}>
+                                  <Tag size="sm" colorScheme="blue">
+                                    <TagLabel>{tag}</TagLabel>
+                                  </Tag>
+                                </WrapItem>
+                              ))}
+                              {template.tags.length > 3 && (
+                                <WrapItem>
+                                  <Tag size="sm" colorScheme="gray">
+                                    <TagLabel>+{template.tags.length - 3}</TagLabel>
+                                  </Tag>
+                                </WrapItem>
+                              )}
+                            </Wrap>
+                          )}
+
+                          {template.estimatedValue > 0 && (
+                            <HStack spacing={2}>
+                              <Text fontSize="xs" color={mutedTextColor}>Est. Value:</Text>
+                              <Text fontSize="xs" fontWeight="semibold" color={textColor}>
+                                ${template.estimatedValue.toLocaleString()}
+                              </Text>
+                            </HStack>
+                          )}
+
+                          {template.estimatedHours > 0 && (
+                            <HStack spacing={2}>
+                              <Text fontSize="xs" color={mutedTextColor}>Est. Hours:</Text>
+                              <Text fontSize="xs" fontWeight="semibold" color={textColor}>
+                                {template.estimatedHours}h
+                              </Text>
+                            </HStack>
+                          )}
+                        </VStack>
+                      </CardBody>
+
+                      <CardFooter pt={0}>
+                        <Text fontSize="xs" color={mutedTextColor}>
+                          Updated {formatDate(template.updatedAt)}
+                        </Text>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </SimpleGrid>
+              )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Flex justify="center" mt={6}>
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <Text fontSize="sm" color={mutedTextColor}>
+                      Page {currentPage} of {totalPages}
+                    </Text>
+                    <Button
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </HStack>
+                </Flex>
+              )}
+            </VStack>
+          </Box>
+
+          <BottomNav
+            isSidebarOpen={isSidebarOpen}
+            isCenterOpen={isCenterOpen}
+            isAddMode={false}
+            isFooterOpen={isFeedbackModalOpen}
+            toggleSidebar={toggleSidebar}
+            toggleCenter={toggleCenter}
+            handleAddTask={() => window.location.href = '/tasks'}
+            handleAddProject={() => window.location.href = '/projects'}
+            handleAddClient={() => {}}
+            handleAddTemplate={handleCreateTemplate}
+            toggleDetail={() => {}}
+            toggleFooter={openFeedbackModal}
+            handleMobileTaskEdit={() => {}}
+            isMobileTaskEditOpen={false}
+          />
+        </Flex>
+      </Flex>
+
+      <MobileBackdropOverlay
+        isOpen={isSidebarOpen && isMobile}
+        onClose={toggleSidebar}
+      />
 
       {/* Template Editor Modal */}
       <ProposalTemplateEditor
@@ -476,22 +606,6 @@ const ProposalTemplateList = () => {
         isOpen={isViewerOpen}
         onClose={onViewerClose}
         template={selectedTemplate}
-      />
-
-      <BottomNav
-        isSidebarOpen={isSidebarOpen}
-        isCenterOpen={isCenterOpen}
-        isAddMode={false}
-        isFooterOpen={isFeedbackModalOpen}
-        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        toggleCenter={() => setIsCenterOpen(!isCenterOpen)}
-        handleAddTask={() => {}}
-        handleAddProject={() => {}}
-        handleAddClient={() => {}}
-        toggleDetail={() => {}}
-        toggleFooter={openFeedbackModal}
-        handleMobileTaskEdit={() => {}}
-        isMobileTaskEditOpen={false}
       />
 
       <FeedbackModal isOpen={isFeedbackModalOpen} onClose={closeFeedbackModal} />

@@ -106,7 +106,7 @@ const ProposalTemplateViewer = ({ isOpen, onClose, template }) => {
     try {
       setLoading(true);
 
-      const response = await apiService.post(`/api/proposal-templates/${template._id}/generate`, {
+      const response = await apiService.generateProposalFromTemplate(template._id, {
         variables
       });
 

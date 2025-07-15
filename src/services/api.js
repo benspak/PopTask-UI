@@ -959,6 +959,58 @@ class ApiService {
       body: JSON.stringify({ status })
     });
   }
+
+  // Proposal Templates methods
+  async getProposalTemplates(filters = {}) {
+    const queryString = this.buildQueryString(filters);
+    return this.request(`/proposal-templates${queryString}`);
+  }
+
+  async getPublicProposalTemplates(filters = {}) {
+    const queryString = this.buildQueryString(filters);
+    return this.request(`/proposal-templates/public${queryString}`);
+  }
+
+  async getProposalTemplate(id) {
+    return this.request(`/proposal-templates/${id}`);
+  }
+
+  async createProposalTemplate(templateData) {
+    return this.request('/proposal-templates', {
+      method: 'POST',
+      body: JSON.stringify(templateData)
+    });
+  }
+
+  async updateProposalTemplate(id, templateData) {
+    return this.request(`/proposal-templates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(templateData)
+    });
+  }
+
+  async deleteProposalTemplate(id) {
+    return this.request(`/proposal-templates/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async duplicateProposalTemplate(id) {
+    return this.request(`/proposal-templates/${id}/duplicate`, {
+      method: 'POST'
+    });
+  }
+
+  async generateProposalFromTemplate(id, data) {
+    return this.request(`/proposal-templates/${id}/generate`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getProposalTemplateCategories() {
+    return this.request('/proposal-templates/categories');
+  }
 }
 
 // Create and export a singleton instance

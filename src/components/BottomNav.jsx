@@ -1,6 +1,6 @@
 import React from 'react';
 import { Flex, IconButton, Tooltip } from '@chakra-ui/react';
-import { HamburgerIcon, AddIcon, CloseIcon, ChatIcon } from '@chakra-ui/icons';
+import { HamburgerIcon, AddIcon, CloseIcon, ChatIcon, ChevronRightIcon, ChevronLeftIcon } from '@chakra-ui/icons';
 import { useLocation } from 'react-router-dom';
 
 export default function BottomNav({
@@ -11,7 +11,10 @@ export default function BottomNav({
   handleAddTask,
   handleAddProject,
   handleAddClient,
-  toggleFooter
+  handleAddTemplate,
+  toggleFooter,
+  isRightSidebarOpen,
+  toggleRightSidebar
 }) {
   const location = useLocation();
   const isOnProjectsPage = location.pathname === '/projects';
@@ -21,12 +24,38 @@ export default function BottomNav({
   const isOnDashboard = location.pathname === '/dashboard';
   const isOnTeamsPage = location.pathname === '/teams';
   const isOnJobsPage = location.pathname === '/jobs/manage';
+  const isOnTasksPage = location.pathname === '/tasks';
+  const isOnProposalTemplatesPage = location.pathname === '/proposal-templates';
 
   // Determine the appropriate handler and labels based on current route
-  const handleAddAction = isOnProjectsPage ? handleAddProject : isOnClientsPage ? handleAddClient : isOnCompaniesPage ? handleAddClient : isOnInvoicesPage ? handleAddTask : isOnTeamsPage ? handleAddTask : isOnJobsPage ? handleAddTask : handleAddTask;
-  const addButtonLabel = isOnProjectsPage ? "Add New Project" : isOnClientsPage ? "Add New Client" : isOnCompaniesPage ? "Add New Company" : isOnInvoicesPage ? "Create Invoice" : isOnTeamsPage ? "Create Team" : isOnJobsPage ? "Post New Job" : "Add New Task";
-  const closeButtonLabel = isOnProjectsPage ? "Close Add Project" : isOnClientsPage ? "Close Add Client" : isOnCompaniesPage ? "Close Add Company" : isOnInvoicesPage ? "Close Create Invoice" : isOnTeamsPage ? "Close Create Team" : isOnJobsPage ? "Close Post Job" : "Close Add Task";
-  const ariaLabel = isAddMode ? (isOnProjectsPage ? "Close Add Project" : isOnClientsPage ? "Close Add Client" : isOnCompaniesPage ? "Close Add Company" : isOnInvoicesPage ? "Close Create Invoice" : isOnTeamsPage ? "Close Create Team" : isOnJobsPage ? "Close Post Job" : "Close Add Task") : (isOnProjectsPage ? "Add New Project" : isOnClientsPage ? "Add New Client" : isOnCompaniesPage ? "Add New Company" : isOnInvoicesPage ? "Create Invoice" : isOnTeamsPage ? "Create Team" : isOnJobsPage ? "Post New Job" : "Add New Task");
+  const handleAddAction = isOnProjectsPage ? handleAddProject :
+                         isOnClientsPage ? handleAddClient :
+                         isOnCompaniesPage ? handleAddClient :
+                         isOnInvoicesPage ? handleAddTask :
+                         isOnTeamsPage ? handleAddTask :
+                         isOnJobsPage ? handleAddTask :
+                         isOnProposalTemplatesPage ? handleAddTemplate :
+                         handleAddTask;
+
+  const addButtonLabel = isOnProjectsPage ? "Add New Project" :
+                        isOnClientsPage ? "Add New Client" :
+                        isOnCompaniesPage ? "Add New Company" :
+                        isOnInvoicesPage ? "Create Invoice" :
+                        isOnTeamsPage ? "Create Team" :
+                        isOnJobsPage ? "Post New Job" :
+                        isOnProposalTemplatesPage ? "Create Template" :
+                        "Add New Task";
+
+  const closeButtonLabel = isOnProjectsPage ? "Close Add Project" :
+                          isOnClientsPage ? "Close Add Client" :
+                          isOnCompaniesPage ? "Close Add Company" :
+                          isOnInvoicesPage ? "Close Create Invoice" :
+                          isOnTeamsPage ? "Close Create Team" :
+                          isOnJobsPage ? "Close Post Job" :
+                          isOnProposalTemplatesPage ? "Close Create Template" :
+                          "Close Add Task";
+
+  const ariaLabel = isAddMode ? closeButtonLabel : addButtonLabel;
 
   return (
     <Flex
@@ -94,6 +123,24 @@ export default function BottomNav({
             _hover={{ bg: 'gray.700' }}
           />
         </Tooltip>
+        {isOnTasksPage && (
+          <Tooltip
+            label={isRightSidebarOpen ? "Hide right sidebar" : "Show right sidebar"}
+            placement="top"
+            hasArrow
+          >
+            <IconButton
+              icon={isRightSidebarOpen ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+              aria-label="Toggle Right Sidebar"
+              onClick={toggleRightSidebar}
+              size={{ base: "md", md: "sm" }}
+              colorScheme={isRightSidebarOpen ? "blue" : "gray"}
+              variant="solid"
+              borderRadius="full"
+              _hover={{ bg: 'gray.700' }}
+            />
+          </Tooltip>
+        )}
       </Flex>
     </Flex>
   );

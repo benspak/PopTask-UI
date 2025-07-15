@@ -61,6 +61,7 @@ import ProjectCreatePanel from './ProjectCreatePanel';
 import TaskCreatePanel from './TaskCreatePanel';
 import ProjectDetailPanel from './ProjectDetailPanel';
 import FeedbackModal from './FeedbackModal';
+import RightSidebar from './RightSidebar';
 
 import { ClientCreateModal } from './ClientList';
 import TopBar from './TopBar';
@@ -81,6 +82,12 @@ export default function TaskDashboard() {
     return saved !== null ? JSON.parse(saved) : !isMobile;
   });
 
+  // Initialize right sidebar state from localStorage (only show on desktop)
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('rightSidebarOpen');
+    return saved !== null ? JSON.parse(saved) : !isMobile;
+  });
+
   const { isOpen: isDetailOpen, onToggle: toggleDetail, onOpen: openDetail } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isClientCreateOpen, onOpen: openClientCreate, onClose: closeClientCreate } = useDisclosure();
@@ -96,6 +103,12 @@ export default function TaskDashboard() {
     const newState = !isCenterOpen;
     setIsCenterOpen(newState);
     localStorage.setItem('centerOpen', JSON.stringify(newState));
+  };
+
+  const toggleRightSidebar = () => {
+    const newState = !isRightSidebarOpen;
+    setIsRightSidebarOpen(newState);
+    localStorage.setItem('rightSidebarOpen', JSON.stringify(newState));
   };
   const { isOpen: isProjectCreateOpen, onOpen: openProjectCreate, onClose: closeProjectCreate } = useDisclosure({ defaultIsOpen: false });
   const { isOpen: isTaskCreateOpen, onOpen: openTaskCreate, onClose: closeTaskCreate } = useDisclosure({ defaultIsOpen: false });
@@ -1021,14 +1034,7 @@ export default function TaskDashboard() {
         isSidebarOpen={isSidebarOpen}
         isCenterOpen={isCenterOpen}
         colorMode={colorMode}
-        dayTasks={dayTasks()}
-        expandedDays={expandedDays}
-        getCurrentDay={getCurrentDay}
         toggleSidebar={toggleSidebar}
-        handleDayClick={handleDayClick}
-        handleWeeklyTaskClick={handleWeeklyTaskClick}
-        toggleTaskCompleted={toggleTaskCompleted}
-        renderFileAttachmentIndicator={renderFileAttachmentIndicator}
         // Shared content props
         sharedTasks={sharedTasks}
         sharedProjects={localSharedProjects}
@@ -1058,6 +1064,8 @@ export default function TaskDashboard() {
           resetToAllTasks={resetToAllTasks}
           isSidebarOpen={isSidebarOpen}
           isCenterOpen={isCenterOpen}
+          isRightSidebarOpen={isRightSidebarOpen}
+          toggleRightSidebar={toggleRightSidebar}
           onLogout={handleLogout}
         />
 
@@ -1102,6 +1110,8 @@ export default function TaskDashboard() {
           toggleFooter={openFeedbackModal}
           handleMobileTaskEdit={handleMobileTaskEdit}
           isMobileTaskEditOpen={isMobileTaskEditOpen}
+          isRightSidebarOpen={isRightSidebarOpen}
+          toggleRightSidebar={toggleRightSidebar}
         />
       </Flex>
 
@@ -1127,6 +1137,21 @@ export default function TaskDashboard() {
           />
         </Box>
       </Collapse>
+
+      {/* Desktop Right Sidebar */}
+      {!isMobile && isRightSidebarOpen && (
+        <RightSidebar
+          currentView="tasks"
+          colorMode={colorMode}
+          dayTasks={dayTasks()}
+          expandedDays={expandedDays}
+          getCurrentDay={getCurrentDay}
+          handleDayClick={handleDayClick}
+          handleWeeklyTaskClick={handleWeeklyTaskClick}
+          toggleTaskCompleted={toggleTaskCompleted}
+          renderFileAttachmentIndicator={renderFileAttachmentIndicator}
+        />
+      )}
     </Flex>
 
     <MobileBackdropOverlay

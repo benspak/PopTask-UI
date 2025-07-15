@@ -38,14 +38,7 @@ const Sidebar = ({
   isSidebarOpen,
   isCenterOpen,
   colorMode,
-  dayTasks,
-  expandedDays,
-  getCurrentDay,
   toggleSidebar,
-  handleDayClick,
-  handleWeeklyTaskClick,
-  toggleTaskCompleted,
-  renderFileAttachmentIndicator,
   // Shared content props
   sharedTasks = [],
   sharedProjects = [],
@@ -248,94 +241,6 @@ const Sidebar = ({
           </Box>
 
           <Divider />
-
-          {/* Week Days Section - Only show when there are tasks to display */}
-          {(() => {
-            // Check if there are any tasks in any day
-            const hasTasks = Object.values(dayTasks).some(tasks => tasks && tasks.length > 0);
-
-            if (!hasTasks) {
-              return null; // Don't render the Week Days section if no tasks
-            }
-
-            return (
-              <Box w="full">
-                <Heading size="md" mb={2} color={colorMode === 'light' ? 'gray.800' : 'white'}>Week Days</Heading>
-                <VStack align="stretch" spacing={1} w="full">
-                  {Object.keys(dayTasks).map((day) => (
-                    <Box key={day} w="full">
-                      <Flex
-                        cursor="pointer"
-                        p={2}
-                        bg={colorMode === 'light' ? 'gray.600' : 'gray.700'}
-                        borderRadius="md"
-                        w="full"
-                        justify="space-between"
-                        align="center"
-                        onClick={() => handleDayClick(day)}
-                        _hover={{ bg: colorMode === 'light' ? 'gray.500' : 'gray.600' }}
-                      >
-                        <HStack spacing={2}>
-                          <Text color={colorMode === 'light' ? 'white' : 'inherit'}>{day}</Text>
-                          {day === getCurrentDay() && (
-                            <Text fontSize="xs" color="green.300" fontWeight="medium">(today)</Text>
-                          )}
-                        </HStack>
-                      </Flex>
-                      <Collapse in={expandedDays[day]} animateOpacity>
-                        <VStack align="start" spacing={1} mt={1} ml={4} w="full">
-                          {dayTasks[day].length > 0 ? (
-                            dayTasks[day].map((task, index) => (
-                              <Box key={index} w="full">
-                                <Flex align="center" w="full">
-                                  <Checkbox
-                                    isChecked={task.completed}
-                                    onChange={() => toggleTaskCompleted(task.title, 'week')}
-                                    colorScheme="green"
-                                    size="sm"
-                                    mr={2}
-                                  />
-                                  <Text
-                                    fontSize="sm"
-                                    color={task.completed ? "gray.500" : "gray.300"}
-                                    cursor="pointer"
-                                    p={1}
-                                    flex={1}
-                                    _hover={{ color: 'white' }}
-                                    onClick={() => handleWeeklyTaskClick(task)}
-                                    textDecoration={task.completed ? "line-through" : "none"}
-                                  >
-                                    {task.title}
-                                  </Text>
-                                  {task.fileAttachments && task.fileAttachments.length > 0 && (
-                                    renderFileAttachmentIndicator(task.fileAttachments)
-                                  )}
-                                </Flex>
-                                <Text
-                                  fontSize="xs"
-                                  color="gray.500"
-                                  ml={6}
-                                  mb={1}
-                                >
-                                  Due: {task.dueDate}
-                                </Text>
-                              </Box>
-                            ))
-                          ) : (
-                            <Box p={2} w="full">
-                              <Text fontSize="sm" color="gray.500" fontStyle="italic">
-                                No Tasks This Day
-                              </Text>
-                            </Box>
-                          )}
-                        </VStack>
-                      </Collapse>
-                    </Box>
-                  ))}
-                </VStack>
-              </Box>
-            );
-          })()}
         </VStack>
       </Box>
     )

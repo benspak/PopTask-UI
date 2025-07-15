@@ -17,16 +17,13 @@ export const useProposalTemplates = () => {
       setLoading(true);
       setError(null);
 
-      const queryParams = new URLSearchParams({
+      const response = await apiService.getProposalTemplates({
         page: params.page || pagination.page,
-        limit: params.limit || pagination.limit
+        limit: params.limit || pagination.limit,
+        search: params.search,
+        category: params.category,
+        tags: params.tags
       });
-
-      if (params.search) queryParams.append('search', params.search);
-      if (params.category) queryParams.append('category', params.category);
-      if (params.tags) queryParams.append('tags', params.tags);
-
-      const response = await apiService.get(`/api/proposal-templates?${queryParams}`);
 
       if (response.success) {
         setTemplates(response.data);
@@ -45,16 +42,13 @@ export const useProposalTemplates = () => {
       setLoading(true);
       setError(null);
 
-      const queryParams = new URLSearchParams({
+      const response = await apiService.getPublicProposalTemplates({
         page: params.page || pagination.page,
-        limit: params.limit || pagination.limit
+        limit: params.limit || pagination.limit,
+        search: params.search,
+        category: params.category,
+        tags: params.tags
       });
-
-      if (params.search) queryParams.append('search', params.search);
-      if (params.category) queryParams.append('category', params.category);
-      if (params.tags) queryParams.append('tags', params.tags);
-
-      const response = await apiService.get(`/api/proposal-templates/public?${queryParams}`);
 
       if (response.success) {
         setTemplates(response.data);
@@ -73,7 +67,7 @@ export const useProposalTemplates = () => {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.post('/api/proposal-templates', templateData);
+      const response = await apiService.createProposalTemplate(templateData);
 
       if (response.success) {
         // Refresh the templates list
@@ -93,7 +87,7 @@ export const useProposalTemplates = () => {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.put(`/api/proposal-templates/${templateId}`, templateData);
+      const response = await apiService.updateProposalTemplate(templateId, templateData);
 
       if (response.success) {
         // Update the template in the list
@@ -117,7 +111,7 @@ export const useProposalTemplates = () => {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.delete(`/api/proposal-templates/${templateId}`);
+      const response = await apiService.deleteProposalTemplate(templateId);
 
       if (response.success) {
         // Remove the template from the list
@@ -137,7 +131,7 @@ export const useProposalTemplates = () => {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.post(`/api/proposal-templates/${templateId}/duplicate`);
+      const response = await apiService.duplicateProposalTemplate(templateId);
 
       if (response.success) {
         // Refresh the templates list
@@ -157,7 +151,7 @@ export const useProposalTemplates = () => {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.post(`/api/proposal-templates/${templateId}/generate`, {
+      const response = await apiService.generateProposalFromTemplate(templateId, {
         variables
       });
 
@@ -177,7 +171,7 @@ export const useProposalTemplates = () => {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.get(`/api/proposal-templates/${templateId}`);
+      const response = await apiService.getProposalTemplate(templateId);
 
       if (response.success) {
         return response.data;
@@ -192,7 +186,7 @@ export const useProposalTemplates = () => {
 
   const getCategories = useCallback(async () => {
     try {
-      const response = await apiService.get('/api/proposal-templates/categories');
+      const response = await apiService.getProposalTemplateCategories();
 
       if (response.success) {
         return response.data;
