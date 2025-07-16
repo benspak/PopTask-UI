@@ -156,10 +156,15 @@ export const InvoiceCreatePanel = () => {
         lineItems,
         total
       });
-      toast({ title: 'Invoice created', status: 'success' });
-      navigate(`/invoices/${response.data._id || response._id}`);
+      toast({ title: 'Invoice created successfully!', status: 'success' });
+      navigate('/invoices');
     } catch (error) {
-      toast({ title: 'Failed to create invoice', status: 'error' });
+      console.error('Invoice creation error:', error);
+      toast({
+        title: 'Failed to create invoice',
+        description: error.message || 'Please try again',
+        status: 'error'
+      });
     } finally {
       setSubmitting(false);
     }

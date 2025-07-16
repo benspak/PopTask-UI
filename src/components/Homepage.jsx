@@ -58,7 +58,7 @@ const Homepage = () => {
     {
       icon: CalendarIcon,
       title: 'Task Management',
-      description: 'Organize tasks by day with calendar view',
+      description: 'Organize your freelance projects with calendar view',
       benefit: 'Save 2-3 hours/week'
     },
     {
@@ -76,19 +76,19 @@ const Homepage = () => {
     {
       icon: TriangleDownIcon,
       title: 'Professional Invoicing',
-      description: 'Convert time tracking to invoices',
+      description: 'Convert time tracking to invoices automatically',
       benefit: 'Save 4-5 hours/month'
     },
     {
       icon: LockIcon,
       title: 'Secure Sharing',
-      description: 'Share tasks and projects with team members',
+      description: 'Share tasks and projects with clients and team',
       benefit: 'Cut meeting time in half'
     },
     {
       icon: TimeIcon,
       title: 'Time Tracking',
-      description: 'Built-in time tracking with session management',
+      description: 'Built-in time tracking for accurate billing',
       benefit: 'Eliminate 25% time waste'
     },
     {
@@ -238,14 +238,14 @@ const Homepage = () => {
             maxW="4xl"
             lineHeight="1.2"
           >
-            Business Management Software
-            <Text as="span" color={accentColor}> for Freelancers and Small Businesses</Text>
+            Essential Tools for Freelancers
+            <Text as="span" color={accentColor}> to Manage Your Business</Text>
           </Heading>
           <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-            Task management, time tracking, invoicing, and payment collection.
+            Task management, time tracking, invoicing, and payment collection - tools you need to succeed.
           </Text>
           <Text fontSize="md" color={useColorModeValue('gray.500', 'gray.400')} maxW="2xl">
-            🚀 Currently in beta - Join early users and help shape the future of business management
+            🚀 Currently in beta - Join early users and help shape the future of freelance tools
           </Text>
           <HStack spacing={4} pt={4}>
             <Button
@@ -264,10 +264,10 @@ const Homepage = () => {
       <Container maxW="7xl" py={10}>
         <VStack spacing={6}>
           <Heading size="lg" color={textColor} textAlign="center">
-            See PopVia in Action
+            See Your Freelance Tools in Action
           </Heading>
           <Text fontSize="md" color={useColorModeValue('gray.600', 'gray.300')} textAlign="center" maxW="2xl">
-            Real screenshots from the app—what you see is what you get.
+            Real screenshots from the app—everything you need to manage your freelance business.
           </Text>
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8} w="full">
             <VStack spacing={3}>
@@ -322,10 +322,10 @@ const Homepage = () => {
           <VStack spacing={16}>
             <VStack spacing={4} textAlign="center">
               <Heading size="xl" color={textColor}>
-                Need Billing and Collaboration?
+                Built for Freelancer Success
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-                From task management to payment collection.
+                From task management to payment collection - every tool you need to grow your freelance business.
               </Text>
               <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')} maxW="2xl">
                 🧪 Beta features available to early adopters
@@ -393,10 +393,10 @@ const Homepage = () => {
           <VStack spacing={8} maxW="4xl" mx="auto">
             <VStack spacing={4} textAlign="center">
               <Heading size="xl" color={textColor}>
-                Your Business ROI
+                Your Freelance Business ROI
               </Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.300')} maxW="2xl">
-                See how much time and money you'll save with PopVia
+                See how much time and money you'll save with our freelance tools
               </Text>
             </VStack>
 
@@ -412,7 +412,7 @@ const Homepage = () => {
             >
               <VStack spacing={6}>
                 <Heading size="md" color={textColor} textAlign="center">
-                  Your Business ROI
+                  Your Freelance Business ROI
                 </Heading>
 
                 <VStack spacing={4} w="full">
@@ -713,14 +713,14 @@ const Homepage = () => {
         <Container maxW="7xl">
           <VStack spacing={8} textAlign="center">
             <Heading size="xl" color="white">
-              Ready to Get More Done?
+              Ready to Build Your Freelance Empire?
             </Heading>
-                          <Text fontSize="lg" color="blue.100" maxW="2xl">
-                Complete business management solution for freelancers and small teams. Start free and see the difference.
-              </Text>
-              <Text fontSize="sm" color="blue.200" maxW="2xl">
-                🚀 Beta users get exclusive early access to new features
-              </Text>
+            <Text fontSize="lg" color="blue.100" maxW="2xl">
+              Your freelance business toolkit. Start free and see the difference these tools make.
+            </Text>
+            <Text fontSize="sm" color="blue.200" maxW="2xl">
+              🚀 Beta users get exclusive early access to new freelance tools
+            </Text>
             <HStack spacing={4}>
               <Button
                 size="lg"
@@ -761,7 +761,7 @@ const Homepage = () => {
                 PopVia
               </Heading>
               <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
-                Complete business management that actually works
+                Essential tools for freelancers that actually work
               </Text>
             </VStack>
             <HStack spacing={6}>

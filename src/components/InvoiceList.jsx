@@ -203,7 +203,7 @@ export const InvoiceList = () => {
                     <ListItem key={inv._id} p={2} borderBottom="1px solid" borderColor="gray.700">
                       <HStack justify="space-between">
                         <Box>
-                          <Text fontWeight="bold" color="white">{inv.clientId?.name || 'No Client'}</Text>
+                          <Text fontWeight="bold" color="white">{inv.clientId?.company || inv.clientId?.name || 'No Client'}</Text>
                           <Text fontSize="sm" color="gray.300">{inv.projectId?.name || 'No Project'}</Text>
                           <Text fontSize="sm" color="gray.400">${inv.total?.toFixed(2) || '0.00'}</Text>
                         </Box>

@@ -473,14 +473,7 @@ const CompanyList = () => {
                               </HStack>
                             )}
 
-                            {company.contact?.email && (
-                              <HStack spacing={2}>
-                                <EmailIcon boxSize={3} color="gray.400" />
-                                <Text fontSize="xs" color="white" noOfLines={1}>
-                                  {company.contact.email}
-                                </Text>
-                              </HStack>
-                            )}
+
 
                             {company.website && (
                               <HStack spacing={2}>
