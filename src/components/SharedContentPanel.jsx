@@ -53,10 +53,9 @@ const SharedContentPanel = ({
   const isLoading = sharedTasksLoading || sharedProjectsLoading;
   const hasError = sharedTasksError || sharedProjectsError;
 
-  // Always show the panel for debugging purposes
-  // if (!hasSharedContent && !isLoading && !hasError) {
-  //   return null;
-  // }
+  if (!hasSharedContent && !isLoading && !hasError) {
+    return null;
+  }
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -156,14 +155,7 @@ const SharedContentPanel = ({
 
           {!isLoading && !hasError && (
             <VStack spacing={3} align="stretch">
-              {/* Debug: Show when no content */}
-              {!hasSharedContent && (
-                <Box p={3} textAlign="center">
-                  <Text fontSize="sm" color="gray.500">
-                    No shared content found. Tasks: {sharedTasks.length}, Projects: {sharedProjects.length}
-                  </Text>
-                </Box>
-              )}
+
 
               {/* Shared Projects */}
               {sharedProjects.length > 0 && (

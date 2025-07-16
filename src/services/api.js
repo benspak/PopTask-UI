@@ -301,7 +301,6 @@ class ApiService {
           return result;
         } else {
           // Fallback for unexpected response formats
-          console.warn('Unexpected API response format:', result);
           return result || null;
         }
       } else {

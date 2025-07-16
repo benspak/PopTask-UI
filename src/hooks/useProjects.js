@@ -50,7 +50,6 @@ export const useProjects = () => {
         // Handle case where response is an object but not in expected format
         projectsData = Array.isArray(response) ? response : [];
       } else {
-        console.warn('Unexpected projects response format:', response);
         projectsData = [];
       }
 
@@ -116,7 +115,6 @@ export const useProjects = () => {
         // Handle case where response is an object but not in expected format
         sharedProjectsData = Array.isArray(response) ? response : [];
       } else {
-        console.warn('Unexpected shared projects response format:', response);
         sharedProjectsData = [];
       }
 
@@ -147,7 +145,6 @@ export const useProjects = () => {
         setSharedError(null);
       }
     } catch (err) {
-      console.error('Error loading shared projects:', err);
       setSharedError('Failed to load shared projects. Please check your connection.');
       setSharedProjects([]);
       setIsOffline(true);
@@ -171,7 +168,6 @@ export const useProjects = () => {
         // Handle case where response is an object but not in expected format
         sharedProjectsData = Array.isArray(response) ? response : [];
       } else {
-        console.warn('Unexpected shared projects response format:', response);
         sharedProjectsData = [];
       }
 

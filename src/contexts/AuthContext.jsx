@@ -51,7 +51,6 @@ export const AuthProvider = ({ children }) => {
 
       // Add timeout to prevent infinite loading
       timeoutId = setTimeout(() => {
-        console.log('Auth check timeout, forcing loading state to false');
         setIsLoading(false);
         isCheckingAuth.current = false;
       }, 5000); // Reduced from 10s to 5s
@@ -62,7 +61,6 @@ export const AuthProvider = ({ children }) => {
 
         // If user has explicitly logged out, don't attempt auto-login
         if (hasExplicitlyLoggedOut) {
-          console.log('User has explicitly logged out, skipping auth check');
           setIsAuthenticated(false);
           setUser(null);
           setIsLoading(false);
@@ -72,12 +70,9 @@ export const AuthProvider = ({ children }) => {
         }
 
         // Check if backend server is accessible
-        console.log('Checking backend server health...');
         const healthCheck = await apiService.healthCheck();
-        console.log('Backend health check result:', healthCheck);
 
         if (healthCheck.status !== 'ok') {
-          console.log('Backend server is not accessible, skipping auth check');
           setIsAuthenticated(false);
           setUser(null);
           setIsLoading(false);
@@ -91,7 +86,6 @@ export const AuthProvider = ({ children }) => {
         const hasRefreshToken = !!localStorage.getItem(apiService.refreshTokenKey);
 
         if (!hasToken && !hasRefreshToken) {
-          console.log('No tokens found, user is not authenticated');
           setIsAuthenticated(false);
           setUser(null);
           setIsLoading(false);
@@ -103,9 +97,7 @@ export const AuthProvider = ({ children }) => {
         // Try to validate the current token first
         if (hasToken) {
           try {
-            console.log('Validating current token...');
             const validationResult = await apiService.validateToken();
-            console.log('Token validation successful');
             setIsAuthenticated(true);
             setUser(validationResult.user);
             lastAuthCheck.current = now;
@@ -114,7 +106,6 @@ export const AuthProvider = ({ children }) => {
             if (timeoutId) clearTimeout(timeoutId);
             return;
           } catch (validationError) {
-            console.log('Token validation failed:', validationError.message);
             // Token is invalid, try to refresh
           }
         }
@@ -122,7 +113,6 @@ export const AuthProvider = ({ children }) => {
         // Try to refresh token if we have one
         if (hasRefreshToken) {
           try {
-            console.log('Attempting to refresh token...');
             const refreshResult = await apiService.refreshToken();
 
             // Store the new tokens
@@ -142,7 +132,6 @@ export const AuthProvider = ({ children }) => {
               setUser(validationResult.user);
             }
 
-            console.log('Token refresh successful');
             setIsAuthenticated(true);
             lastAuthCheck.current = now;
             setIsLoading(false);
@@ -150,7 +139,6 @@ export const AuthProvider = ({ children }) => {
             if (timeoutId) clearTimeout(timeoutId);
             return;
           } catch (refreshError) {
-            console.log('Token refresh failed:', refreshError.message);
             // Both validation and refresh failed, clear everything
             apiService.clearSession();
             setIsAuthenticated(false);
@@ -162,7 +150,6 @@ export const AuthProvider = ({ children }) => {
           }
         } else {
           // No refresh token available
-          console.log('No refresh token available, clearing session');
           apiService.clearSession();
           setIsAuthenticated(false);
           setUser(null);
@@ -334,15 +321,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      console.log('Logging out user...');
       await apiService.logout();
-      console.log('Backend logout successful');
     } catch (error) {
       console.error('Backend logout failed:', error);
       // Logout request failed silently
     } finally {
       // Clear session and set logout state
-      console.log('Clearing session and setting logout state');
       apiService.clearSession();
       setIsAuthenticated(false);
       setUser(null);
@@ -350,7 +334,6 @@ export const AuthProvider = ({ children }) => {
       setHasExplicitlyLoggedOut(true);
       lastAuthCheck.current = 0;
       isCheckingAuth.current = false;
-      console.log('Logout completed - user should be unauthenticated');
     }
   };
 

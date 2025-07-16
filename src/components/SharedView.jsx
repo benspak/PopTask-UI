@@ -79,7 +79,7 @@ const SharedView = () => {
         const tasks = response.data.tasks || [];
         const projectStats = response.data.projectStats || null;
 
-        // Debug logging removed for production
+
 
         setData({
           [type]: itemData,
@@ -674,13 +674,7 @@ const SharedProjectView = ({ project, isEditing, editData, setEditData, onSave, 
 
   if (!project) return null;
 
-  // Debug logging for project statistics
-  console.log('SharedProjectView rendering with:', {
-    projectName: project.name,
-    tasksCount: tasks.length,
-    projectStats: projectStats,
-    hasProjectStats: !!projectStats
-  });
+
 
   // Fallback calculation for project statistics if backend stats are missing or zero
   const calculateFallbackStats = () => {
@@ -718,8 +712,6 @@ const SharedProjectView = ({ project, isEditing, editData, setEditData, onSave, 
 
   // Use backend stats if available and non-zero, otherwise use fallback
   const effectiveStats = projectStats && projectStats.totalTasks > 0 ? projectStats : calculateFallbackStats();
-
-  console.log('Effective project statistics:', effectiveStats);
 
   // Utility function to format time in seconds to readable format
   const formatTime = (seconds) => {

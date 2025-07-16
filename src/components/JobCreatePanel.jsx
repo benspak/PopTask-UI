@@ -62,13 +62,7 @@ const JobCreatePanel = ({ isOpen, onClose, onSuccess }) => {
     return null; // Don't render anything if not authenticated
   }
 
-  // Debug authentication state
-  console.log('JobCreatePanel - Auth state:', {
-    isAuthenticated,
-    userType: user?.userType,
-    userId: user?._id,
-    hasToken: !!localStorage.getItem('popVia_accessToken')
-  });
+
 
   const [formData, setFormData] = useState({
     title: '',
@@ -117,12 +111,7 @@ const JobCreatePanel = ({ isOpen, onClose, onSuccess }) => {
     fetchCompanies({ includeVerified: false });
   }, [fetchCompanies]);
 
-  // Debug companies loading
-  useEffect(() => {
-    console.log('Companies loaded:', companies);
-    console.log('Companies loading:', companiesLoading);
-    console.log('Current formData.companyId:', formData.companyId);
-  }, [companies, companiesLoading, formData.companyId]);
+
 
   // Reset form when modal opens
   useEffect(() => {
@@ -298,12 +287,7 @@ const JobCreatePanel = ({ isOpen, onClose, onSuccess }) => {
         jobData.expiresAt = new Date(formData.expiresAt).toISOString();
       }
 
-      console.log('Submitting job data:', jobData);
-      console.log('Form validation:', isFormValid());
-      console.log('Current user:', user);
-      console.log('Selected company:', companies.find(c => c._id === formData.companyId));
-      console.log('Auth token exists:', !!localStorage.getItem('popVia_accessToken'));
-      console.log('User type:', user?.userType);
+
 
       const createdJob = await createJob(jobData);
 

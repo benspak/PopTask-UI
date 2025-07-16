@@ -127,7 +127,7 @@ export default function ClientList() {
     }
   }, [isCreateOpen, toast]);
 
-  // Debug logging removed for production
+
 
   const handleAdd = async () => {
     if (!newClient.name.trim()) {

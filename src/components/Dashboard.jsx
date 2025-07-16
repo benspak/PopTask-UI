@@ -105,6 +105,8 @@ export default function Dashboard() {
     refreshData
   } = useDashboardData();
 
+
+
   // Calculate dashboard stats
   const totalTasks = backendTasks?.length || 0;
   const completedTasks = backendTasks?.filter(task => task.completed)?.length || 0;
@@ -224,6 +226,30 @@ export default function Dashboard() {
                 <Text color={colorMode === 'light' ? 'gray.600' : 'gray.400'}>
                   Here's what's happening with your tasks and projects today.
                 </Text>
+
+                {/* Error Display */}
+                {dashboardError && (
+                  <Box mt={4} p={3} bg="red.50" border="1px solid" borderColor="red.200" borderRadius="md">
+                    <Text color="red.800" fontSize="sm">
+                      Error: {dashboardError}
+                    </Text>
+                    <Button size="sm" mt={2} colorScheme="red" variant="outline" onClick={refreshData}>
+                      Retry
+                    </Button>
+                  </Box>
+                )}
+
+                {/* Loading State */}
+                {dashboardLoading && (
+                  <Box mt={4} p={3} bg="blue.50" border="1px solid" borderColor="blue.200" borderRadius="md">
+                    <Flex align="center" gap={2}>
+                      <Spinner size="sm" />
+                      <Text color="blue.800" fontSize="sm">
+                        Loading dashboard data...
+                      </Text>
+                    </Flex>
+                  </Box>
+                )}
               </Box>
 
               {/* Stats Grid */}
@@ -354,6 +380,8 @@ export default function Dashboard() {
                   </CardBody>
                 </Card>
               </Box>
+
+
 
               {/* Summary Stats */}
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>

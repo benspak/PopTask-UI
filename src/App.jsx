@@ -49,7 +49,7 @@ class LazyComponentErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Lazy component error:', error, errorInfo);
+    // Error logged silently in production
   }
 
   render() {
@@ -123,21 +123,6 @@ export default function App() {
         <VStack spacing={4}>
           <Spinner size="xl" />
           <Text>Loading...</Text>
-          {/* Debug information */}
-          <Text fontSize="sm" color="gray.500">
-            Auth Debug: isAuthenticated={typeof isAuthenticated === 'boolean' ? isAuthenticated.toString() : 'unknown'}, user={user ? 'exists' : 'null'}
-          </Text>
-          {/* Temporary debug button */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              localStorage.clear();
-              window.location.reload();
-            }}
-          >
-            Clear Auth & Reload (Debug)
-          </Button>
         </VStack>
       </Center>
     );

@@ -34,15 +34,17 @@ export const useDashboardData = () => {
       // Try to get all data in one batch request first
       try {
         const batchResponse = await apiService.getDashboardData();
-        if (batchResponse.success && batchResponse.data) {
-          setDashboardData(batchResponse.data);
+
+        // Check if we got a valid response with data
+        if (batchResponse && typeof batchResponse === 'object') {
+          // The API service returns data directly, not wrapped in success property
+          setDashboardData(batchResponse);
           hasLoadedData.current = true;
           lastLoadTime.current = now;
           return;
         }
       } catch (batchError) {
         // Fall back to individual requests if batch request fails
-        console.log('Batch request failed, falling back to individual requests');
       }
 
       // Fallback to individual requests
