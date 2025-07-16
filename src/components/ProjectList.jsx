@@ -60,7 +60,7 @@ import BottomNav from './BottomNav';
 import MobileBackdropOverlay from './MobileBackdropOverlay';
 import FeedbackModal from './FeedbackModal';
 
-export const ProjectList = () => {
+export default function ProjectList() {
   const [newProject, setNewProject] = useState({ name: '', description: '', clientId: '' });
   const [editingProject, setEditingProject] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -96,8 +96,43 @@ export const ProjectList = () => {
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
 
+  // Safe useAuth call with error boundary
+  let authResult;
+  try {
+    authResult = useAuth();
+  } catch (error) {
+    console.error('useAuth error:', error);
+    authResult = { logout: () => {}, user: null };
+  }
+  const { logout, user } = authResult;
+
+  // Ensure user is a valid object
+  const safeUser = user && typeof user === 'object' ? user : null;
+
+  // Safe useProjects call with error boundary
+  let projectsResult;
+  try {
+    projectsResult = useProjects();
+  } catch (error) {
+    console.error('useProjects error:', error);
+    projectsResult = {
+      projects: [],
+      sharedProjects: [],
+      loading: false,
+      sharedLoading: false,
+      error: null,
+      sharedError: null,
+      dismissError: () => {},
+      dismissSharedError: () => {},
+      loadProjects: () => {},
+      loadSharedProjects: () => {},
+      refreshSharedProjects: () => {},
+      createProject: () => {},
+      updateProject: () => {},
+      deleteProject: () => {},
+    };
+  }
   const {
     projects,
     sharedProjects,
@@ -113,13 +148,62 @@ export const ProjectList = () => {
     createProject,
     updateProject,
     deleteProject,
-  } = useProjects();
+  } = projectsResult;
 
+  // Ensure projects and sharedProjects are always arrays with proper validation
+  const safeProjects = Array.isArray(projects)
+    ? projects.filter(project =>
+        project &&
+        typeof project === 'object' &&
+        project._id &&
+        typeof project._id === 'string' &&
+        project.name &&
+        typeof project.name === 'string'
+      )
+    : [];
+  const safeSharedProjects = Array.isArray(sharedProjects)
+    ? sharedProjects.filter(project =>
+        project &&
+        typeof project === 'object' &&
+        project._id &&
+        typeof project._id === 'string' &&
+        project.name &&
+        typeof project.name === 'string'
+      )
+    : [];
+
+
+  // Safe useClients call
+  let clientsResult;
+  try {
+    clientsResult = useClients();
+  } catch (error) {
+    console.error('useClients error:', error);
+    clientsResult = {
+      clients: [],
+      loadClients: () => {},
+    };
+  }
   const {
     clients: clientsData,
     loadClients,
-  } = useClients();
+  } = clientsResult;
 
+  // Safe useTasks call
+  let tasksResult;
+  try {
+    tasksResult = useTasks();
+  } catch (error) {
+    console.error('useTasks error:', error);
+    tasksResult = {
+      sharedTasks: [],
+      sharedLoading: false,
+      sharedError: null,
+      dismissSharedError: () => {},
+      loadSharedTasks: () => {},
+      refreshSharedTasks: () => {},
+    };
+  }
   const {
     sharedTasks,
     sharedLoading: sharedTasksLoading,
@@ -127,7 +211,10 @@ export const ProjectList = () => {
     dismissSharedError: dismissSharedTasksError,
     loadSharedTasks,
     refreshSharedTasks,
-  } = useTasks();
+  } = tasksResult;
+
+  // Ensure sharedTasks is always an array
+  const safeSharedTasks = Array.isArray(sharedTasks) ? sharedTasks : [];
 
   // Toggle functions with localStorage persistence
   const toggleSidebar = () => {
@@ -191,6 +278,8 @@ export const ProjectList = () => {
         await loadClients();
       } catch (error) {
         console.error('Failed to load clients:', error);
+        // Ensure clients is always an array even if loading fails
+        setClients([]);
       } finally {
         setClientsLoading(false);
       }
@@ -206,8 +295,11 @@ export const ProjectList = () => {
     }
   }, [clientsData]);
 
+  // Ensure clients is always an array
+  const safeClients = Array.isArray(clients) ? clients : [];
+
   const handleCreateProject = async () => {
-    if (!newProject.name.trim()) {
+    if (!newProject.name || typeof newProject.name !== 'string' || !newProject.name.trim()) {
       toast({
         title: 'Error',
         description: 'Project name is required',
@@ -244,7 +336,7 @@ export const ProjectList = () => {
   };
 
   const handleUpdateProject = async () => {
-    if (!editingProject || !editingProject.name.trim()) {
+    if (!editingProject || !editingProject.name || typeof editingProject.name !== 'string' || !editingProject.name.trim()) {
       toast({
         title: 'Error',
         description: 'Project name is required',
@@ -313,6 +405,8 @@ export const ProjectList = () => {
   };
 
   const openEditModal = (project) => {
+    if (!project || !project._id) return;
+
     setEditingProject({
       ...project,
       clientId: project.clientId?._id || project.clientId || ''
@@ -321,22 +415,42 @@ export const ProjectList = () => {
   };
 
   const openDeleteModal = (project) => {
+    if (!project || !project._id) return;
+
     setProjectToDelete(project);
     setIsDeleteModalOpen(true);
   };
 
-  const getClientName = (clientId) => {
+    const getClientName = (clientId) => {
     if (!clientId) return 'No client assigned';
 
     // Handle both populated client object and client ID string
-    if (typeof clientId === 'object') {
+    if (typeof clientId === 'object' && clientId !== null) {
       // Prioritize company name over contact name
       return clientId.company || clientId.name || 'Unknown client';
     }
 
     // If it's a string ID, try to find the client in the clients array
-    const client = clients.find(c => c._id === clientId);
-    return client ? (client.company || client.name) : 'Unknown client';
+    if (typeof clientId === 'string') {
+      const client = safeClients.find(c => c && c._id === clientId);
+      return client ? (client.company || client.name) : 'Unknown client';
+    }
+
+    // Handle any other type (number, boolean, etc.) by converting to string
+    if (clientId !== null && clientId !== undefined) {
+      try {
+        // Check if it's a primitive type that can be safely converted
+        if (typeof clientId === 'string' || typeof clientId === 'number' || typeof clientId === 'boolean') {
+          return String(clientId);
+        }
+        // If it's an object or other complex type, return a safe fallback
+        return 'Unknown client';
+      } catch (error) {
+        return 'Unknown client';
+      }
+    }
+
+    return 'Unknown client';
   };
 
   const resetToAllTasks = () => {
@@ -372,8 +486,8 @@ export const ProjectList = () => {
           toggleTaskCompleted={() => {}}
           renderFileAttachmentIndicator={() => null}
           // Shared content props
-          sharedTasks={sharedTasks}
-          sharedProjects={sharedProjects}
+          sharedTasks={safeSharedTasks}
+          sharedProjects={safeSharedProjects}
           sharedTasksLoading={sharedTasksLoading}
           sharedProjectsLoading={sharedProjectsLoading}
           sharedTasksError={sharedTasksError}
@@ -386,7 +500,7 @@ export const ProjectList = () => {
           dismissSharedTasksError={dismissSharedTasksError}
           // Navigation props
           resetToAllTasks={resetToAllTasks}
-          isProUser={user?.userType === 'pro'}
+          isProUser={safeUser?.userType === 'pro'}
         />
 
         <Flex flex="1" direction="column">
@@ -407,7 +521,7 @@ export const ProjectList = () => {
             {/* Content */}
             <Box maxW="1200px" mx="auto">
               {/* Error Alert */}
-              {projectsError && (
+              {projectsError && typeof projectsError === 'string' && (
                 <DismissibleAlert
                   status="error"
                   title="Projects Error!"
@@ -418,14 +532,14 @@ export const ProjectList = () => {
               )}
 
               {/* Projects Grid */}
-              {projectsLoading ? (
+              {projectsLoading === true ? (
                 <Flex justify="center" align="center" py={20}>
                   <VStack spacing={4}>
                     <Spinner size="xl" color="blue.500" />
                     <Text color={textColor}>Loading projects...</Text>
                   </VStack>
                 </Flex>
-              ) : projects.length === 0 ? (
+              ) : safeProjects.length === 0 ? (
                 <Box textAlign="center" py={20}>
                   <VStack spacing={4}>
                     <SettingsIcon size="60px" color="gray.400" />
@@ -442,7 +556,7 @@ export const ProjectList = () => {
                 </Box>
               ) : (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                  {projects.map((project) => (
+                  {safeProjects.filter(project => project && typeof project === 'object' && project._id).map((project) => (
                     <Box
                       key={project._id}
                       bg={bgColor}
@@ -458,10 +572,10 @@ export const ProjectList = () => {
                         <Flex justify="space-between" align="start">
                           <VStack align="start" spacing={1} flex={1}>
                             <Heading size="md" color={textColor} noOfLines={1}>
-                              {project.name}
+                              {typeof project?.name === 'string' ? project.name : 'Unnamed Project'}
                             </Heading>
                             <Text fontSize="sm" color="gray.500">
-                              {getClientName(project.clientId)}
+                              {getClientName(project?.clientId)}
                             </Text>
                           </VStack>
                           <HStack spacing={2}>
@@ -488,7 +602,7 @@ export const ProjectList = () => {
                         </Flex>
 
                         {/* Project Description */}
-                        {project.description && (
+                        {project?.description && typeof project.description === 'string' && (
                           <Text fontSize="sm" color="gray.600" noOfLines={3}>
                             {project.description}
                           </Text>
@@ -497,13 +611,13 @@ export const ProjectList = () => {
                         {/* Project Status */}
                         <HStack justify="space-between">
                           <Badge
-                            colorScheme={project.isOffline ? 'orange' : 'green'}
+                            colorScheme={project?.isOffline ? 'orange' : 'green'}
                             size="sm"
                           >
-                            {project.isOffline ? 'Offline' : 'Active'}
+                            {project?.isOffline ? 'Offline' : 'Active'}
                           </Badge>
                           <Text fontSize="xs" color="gray.500">
-                            Created {new Date(project.createdAt).toLocaleDateString()}
+                            Created {project?.createdAt && typeof project.createdAt === 'string' ? new Date(project.createdAt).toLocaleDateString() : 'Unknown date'}
                           </Text>
                         </HStack>
 
@@ -513,7 +627,7 @@ export const ProjectList = () => {
                             size="sm"
                             variant="outline"
                             leftIcon={<StarIcon />}
-                            onClick={() => navigate('/tasks', { state: { selectedProject: project.name } })}
+                            onClick={() => navigate('/tasks', { state: { selectedProject: typeof project?.name === 'string' ? project.name : 'Unnamed Project' } })}
                             flex={1}
                           >
                             View Tasks
@@ -570,7 +684,7 @@ export const ProjectList = () => {
               <FormControl>
                 <FormLabel>Project Name</FormLabel>
                 <Input
-                  value={newProject.name}
+                  value={typeof newProject.name === 'string' ? newProject.name : ''}
                   onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
                   placeholder="Enter project name"
                 />
@@ -578,7 +692,7 @@ export const ProjectList = () => {
               <FormControl>
                 <FormLabel>Description (Optional)</FormLabel>
                 <Textarea
-                  value={newProject.description}
+                  value={typeof newProject.description === 'string' ? newProject.description : ''}
                   onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
                   placeholder="Enter project description"
                   rows={3}
@@ -587,11 +701,11 @@ export const ProjectList = () => {
               <FormControl>
                 <FormLabel>Client (Optional)</FormLabel>
                 <Select
-                  value={newProject.clientId}
+                  value={typeof newProject.clientId === 'string' ? newProject.clientId : ''}
                   onChange={(e) => setNewProject({ ...newProject, clientId: e.target.value })}
                   placeholder="Select a client"
                 >
-                  {clients.map((client) => (
+                  {safeClients.map((client) => (
                     <option key={client._id} value={client._id}>
                       {client.company || client.name} {client.company && client.name ? `(${client.name})` : ''}
                     </option>
@@ -625,7 +739,7 @@ export const ProjectList = () => {
               <FormControl>
                 <FormLabel>Project Name</FormLabel>
                 <Input
-                  value={editingProject?.name || ''}
+                  value={typeof editingProject?.name === 'string' ? editingProject.name : ''}
                   onChange={(e) => setEditingProject({ ...editingProject, name: e.target.value })}
                   placeholder="Enter project name"
                 />
@@ -633,7 +747,7 @@ export const ProjectList = () => {
               <FormControl>
                 <FormLabel>Description (Optional)</FormLabel>
                 <Textarea
-                  value={editingProject?.description || ''}
+                  value={typeof editingProject?.description === 'string' ? editingProject.description : ''}
                   onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })}
                   placeholder="Enter project description"
                   rows={3}
@@ -642,12 +756,12 @@ export const ProjectList = () => {
               <FormControl>
                 <FormLabel>Client (Optional)</FormLabel>
                 <Select
-                  value={editingProject?.clientId || ''}
+                  value={typeof editingProject?.clientId === 'string' ? editingProject.clientId : ''}
                   onChange={(e) => setEditingProject({ ...editingProject, clientId: e.target.value })}
                   placeholder="Select a client"
                 >
                   <option value="">No client assigned</option>
-                  {clients.map((client) => (
+                  {safeClients.map((client) => (
                     <option key={client._id} value={client._id}>
                       {client.company || client.name} {client.company && client.name ? `(${client.name})` : ''}
                     </option>
@@ -678,7 +792,7 @@ export const ProjectList = () => {
           <ModalCloseButton />
           <ModalBody pb={6}>
             <Text>
-              Are you sure you want to delete "{projectToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{typeof projectToDelete?.name === 'string' ? projectToDelete.name : 'this project'}"? This action cannot be undone.
             </Text>
           </ModalBody>
           <Flex justify="flex-end" p={4} gap={3}>
@@ -699,4 +813,4 @@ export const ProjectList = () => {
       <FeedbackModal isOpen={isFeedbackModalOpen} onClose={closeFeedbackModal} />
     </Box>
   );
-};
+}

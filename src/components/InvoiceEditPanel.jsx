@@ -27,7 +27,7 @@ import apiService from '../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatHoursToTime, parseTimeToHours } from '../utils/timeFormat';
 
-export const InvoiceEditPanel = () => {
+export default function InvoiceEditPanel() {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -58,10 +58,10 @@ export const InvoiceEditPanel = () => {
           apiService.getInvoice(invoiceId)
         ]);
 
-        // Handle both direct array response and response.data format
-        const clientsData = Array.isArray(clientsRes) ? clientsRes : (clientsRes?.data || []);
-        const projectsData = Array.isArray(projectsRes) ? projectsRes : (projectsRes?.data || []);
-        const invoiceData = invoiceRes?.data || invoiceRes;
+        // The API service already extracts the data property, so responses are the arrays/objects directly
+        const clientsData = clientsRes || [];
+        const projectsData = projectsRes || [];
+        const invoiceData = invoiceRes;
 
         setClients(clientsData || []);
         setProjects(projectsData || []);

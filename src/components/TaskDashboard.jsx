@@ -67,30 +67,63 @@ import { ClientCreateModal } from './ClientList';
 import TopBar from './TopBar';
 
 export default function TaskDashboard() {
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  // Use a simple approach for breakpoint detection
+  const [isMobile, setIsMobile] = React.useState(() => {
+    // Default to mobile on server-side rendering
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth < 768;
+  });
+
+  // Update mobile state on window resize
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Try to use Chakra UI's useBreakpointValue if available
+  let chakraIsMobile;
+  try {
+    chakraIsMobile = useBreakpointValue({ base: true, md: false });
+  } catch (error) {
+    console.warn('useBreakpointValue not available, using window-based detection');
+  }
+
+  // Use Chakra UI value if available, otherwise use window-based detection
+  const finalIsMobile = chakraIsMobile !== undefined ? chakraIsMobile : isMobile;
+
   const location = useLocation();
 
   // Initialize sidebar state from localStorage
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('sidebarOpen');
-    return saved !== null ? JSON.parse(saved) : !isMobile;
+    return saved !== null ? JSON.parse(saved) : !finalIsMobile;
   });
 
   // Initialize center panel state from localStorage
   const [isCenterOpen, setIsCenterOpen] = useState(() => {
     const saved = localStorage.getItem('centerOpen');
-    return saved !== null ? JSON.parse(saved) : !isMobile;
+    return saved !== null ? JSON.parse(saved) : !finalIsMobile;
   });
 
   // Initialize right sidebar state from localStorage (only show on desktop)
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('rightSidebarOpen');
-    return saved !== null ? JSON.parse(saved) : !isMobile;
+    return saved !== null ? JSON.parse(saved) : !finalIsMobile;
   });
 
-  const { isOpen: isDetailOpen, onToggle: toggleDetail, onOpen: openDetail } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isFooterOpen, onToggle: toggleFooter } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isClientCreateOpen, onOpen: openClientCreate, onClose: closeClientCreate } = useDisclosure();
+    // Safely use Chakra UI hooks with fallbacks
+  const detailDisclosure = useDisclosure({ defaultIsOpen: false });
+  const footerDisclosure = useDisclosure({ defaultIsOpen: false });
+  const clientCreateDisclosure = useDisclosure();
+
+  // Destructure for easier use
+  const { isOpen: isDetailOpen, onToggle: toggleDetail, onOpen: openDetail } = detailDisclosure;
+  const { isOpen: isFooterOpen, onToggle: toggleFooter } = footerDisclosure;
+  const { isOpen: isClientCreateOpen, onOpen: openClientCreate, onClose: closeClientCreate } = clientCreateDisclosure;
 
   // Toggle functions with localStorage persistence
   const toggleSidebar = () => {
@@ -110,13 +143,27 @@ export default function TaskDashboard() {
     setIsRightSidebarOpen(newState);
     localStorage.setItem('rightSidebarOpen', JSON.stringify(newState));
   };
-  const { isOpen: isProjectCreateOpen, onOpen: openProjectCreate, onClose: closeProjectCreate } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isTaskCreateOpen, onOpen: openTaskCreate, onClose: closeTaskCreate } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isMobileTaskCreateOpen, onOpen: openMobileTaskCreate, onClose: closeMobileTaskCreate } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isMobileTaskEditOpen, onOpen: openMobileTaskEdit, onClose: closeMobileTaskEdit } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isMobileTaskDetailOpen, onOpen: openMobileTaskDetail, onClose: closeMobileTaskDetail } = useDisclosure({ defaultIsOpen: false });
-  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = useDisclosure({ defaultIsOpen: false });
-  const { colorMode, toggleColorMode } = useColorMode();
+
+      // Safely use remaining Chakra UI hooks
+  const projectCreateDisclosure = useDisclosure({ defaultIsOpen: false });
+  const taskCreateDisclosure = useDisclosure({ defaultIsOpen: false });
+  const mobileTaskCreateDisclosure = useDisclosure({ defaultIsOpen: false });
+  const mobileTaskEditDisclosure = useDisclosure({ defaultIsOpen: false });
+  const mobileTaskDetailDisclosure = useDisclosure({ defaultIsOpen: false });
+  const feedbackModalDisclosure = useDisclosure({ defaultIsOpen: false });
+
+  // Destructure remaining disclosures
+  const { isOpen: isProjectCreateOpen, onOpen: openProjectCreate, onClose: closeProjectCreate } = projectCreateDisclosure;
+  const { isOpen: isTaskCreateOpen, onOpen: openTaskCreate, onClose: closeTaskCreate } = taskCreateDisclosure;
+  const { isOpen: isMobileTaskCreateOpen, onOpen: openMobileTaskCreate, onClose: closeMobileTaskCreate } = mobileTaskCreateDisclosure;
+  const { isOpen: isMobileTaskEditOpen, onOpen: openMobileTaskEdit, onClose: closeMobileTaskEdit } = mobileTaskEditDisclosure;
+  const { isOpen: isMobileTaskDetailOpen, onOpen: openMobileTaskDetail, onClose: closeMobileTaskDetail } = mobileTaskDetailDisclosure;
+  const { isOpen: isFeedbackModalOpen, onOpen: openFeedbackModal, onClose: closeFeedbackModal } = feedbackModalDisclosure;
+
+  // Safely use useColorMode
+  const colorModeHook = useColorMode();
+  const { colorMode, toggleColorMode } = colorModeHook;
+
   const { logout, refreshUser, user } = useAuth();
 
   const {
@@ -750,7 +797,7 @@ export default function TaskDashboard() {
         method: 'POST',
         body: formData,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('popVia_accessToken')}`
         }
       });
 
@@ -777,7 +824,7 @@ export default function TaskDashboard() {
       const response = await fetch(`/api/uploads/${filename}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('popVia_accessToken')}`
         }
       });
 
@@ -923,7 +970,7 @@ export default function TaskDashboard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('popVia_accessToken')}`
         },
         body: JSON.stringify(shareData)
       });
@@ -961,7 +1008,7 @@ export default function TaskDashboard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('popVia_accessToken')}`
         }
       });
 

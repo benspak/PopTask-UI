@@ -27,7 +27,7 @@ export const useTasks = () => {
   const loadTasks = useCallback(async (filters = {}, forceRefresh = false) => {
     // Don't reload if data was loaded recently (within cache time) unless forced
     const now = Date.now();
-    const cacheTime = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+    const cacheTime = import.meta.env.DEV ? 30000 : 30000; // 30s in both dev and prod
 
     if (!forceRefresh && hasLoadedTasks.current && (now - lastLoadTime.current) < cacheTime) {
       return;
@@ -38,7 +38,9 @@ export const useTasks = () => {
       setError(null);
 
       const response = await apiService.getTasks(filters);
-      setTasks(response.data || []);
+      // Handle both direct array response and response.data format
+      const tasksData = Array.isArray(response) ? response : (response?.data || []);
+      setTasks(tasksData);
       hasLoadedTasks.current = true;
       lastLoadTime.current = now;
 
@@ -72,7 +74,9 @@ export const useTasks = () => {
       setSharedError(null);
 
       const response = await apiService.getSharedTasks();
-      setSharedTasks(response.data || []);
+      // Handle both direct array response and response.data format
+      const sharedTasksData = Array.isArray(response) ? response : (response?.data || []);
+      setSharedTasks(sharedTasksData);
       hasLoadedSharedTasks.current = true;
       lastSharedLoadTime.current = now;
 
@@ -97,10 +101,12 @@ export const useTasks = () => {
   const refreshSharedTasks = useCallback(async (showNotification = false) => {
     try {
       const response = await apiService.getSharedTasks();
+      // Handle both direct array response and response.data format
+      const sharedTasksData = Array.isArray(response) ? response : (response?.data || []);
       const previousCount = sharedTasks.length;
-      const newCount = response.data?.length || 0;
+      const newCount = sharedTasksData.length;
 
-      setSharedTasks(response.data || []);
+      setSharedTasks(sharedTasksData);
       lastSharedLoadTime.current = Date.now();
 
       // Show notification if requested and there are changes
@@ -117,8 +123,10 @@ export const useTasks = () => {
     try {
       setError(null);
       const response = await apiService.createTask(taskData);
-      setTasks(prev => [...prev, response.data]);
-      return response.data;
+      // Handle both direct object response and response.data format
+      const newTask = response?.data || response;
+      setTasks(prev => [...prev, newTask]);
+      return newTask;
     } catch (err) {
       setError('Failed to create task. Please try again.');
       throw err;
@@ -129,14 +137,16 @@ export const useTasks = () => {
     try {
       setError(null);
       const response = await apiService.updateTask(id, taskData);
+      // Handle both direct object response and response.data format
+      const updatedTask = response?.data || response;
       setTasks(prev => prev.map(task =>
-        task._id === id ? response.data : task
+        task._id === id ? updatedTask : task
       ));
 
       // Refresh shared tasks to reflect any changes
       await refreshSharedTasks();
 
-      return response.data;
+      return updatedTask;
     } catch (err) {
       setError('Failed to update task. Please try again.');
       throw err;
@@ -163,14 +173,16 @@ export const useTasks = () => {
     try {
       setError(null);
       const response = await apiService.toggleTaskCompletion(id);
+      // Handle both direct object response and response.data format
+      const updatedTask = response?.data || response;
       setTasks(prev => prev.map(task =>
-        task._id === id ? response.data : task
+        task._id === id ? updatedTask : task
       ));
 
       // Refresh shared tasks to reflect any changes
       await refreshSharedTasks();
 
-      return response.data;
+      return updatedTask;
     } catch (err) {
       setError('Failed to update task completion. Please try again.');
       throw err;

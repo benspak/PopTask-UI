@@ -69,7 +69,7 @@ import Sidebar from './Sidebar';
 import MobileBackdropOverlay from './MobileBackdropOverlay';
 import FeedbackModal from './FeedbackModal';
 
-const CompanyList = () => {
+export default function CompanyList() {
   const navigate = useNavigate();
   const { colorMode, toggleColorMode } = useColorMode();
   const { logout, user } = useAuth();
@@ -671,6 +671,4 @@ const CompanyList = () => {
       />
     </Box>
   );
-};
-
-export default CompanyList;
+}

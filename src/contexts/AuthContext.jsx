@@ -34,6 +34,8 @@ export const AuthProvider = ({ children }) => {
 
   // Check authentication status on mount and when tokens change
   useEffect(() => {
+    let timeoutId = null;
+
     const checkAuthStatus = async () => {
       // Prevent multiple simultaneous auth checks
       if (isCheckingAuth.current) {
@@ -42,10 +44,17 @@ export const AuthProvider = ({ children }) => {
 
       // Throttle auth checks to prevent excessive API calls
       const now = Date.now();
-      const throttleTime = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+      const throttleTime = import.meta.env.DEV ? 30000 : 30000; // 30s in both dev and prod
       if (now - lastAuthCheck.current < throttleTime) {
         return;
       }
+
+      // Add timeout to prevent infinite loading
+      timeoutId = setTimeout(() => {
+        console.log('Auth check timeout, forcing loading state to false');
+        setIsLoading(false);
+        isCheckingAuth.current = false;
+      }, 5000); // Reduced from 10s to 5s
 
       try {
         isCheckingAuth.current = true;
@@ -53,8 +62,27 @@ export const AuthProvider = ({ children }) => {
 
         // If user has explicitly logged out, don't attempt auto-login
         if (hasExplicitlyLoggedOut) {
+          console.log('User has explicitly logged out, skipping auth check');
           setIsAuthenticated(false);
           setUser(null);
+          setIsLoading(false);
+          isCheckingAuth.current = false;
+          if (timeoutId) clearTimeout(timeoutId);
+          return;
+        }
+
+        // Check if backend server is accessible
+        console.log('Checking backend server health...');
+        const healthCheck = await apiService.healthCheck();
+        console.log('Backend health check result:', healthCheck);
+
+        if (healthCheck.status !== 'ok') {
+          console.log('Backend server is not accessible, skipping auth check');
+          setIsAuthenticated(false);
+          setUser(null);
+          setIsLoading(false);
+          isCheckingAuth.current = false;
+          if (timeoutId) clearTimeout(timeoutId);
           return;
         }
 
@@ -63,20 +91,30 @@ export const AuthProvider = ({ children }) => {
         const hasRefreshToken = !!localStorage.getItem(apiService.refreshTokenKey);
 
         if (!hasToken && !hasRefreshToken) {
+          console.log('No tokens found, user is not authenticated');
           setIsAuthenticated(false);
           setUser(null);
+          setIsLoading(false);
+          isCheckingAuth.current = false;
+          if (timeoutId) clearTimeout(timeoutId);
           return;
         }
 
         // Try to validate the current token first
         if (hasToken) {
           try {
+            console.log('Validating current token...');
             const validationResult = await apiService.validateToken();
+            console.log('Token validation successful');
             setIsAuthenticated(true);
             setUser(validationResult.user);
             lastAuthCheck.current = now;
+            setIsLoading(false);
+            isCheckingAuth.current = false;
+            if (timeoutId) clearTimeout(timeoutId);
             return;
           } catch (validationError) {
+            console.log('Token validation failed:', validationError.message);
             // Token is invalid, try to refresh
           }
         }
@@ -84,6 +122,7 @@ export const AuthProvider = ({ children }) => {
         // Try to refresh token if we have one
         if (hasRefreshToken) {
           try {
+            console.log('Attempting to refresh token...');
             const refreshResult = await apiService.refreshToken();
 
             // Store the new tokens
@@ -103,32 +142,55 @@ export const AuthProvider = ({ children }) => {
               setUser(validationResult.user);
             }
 
+            console.log('Token refresh successful');
             setIsAuthenticated(true);
             lastAuthCheck.current = now;
+            setIsLoading(false);
+            isCheckingAuth.current = false;
+            if (timeoutId) clearTimeout(timeoutId);
             return;
           } catch (refreshError) {
+            console.log('Token refresh failed:', refreshError.message);
             // Both validation and refresh failed, clear everything
             apiService.clearSession();
             setIsAuthenticated(false);
             setUser(null);
+            setIsLoading(false);
+            isCheckingAuth.current = false;
+            if (timeoutId) clearTimeout(timeoutId);
+            return;
           }
         } else {
           // No refresh token available
+          console.log('No refresh token available, clearing session');
           apiService.clearSession();
           setIsAuthenticated(false);
           setUser(null);
+          setIsLoading(false);
+          isCheckingAuth.current = false;
+          if (timeoutId) clearTimeout(timeoutId);
+          return;
         }
       } catch (error) {
+        console.error('Auth check error:', error);
         apiService.clearSession();
         setIsAuthenticated(false);
         setUser(null);
-      } finally {
         setIsLoading(false);
         isCheckingAuth.current = false;
+        if (timeoutId) clearTimeout(timeoutId);
       }
     };
 
-    checkAuthStatus();
+    // Only run checkAuthStatus if user hasn't explicitly logged out
+    if (!hasExplicitlyLoggedOut) {
+      checkAuthStatus();
+    } else {
+      // If user has explicitly logged out, ensure we're in logged out state
+      setIsAuthenticated(false);
+      setUser(null);
+      setIsLoading(false);
+    }
 
     // Listen for storage changes (when tokens are updated in other tabs)
     const handleStorageChange = (e) => {
@@ -140,8 +202,11 @@ export const AuthProvider = ({ children }) => {
             clearTimeout(visibilityChangeTimeout.current);
           }
           visibilityChangeTimeout.current = setTimeout(() => {
-            checkAuthStatus();
-          }, import.meta.env.DEV ? 5000 : 3000); // 5s in dev, 3s in prod
+            // Double-check that user hasn't logged out before running auth check
+            if (!hasExplicitlyLoggedOut) {
+              checkAuthStatus();
+            }
+          }, import.meta.env.DEV ? 3000 : 2000); // Reduced from 5s to 3s in dev, 3s to 2s in prod
         }
       }
     };
@@ -151,15 +216,18 @@ export const AuthProvider = ({ children }) => {
       if (!document.hidden && !hasExplicitlyLoggedOut) {
         // Only check auth if we haven't checked recently
         const now = Date.now();
-        const minInterval = import.meta.env.DEV ? 600000 : 300000; // 10 min in dev, 5 min in prod
+        const minInterval = import.meta.env.DEV ? 300000 : 300000; // 5 min in both dev and prod
         if (now - lastAuthCheck.current > minInterval) {
           // Debounce visibility changes
           if (visibilityChangeTimeout.current) {
             clearTimeout(visibilityChangeTimeout.current);
           }
           visibilityChangeTimeout.current = setTimeout(() => {
-            checkAuthStatus();
-          }, import.meta.env.DEV ? 10000 : 5000); // 10s delay in dev, 5s in prod
+            // Double-check that user hasn't logged out before running auth check
+            if (!hasExplicitlyLoggedOut) {
+              checkAuthStatus();
+            }
+          }, import.meta.env.DEV ? 5000 : 3000); // Reduced from 10s to 5s in dev, 5s to 3s in prod
         }
       }
     };
@@ -168,14 +236,17 @@ export const AuthProvider = ({ children }) => {
     const handlePageFocus = () => {
       if (!hasExplicitlyLoggedOut) {
         const now = Date.now();
-        const minInterval = import.meta.env.DEV ? 900000 : 600000; // 15 min in dev, 10 min in prod
+        const minInterval = import.meta.env.DEV ? 600000 : 600000; // 10 min in both dev and prod
         if (now - lastAuthCheck.current > minInterval) {
           if (visibilityChangeTimeout.current) {
             clearTimeout(visibilityChangeTimeout.current);
           }
           visibilityChangeTimeout.current = setTimeout(() => {
-            checkAuthStatus();
-          }, import.meta.env.DEV ? 5000 : 2000); // 5s in dev, 2s in prod
+            // Double-check that user hasn't logged out before running auth check
+            if (!hasExplicitlyLoggedOut) {
+              checkAuthStatus();
+            }
+          }, import.meta.env.DEV ? 3000 : 2000); // Reduced from 5s to 3s in dev, 2s to 2s in prod
         }
       }
     };
@@ -190,6 +261,9 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('focus', handlePageFocus);
       if (visibilityChangeTimeout.current) {
         clearTimeout(visibilityChangeTimeout.current);
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
     };
   }, [hasExplicitlyLoggedOut]);
@@ -259,12 +333,25 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await apiService.logout();
-    setIsAuthenticated(false);
-    setUser(null);
-    setHasAttemptedAutoLogin(false);
-    setHasExplicitlyLoggedOut(true);
-    lastAuthCheck.current = 0;
+    try {
+      console.log('Logging out user...');
+      await apiService.logout();
+      console.log('Backend logout successful');
+    } catch (error) {
+      console.error('Backend logout failed:', error);
+      // Logout request failed silently
+    } finally {
+      // Clear session and set logout state
+      console.log('Clearing session and setting logout state');
+      apiService.clearSession();
+      setIsAuthenticated(false);
+      setUser(null);
+      setHasAttemptedAutoLogin(false);
+      setHasExplicitlyLoggedOut(true);
+      lastAuthCheck.current = 0;
+      isCheckingAuth.current = false;
+      console.log('Logout completed - user should be unauthenticated');
+    }
   };
 
   const refreshUser = async () => {
@@ -279,6 +366,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const oauthLogin = async (token, refreshToken) => {
+    try {
+      // Store tokens
+      localStorage.setItem(apiService.tokenKey, token);
+      localStorage.setItem(apiService.refreshTokenKey, refreshToken);
+
+      // Get current user data
+      const userResult = await apiService.getCurrentUser();
+
+      setIsAuthenticated(true);
+      setUser(userResult.user);
+      setHasAttemptedAutoLogin(false);
+      setHasExplicitlyLoggedOut(false);
+      lastAuthCheck.current = Date.now();
+
+      return userResult;
+    } catch (error) {
+      console.error('OAuth login error:', error);
+      throw error;
+    }
+  };
+
   const value = {
     isAuthenticated,
     isLoading,
@@ -287,6 +396,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     refreshUser,
+    oauthLogin,
   };
 
   return (

@@ -1,10 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import path from 'path'
 
 export default defineConfig(({ mode }) => ({
   plugins: [
-    react(),
+    react({
+      // Fix for @emotion/react multiple instances
+      jsxImportSource: '@emotion/react',
+      babel: {
+        plugins: ['@emotion/babel-plugin']
+      }
+    }),
     // Only enable PWA in production
     ...(mode === 'production' ? [VitePWA({
       registerType: 'autoUpdate',
@@ -29,7 +36,7 @@ export default defineConfig(({ mode }) => ({
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
-              networkTimeoutSeconds: 3, // Reduced timeout
+              networkTimeoutSeconds: 2, // Reduced from 3s to 2s
               cacheableResponse: {
                 statuses: [0, 200]
               }
@@ -150,7 +157,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     hmr: {
       overlay: false // Disable error overlay for faster reloads
-    }
+    },
+    // Add these optimizations:
+    watch: {
+      usePolling: false,
+      interval: 1000
+    },
+    // Force dependency pre-bundling
+    force: true
   },
   // Optimize build for development
   build: {
@@ -158,6 +172,52 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: undefined // Disable chunk splitting in dev
       }
+    },
+    // Disable source maps in development for faster builds
+    sourcemap: false
+  },
+  // Add performance optimizations and fix dependency deduplication
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      '@chakra-ui/react',
+      '@emotion/react',
+      '@emotion/styled',
+      'react-router-dom',
+      'framer-motion'
+    ],
+    exclude: [],
+    // Force deduplication of @emotion packages
+    force: true,
+    // Disable esbuild optimization to prevent MIME type issues
+    esbuildOptions: {
+      target: 'es2020'
+    },
+    // Fix outdated optimize deps by forcing re-optimization
+    entries: [
+      './src/main.jsx'
+    ]
+  },
+  // Reduce chunk size warnings
+  chunkSizeWarningLimit: 1000,
+  // Add resolve configuration to ensure single instances
+  resolve: {
+    dedupe: ['@emotion/react', '@emotion/styled', 'react', 'react-dom'],
+    alias: {
+      // Force single React instance
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      '@emotion/react': path.resolve(__dirname, 'node_modules/@emotion/react'),
+      '@emotion/styled': path.resolve(__dirname, 'node_modules/@emotion/styled')
     }
+  },
+  // Add esbuild configuration for better module handling
+  esbuild: {
+    target: 'es2020'
+  },
+  // Disable PWA in development to prevent module loading issues
+  define: {
+    __DEV__: mode === 'development'
   }
 }))

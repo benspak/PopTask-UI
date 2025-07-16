@@ -22,7 +22,7 @@ const OAuthCallback = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { oauthLogin } = useAuth();
   const toast = useToast();
 
   useEffect(() => {
@@ -60,12 +60,8 @@ const OAuthCallback = () => {
           return;
         }
 
-        // Store tokens in localStorage
-        localStorage.setItem('token', token);
-        localStorage.setItem('refreshToken', refreshToken);
-
-        // Update auth context
-        await login(token, refreshToken);
+        // Use the oauthLogin method to handle authentication
+        await oauthLogin(token, refreshToken);
 
         setStatus('success');
         toast({
@@ -96,7 +92,7 @@ const OAuthCallback = () => {
     };
 
     handleOAuthCallback();
-  }, [searchParams, navigate, login, toast]);
+  }, [searchParams, navigate, oauthLogin, toast]);
 
   if (status === 'processing') {
     return (

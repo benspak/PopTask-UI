@@ -5,6 +5,46 @@ import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { TimezoneProvider } from './contexts/TimezoneContext';
 import App from './App.jsx';
+import apiService from './services/api';
+
+// Add global debug function for testing backend connectivity
+window.debugBackend = async () => {
+  console.log('Testing backend connectivity...');
+  try {
+    const healthCheck = await apiService.healthCheck();
+    console.log('Backend health check:', healthCheck);
+    return healthCheck;
+  } catch (error) {
+    console.error('Backend health check failed:', error);
+    return { status: 'error', message: error.message };
+  }
+};
+
+// Add performance monitoring
+window.performanceMonitor = {
+  startTime: performance.now(),
+
+  measure(name, fn) {
+    const start = performance.now();
+    const result = fn();
+    const duration = performance.now() - start;
+    console.log(`${name}: ${duration.toFixed(2)}ms`);
+    return result;
+  },
+
+  logTotalTime() {
+    const total = performance.now() - this.startTime;
+    console.log(`Total load time: ${total.toFixed(2)}ms`);
+
+    if (total < 2000) {
+      console.log('✅ Excellent performance!');
+    } else if (total < 5000) {
+      console.log('⚠️  Good performance, but could be better');
+    } else {
+      console.log('❌ Performance needs improvement');
+    }
+  }
+};
 
 // Create theme with dark mode as default
 const theme = extendTheme({
@@ -71,3 +111,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </ChakraProvider>
   </ErrorBoundary>
 );
+
+// Log total performance after app loads
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    window.performanceMonitor.logTotalTime();
+  }, 1000);
+});

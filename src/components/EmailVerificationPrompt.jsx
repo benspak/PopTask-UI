@@ -20,8 +20,10 @@ import {
 } from '@chakra-ui/react';
 import { EmailIcon, CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import apiService from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const EmailVerificationPrompt = ({ user, onVerificationComplete }) => {
+  const { logout } = useAuth();
   const [isResending, setIsResending] = useState(false);
   const [email, setEmail] = useState(user?.email || '');
   const [isValidEmail, setIsValidEmail] = useState(true);
@@ -69,7 +71,7 @@ const EmailVerificationPrompt = ({ user, onVerificationComplete }) => {
 
   const handleLogout = async () => {
     try {
-      await apiService.logout();
+      await logout();
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);

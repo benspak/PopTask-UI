@@ -77,7 +77,7 @@ import TopBar from './TopBar';
 import MobileBackdropOverlay from './MobileBackdropOverlay';
 
 const ProposalTemplateList = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -138,7 +138,7 @@ const ProposalTemplateList = () => {
 
   const handleLogout = async () => {
     try {
-      await apiService.logout();
+      await logout();
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout failed:', error);

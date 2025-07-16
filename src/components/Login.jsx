@@ -36,7 +36,7 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState(null); // 'google' or 'github'
+  const [oauthLoading, setOauthLoading] = useState(null); // 'google'
   const toast = useToast();
 
   // Get the redirect URL from location state
@@ -157,21 +157,7 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
               Continue with Google
             </Button>
 
-            <Button
-              w="full"
-              size="lg"
-              variant="outline"
-              onClick={() => handleOAuthLogin('github')}
-              isLoading={oauthLoading === 'github'}
-              loadingText="Connecting to GitHub..."
-              leftIcon={
-                <Box as="span" fontSize="18px">
-                  🐙
-                </Box>
-              }
-            >
-              Continue with GitHub
-            </Button>
+
           </VStack>
 
           <HStack w="full" spacing={4}>

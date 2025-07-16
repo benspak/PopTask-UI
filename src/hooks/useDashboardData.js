@@ -21,7 +21,7 @@ export const useDashboardData = () => {
   const loadDashboardData = useCallback(async (forceRefresh = false) => {
     // Don't reload if data was loaded recently (within cache time) unless forced
     const now = Date.now();
-    const cacheTime = import.meta.env.DEV ? 120000 : 60000; // 2 min in dev, 1 min in prod
+    const cacheTime = import.meta.env.DEV ? 30000 : 60000; // 30s in dev, 1 min in prod
 
     if (!forceRefresh && hasLoadedData.current && (now - lastLoadTime.current) < cacheTime) {
       return;

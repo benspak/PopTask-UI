@@ -37,7 +37,7 @@ import Sidebar from './Sidebar';
 import MobileBackdropOverlay from './MobileBackdropOverlay';
 import { useAuth } from '../contexts/AuthContext';
 
-export const InvoiceDetail = () => {
+export default function InvoiceDetail() {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();

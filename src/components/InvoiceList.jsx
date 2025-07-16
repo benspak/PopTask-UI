@@ -10,7 +10,7 @@ import Sidebar from './Sidebar';
 import MobileBackdropOverlay from './MobileBackdropOverlay';
 import { useAuth } from '../contexts/AuthContext';
 
-export const InvoiceList = () => {
+export default function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Flex,
@@ -47,7 +48,8 @@ import FeedbackModal from './FeedbackModal';
 
 export default function Dashboard() {
   const { colorMode, toggleColorMode } = useColorMode();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useBreakpointValue({ base: true, md: false });
   const toast = useToast();
 

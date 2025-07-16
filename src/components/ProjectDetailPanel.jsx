@@ -81,7 +81,8 @@ const ProjectDetailPanel = ({
       try {
         setClientsLoading(true);
         const response = await apiService.getClients();
-        const clientsData = Array.isArray(response) ? response : (response.data || []);
+        // The API service already extracts the data property, so response is the clients array
+        const clientsData = response || [];
         setClients(clientsData);
       } catch (error) {
         console.error('Failed to load clients:', error);

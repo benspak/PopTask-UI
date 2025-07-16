@@ -13,7 +13,7 @@ export const useClients = () => {
   const loadClients = useCallback(async (forceRefresh = false) => {
     // Don't reload if data was loaded recently (within cache time) unless forced
     const now = Date.now();
-    const cacheTime = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+    const cacheTime = import.meta.env.DEV ? 30000 : 30000; // 30s in both dev and prod
 
     if (!forceRefresh && hasLoadedClients.current && (now - lastLoadTime.current) < cacheTime) {
       return;
@@ -23,13 +23,20 @@ export const useClients = () => {
     setError(null);
     try {
       const response = await apiService.getClients();
-      // Handle both direct array response and response.data
-      const clientsData = Array.isArray(response) ? response : (response.data || []);
-      setClients(clientsData);
+      // The API service already extracts the data property, so response is the clients array
+      const clientsData = response || [];
+
+      // Ensure we have a valid array and filter out any invalid entries
+      const validClients = Array.isArray(clientsData)
+        ? clientsData.filter(client => client && typeof client === 'object' && client._id)
+        : [];
+
+      setClients(validClients || []);
       hasLoadedClients.current = true;
       lastLoadTime.current = now;
     } catch (err) {
       setError(err.message || 'Failed to load clients');
+      setClients([]); // Ensure clients is always an array even if loading fails
     } finally {
       setLoading(false);
     }
@@ -40,10 +47,16 @@ export const useClients = () => {
     setError(null);
     try {
       const response = await apiService.createClient(clientData);
-      // Handle both direct object response and response.data
-      const newClient = response.data || response;
-      setClients(prev => [...prev, newClient]);
-      return newClient;
+      // The API service already extracts the data property
+      const newClient = response;
+
+      // Ensure we have a valid client object
+      if (newClient && typeof newClient === 'object' && newClient._id) {
+        setClients(prev => [...prev, newClient]);
+        return newClient;
+      } else {
+        throw new Error('Invalid client data received from server');
+      }
     } catch (err) {
       setError(err.message || 'Failed to create client');
       throw err;
@@ -57,12 +70,18 @@ export const useClients = () => {
     setError(null);
     try {
       const response = await apiService.updateClient(clientId, clientData);
-      // Handle both direct object response and response.data
-      const updatedClient = response.data || response;
-      setClients(prev => prev.map(client =>
-        client._id === clientId ? updatedClient : client
-      ));
-      return updatedClient;
+      // The API service already extracts the data property
+      const updatedClient = response;
+
+      // Ensure we have a valid client object
+      if (updatedClient && typeof updatedClient === 'object' && updatedClient._id) {
+        setClients(prev => prev.map(client =>
+          client._id === clientId ? updatedClient : client
+        ));
+        return updatedClient;
+      } else {
+        throw new Error('Invalid client data received from server');
+      }
     } catch (err) {
       setError(err.message || 'Failed to update client');
       throw err;

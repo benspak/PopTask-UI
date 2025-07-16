@@ -45,7 +45,7 @@ import MobileBackdropOverlay from './MobileBackdropOverlay';
 import FeedbackModal from './FeedbackModal';
 import { useAuth } from '../contexts/AuthContext';
 
-export const ClientList = () => {
+export default function ClientList() {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   // Initialize sidebar state from localStorage
@@ -314,7 +314,7 @@ export const ClientList = () => {
             </Box>
           ) : (
             <VStack spacing={3} align="stretch">
-              {clients.filter(client => client && client._id).map(client => (
+              {clients.filter(client => client && typeof client === 'object' && client._id).map(client => (
                 <Box
                   key={client._id}
                   bg="gray.800"
@@ -328,22 +328,22 @@ export const ClientList = () => {
                     <Box flex="1">
                       <HStack spacing={3} mb={2}>
                         <Text fontWeight="bold" color="white" fontSize="lg">
-                          {client.name || 'Unnamed Client'}
+                          {typeof client.name === 'string' ? client.name : 'Unnamed Client'}
                         </Text>
-                        {client.company && (
+                        {client.company && typeof client.company === 'string' && (
                           <Badge colorScheme="blue" variant="subtle">
                             {client.company}
                           </Badge>
                         )}
                       </HStack>
 
-                      {client.email && (
+                      {client.email && typeof client.email === 'string' && (
                         <Text fontSize="sm" color="gray.300" mb={1}>
                           📧 {client.email}
                         </Text>
                       )}
 
-                      {client.notes && (
+                      {client.notes && typeof client.notes === 'string' && (
                         <Text fontSize="sm" color="gray.400" mt={2}>
                           📝 {client.notes}
                         </Text>

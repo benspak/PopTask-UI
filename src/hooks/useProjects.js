@@ -27,7 +27,7 @@ export const useProjects = () => {
   const loadProjects = useCallback(async (forceRefresh = false) => {
     // Don't reload if data was loaded recently (within cache time) unless forced
     const now = Date.now();
-    const cacheTime = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+    const cacheTime = import.meta.env.DEV ? 30000 : 30000; // 30s in both dev and prod
 
     if (!forceRefresh && hasLoadedProjects.current && (now - lastLoadTime.current) < cacheTime) {
       return;
@@ -38,7 +38,36 @@ export const useProjects = () => {
       setError(null);
 
       const response = await apiService.getProjects();
-      setProjects(response.data || []);
+
+      // Enhanced data validation and sanitization
+      let projectsData = [];
+
+      if (Array.isArray(response)) {
+        projectsData = response;
+      } else if (response && typeof response === 'object' && response.data) {
+        projectsData = response.data;
+      } else if (response && typeof response === 'object') {
+        // Handle case where response is an object but not in expected format
+        projectsData = Array.isArray(response) ? response : [];
+      } else {
+        console.warn('Unexpected projects response format:', response);
+        projectsData = [];
+      }
+
+      // Ensure we have a valid array and filter out any invalid entries
+      const validProjects = Array.isArray(projectsData)
+        ? projectsData.filter(project => {
+            // Enhanced validation for project objects
+            return project &&
+                   typeof project === 'object' &&
+                   project._id &&
+                   typeof project._id === 'string' &&
+                   project.name &&
+                   typeof project.name === 'string';
+          })
+        : [];
+
+      setProjects(validProjects);
       hasLoadedProjects.current = true;
       lastLoadTime.current = now;
 
@@ -52,6 +81,7 @@ export const useProjects = () => {
         setError(null);
       }
     } catch (err) {
+      console.error('Error loading projects:', err);
       setError('Failed to load projects. Please check your connection.');
       setProjects([]);
       setIsOffline(true);
@@ -74,7 +104,36 @@ export const useProjects = () => {
       setSharedError(null);
 
       const response = await apiService.getSharedProjects();
-      setSharedProjects(response.data || []);
+
+      // Enhanced data validation and sanitization
+      let sharedProjectsData = [];
+
+      if (Array.isArray(response)) {
+        sharedProjectsData = response;
+      } else if (response && typeof response === 'object' && response.data) {
+        sharedProjectsData = response.data;
+      } else if (response && typeof response === 'object') {
+        // Handle case where response is an object but not in expected format
+        sharedProjectsData = Array.isArray(response) ? response : [];
+      } else {
+        console.warn('Unexpected shared projects response format:', response);
+        sharedProjectsData = [];
+      }
+
+      // Ensure we have a valid array and filter out any invalid entries
+      const validSharedProjects = Array.isArray(sharedProjectsData)
+        ? sharedProjectsData.filter(project => {
+            // Enhanced validation for project objects
+            return project &&
+                   typeof project === 'object' &&
+                   project._id &&
+                   typeof project._id === 'string' &&
+                   project.name &&
+                   typeof project.name === 'string';
+          })
+        : [];
+
+      setSharedProjects(validSharedProjects);
       hasLoadedSharedProjects.current = true;
       lastSharedLoadTime.current = now;
 
@@ -88,6 +147,7 @@ export const useProjects = () => {
         setSharedError(null);
       }
     } catch (err) {
+      console.error('Error loading shared projects:', err);
       setSharedError('Failed to load shared projects. Please check your connection.');
       setSharedProjects([]);
       setIsOffline(true);
@@ -99,10 +159,39 @@ export const useProjects = () => {
   const refreshSharedProjects = useCallback(async (showNotification = false) => {
     try {
       const response = await apiService.getSharedProjects();
-      const previousCount = sharedProjects.length;
-      const newCount = response.data?.length || 0;
 
-      setSharedProjects(response.data || []);
+      // Enhanced data validation and sanitization
+      let sharedProjectsData = [];
+
+      if (Array.isArray(response)) {
+        sharedProjectsData = response;
+      } else if (response && typeof response === 'object' && response.data) {
+        sharedProjectsData = response.data;
+      } else if (response && typeof response === 'object') {
+        // Handle case where response is an object but not in expected format
+        sharedProjectsData = Array.isArray(response) ? response : [];
+      } else {
+        console.warn('Unexpected shared projects response format:', response);
+        sharedProjectsData = [];
+      }
+
+      // Ensure we have a valid array and filter out any invalid entries
+      const validSharedProjects = Array.isArray(sharedProjectsData)
+        ? sharedProjectsData.filter(project => {
+            // Enhanced validation for project objects
+            return project &&
+                   typeof project === 'object' &&
+                   project._id &&
+                   typeof project._id === 'string' &&
+                   project.name &&
+                   typeof project.name === 'string';
+          })
+        : [];
+
+      const previousCount = sharedProjects.length;
+      const newCount = validSharedProjects.length;
+
+      setSharedProjects(validSharedProjects);
       lastSharedLoadTime.current = Date.now();
 
       // Show notification if requested and there are changes
@@ -111,6 +200,7 @@ export const useProjects = () => {
         return { previousCount, newCount };
       }
     } catch (err) {
+      console.error('Error refreshing shared projects:', err);
       // Don't set error state for refresh operations to avoid disrupting UI
     }
   }, [sharedProjects.length]);
@@ -119,12 +209,14 @@ export const useProjects = () => {
     try {
       setError(null);
       const response = await apiService.createProject(projectData);
-      setProjects(prev => [...prev, response.data]);
+      // Handle both direct object response and response.data format
+      const newProject = response?.data || response;
+      setProjects(prev => [...prev, newProject]);
 
       // Refresh shared projects to reflect any changes
       await refreshSharedProjects();
 
-      return response.data;
+      return newProject;
     } catch (err) {
       setError('Failed to create project. Please try again.');
       throw err;
@@ -135,14 +227,16 @@ export const useProjects = () => {
     try {
       setError(null);
       const response = await apiService.updateProject(id, projectData);
+      // Handle both direct object response and response.data format
+      const updatedProject = response?.data || response;
       setProjects(prev => prev.map(project =>
-        project._id === id ? response.data : project
+        project._id === id ? updatedProject : project
       ));
 
       // Refresh shared projects to reflect any changes
       await refreshSharedProjects();
 
-      return response.data;
+      return updatedProject;
     } catch (err) {
       setError('Failed to update project. Please try again.');
       throw err;

@@ -19,7 +19,11 @@
     "analyze": "vite-bundle-analyzer",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist node_modules/.vite",
-    "preview:build": "npm run build && npm run preview"
+    "clean:all": "rm -rf dist node_modules/.vite node_modules package-lock.json && npm install",
+    "clean:vite": "node clean-vite-cache.js",
+    "preview:build": "npm run build && npm run preview",
+    "diagnose:emotion": "node fix-emotion-issues.js",
+    "test:react": "node test-react-single-instance.js"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
@@ -28,8 +32,8 @@
     "@emotion/styled": "^11.11.0",
     "date-fns-tz": "^3.2.0",
     "framer-motion": "^10.16.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-quill": "^2.0.0",
     "react-router-dom": "^7.6.3"
   },

@@ -51,6 +51,9 @@ class ApiService {
     this.baseURL = API_BASE_URL;
     this.isOnline = navigator.onLine;
     this.onlineCheckInterval = null;
+    this.pendingRequests = new Map(); // Add request deduplication
+    this.healthCheckCache = null;
+    this.healthCheckCacheTime = 0;
 
     // Set up network status listeners
     window.addEventListener('online', () => {
@@ -69,7 +72,7 @@ class ApiService {
 
   // Start periodic online status check
   startPeriodicOnlineCheck() {
-    const interval = import.meta.env.DEV ? 60000 : 30000; // 1 min in dev, 30s in prod
+    const interval = import.meta.env.DEV ? 30000 : 30000; // 30s in both dev and prod
 
     this.onlineCheckInterval = setInterval(async () => {
       const wasOnline = this.isOnline;
@@ -94,15 +97,22 @@ class ApiService {
     }
   }
 
-  // Check if we can reach the server
+  // Check if we can reach the server with caching
   async checkServerConnection() {
     try {
       if (!navigator.onLine) {
         return false;
       }
 
+      // Use cached health check result if recent
+      const now = Date.now();
+      const cacheTime = import.meta.env.DEV ? 10000 : 5000; // 10s in dev, 5s in prod
+      if (this.healthCheckCache && (now - this.healthCheckCacheTime) < cacheTime) {
+        return this.healthCheckCache;
+      }
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), import.meta.env.DEV ? 5000 : 3000); // 5s in dev, 3s in prod
+      const timeoutId = setTimeout(() => controller.abort(), import.meta.env.DEV ? 2000 : 3000); // 2s in dev, 3s in prod
 
       const response = await fetch(`${this.baseURL}/health`, {
         method: 'GET',
@@ -116,12 +126,20 @@ class ApiService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        this.healthCheckCache = false;
+        this.healthCheckCacheTime = now;
         return false;
       }
 
       const data = await response.json();
-      return data && typeof data.status === 'string' && data.status.toLowerCase() === 'ok';
+      const isHealthy = data && typeof data.status === 'string' && data.status.toLowerCase() === 'ok';
+
+      this.healthCheckCache = isHealthy;
+      this.healthCheckCacheTime = now;
+      return isHealthy;
     } catch (error) {
+      this.healthCheckCache = false;
+      this.healthCheckCacheTime = Date.now();
       return false;
     }
   }
@@ -137,8 +155,63 @@ class ApiService {
     return this.request('/dashboard/initial-data');
   }
 
-  // Simple request method
+  // Add health check method with caching
+  async healthCheck() {
+    try {
+      // Use cached result if recent
+      const now = Date.now();
+      const cacheTime = import.meta.env.DEV ? 5000 : 3000; // 5s in dev, 3s in prod
+      if (this.healthCheckCache && (now - this.healthCheckCacheTime) < cacheTime) {
+        return { status: this.healthCheckCache ? 'ok' : 'error' };
+      }
+
+      const response = await fetch(`${this.baseURL}/health`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.healthCheckCache = true;
+        this.healthCheckCacheTime = now;
+        return { status: 'ok', data };
+      } else {
+        this.healthCheckCache = false;
+        this.healthCheckCacheTime = now;
+        return { status: 'error', statusCode: response.status };
+      }
+    } catch (error) {
+      this.healthCheckCache = false;
+      this.healthCheckCacheTime = Date.now();
+      return { status: 'error', message: error.message };
+    }
+  }
+
+  // Simple request method with deduplication
   async request(endpoint, options = {}) {
+    const requestKey = `${endpoint}-${JSON.stringify(options)}`;
+
+    // Check if this request is already pending
+    if (this.pendingRequests.has(requestKey)) {
+      return this.pendingRequests.get(requestKey);
+    }
+
+    const promise = this._makeRequest(endpoint, options);
+    this.pendingRequests.set(requestKey, promise);
+
+    try {
+      const result = await promise;
+      return result;
+    } finally {
+      this.pendingRequests.delete(requestKey);
+    }
+  }
+
+  // Internal request method
+  async _makeRequest(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
 
     const config = {
@@ -160,53 +233,86 @@ class ApiService {
       delete config.headers['Content-Type'];
     }
 
-    let response = await fetch(url, config);
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced from 10s to 8s
 
-    // If we get a 401 and we have a refresh token, try to refresh
-    if (response.status === 401 && token && localStorage.getItem(this.refreshTokenKey)) {
-      try {
-        const refreshResult = await this.refreshToken();
+    try {
+      let response = await fetch(url, {
+        ...config,
+        signal: controller.signal
+      });
 
-        // Update the token in the request
-        if (refreshResult.token) {
-          config.headers.Authorization = `Bearer ${refreshResult.token}`;
-          // Retry the original request with the new token
-          response = await fetch(url, config);
+      clearTimeout(timeoutId);
+
+      // If we get a 401 and we have a refresh token, try to refresh
+      if (response.status === 401 && token && localStorage.getItem(this.refreshTokenKey)) {
+        try {
+          const refreshResult = await this.refreshToken();
+
+          // Update the token in the request
+          if (refreshResult.token) {
+            config.headers.Authorization = `Bearer ${refreshResult.token}`;
+            // Retry the original request with the new token
+            response = await fetch(url, {
+              ...config,
+              signal: controller.signal
+            });
+          }
+        } catch (refreshError) {
+          // If refresh fails, clear session and throw original error
+          this.clearSession();
+          throw new Error('Authentication failed. Please login again.');
         }
-      } catch (refreshError) {
-        // If refresh fails, clear session and throw original error
-        this.clearSession();
-        throw new Error('Authentication failed. Please login again.');
       }
-    }
 
-    if (!response.ok) {
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+
+          // Create a custom error object that preserves the backend error details
+          const error = new Error(data.message || data.error || `Server error: ${response.status}`);
+          error.status = response.status;
+          error.errorType = data.error;
+          error.message = data.message || data.error || `Server error: ${response.status}`;
+          error.isLimitError = data.error === 'Task limit reached' || data.error === 'Project limit reached';
+          error.response = { data, status: response.status };
+
+          throw error;
+        } else {
+          const error = new Error(`Server error: ${response.status}`);
+          error.status = response.status;
+          throw error;
+        }
+      }
+
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
+        const result = await response.json();
 
-        // Create a custom error object that preserves the backend error details
-        const error = new Error(data.message || data.error || `Server error: ${response.status}`);
-        error.status = response.status;
-        error.errorType = data.error;
-        error.message = data.message || data.error || `Server error: ${response.status}`;
-        error.isLimitError = data.error === 'Task limit reached' || data.error === 'Project limit reached';
-        error.response = { data, status: response.status };
-
-        throw error;
+        // Validate and sanitize the response data
+        if (result && typeof result === 'object') {
+          // Handle backend response format: { success: true, data: [...] }
+          if (result.success && result.data !== undefined) {
+            return result.data;
+          }
+          // Handle direct data response
+          return result;
+        } else {
+          // Fallback for unexpected response formats
+          console.warn('Unexpected API response format:', result);
+          return result || null;
+        }
       } else {
-        const error = new Error(`Server error: ${response.status}`);
-        error.status = response.status;
-        throw error;
+        return { success: true };
       }
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const result = await response.json();
-      return result;
-    } else {
-      return { success: true };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout - server may be unavailable');
+      }
+      throw error;
     }
   }
 
@@ -276,8 +382,16 @@ class ApiService {
 
   async logout() {
     try {
+      const refreshToken = localStorage.getItem(this.refreshTokenKey);
+      const logoutData = {};
+
+      if (refreshToken) {
+        logoutData.refreshToken = refreshToken;
+      }
+
       await this.request('/auth/logout', {
         method: 'POST',
+        body: JSON.stringify(logoutData),
       });
     } catch (error) {
       // Logout request failed silently
@@ -323,6 +437,7 @@ class ApiService {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.refreshTokenKey);
     localStorage.removeItem('userData');
+    localStorage.removeItem('popvia_app_state');
   }
 
   // Token storage keys

@@ -29,7 +29,7 @@ import Sidebar from './Sidebar';
 import MobileBackdropOverlay from './MobileBackdropOverlay';
 import { useAuth } from '../contexts/AuthContext';
 
-export const InvoiceCreatePanel = () => {
+export default function InvoiceCreatePanel() {
   const navigate = useNavigate();
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
@@ -87,9 +87,9 @@ export const InvoiceCreatePanel = () => {
           apiService.getProjects()
         ]);
 
-        // Handle both direct array response and response.data format
-        const clientsData = Array.isArray(clientsRes) ? clientsRes : (clientsRes?.data || []);
-        const projectsData = Array.isArray(projectsRes) ? projectsRes : (projectsRes?.data || []);
+        // The API service already extracts the data property, so responses are the arrays directly
+        const clientsData = clientsRes || [];
+        const projectsData = projectsRes || [];
 
         setClients(clientsData || []);
         setProjects(projectsData || []);
