@@ -20,6 +20,7 @@ import {
   InputRightElement,
   IconButton,
   HStack,
+  Divider,
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,6 +36,7 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(null); // 'google' or 'github'
   const toast = useToast();
 
   // Get the redirect URL from location state
@@ -104,6 +106,17 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
     }
   };
 
+  const handleOAuthLogin = (provider) => {
+    setOauthLoading(provider);
+
+    // Redirect to OAuth provider
+    const backendUrl = process.env.NODE_ENV === 'production'
+      ? window.location.origin.replace('5173', '3001')
+      : 'http://localhost:3001';
+
+    window.location.href = `${backendUrl}/api/auth/${provider}`;
+  };
+
   return (
     <Container maxW="md" py={10}>
       <Center>
@@ -125,6 +138,49 @@ const Login = ({ onSwitchToRegister, onSwitchToForgotPassword }) => {
               </Alert>
             )}
           </VStack>
+
+          {/* OAuth Login Buttons */}
+          <VStack spacing={3} w="full">
+            <Button
+              w="full"
+              size="lg"
+              variant="outline"
+              onClick={() => handleOAuthLogin('google')}
+              isLoading={oauthLoading === 'google'}
+              loadingText="Connecting to Google..."
+              leftIcon={
+                <Box as="span" fontSize="18px">
+                  🔍
+                </Box>
+              }
+            >
+              Continue with Google
+            </Button>
+
+            <Button
+              w="full"
+              size="lg"
+              variant="outline"
+              onClick={() => handleOAuthLogin('github')}
+              isLoading={oauthLoading === 'github'}
+              loadingText="Connecting to GitHub..."
+              leftIcon={
+                <Box as="span" fontSize="18px">
+                  🐙
+                </Box>
+              }
+            >
+              Continue with GitHub
+            </Button>
+          </VStack>
+
+          <HStack w="full" spacing={4}>
+            <Divider />
+            <Text fontSize="sm" color="gray.500" whiteSpace="nowrap">
+              or
+            </Text>
+            <Divider />
+          </HStack>
 
           <Box as="form" onSubmit={handleSubmit} w="full">
             <VStack spacing={4}>

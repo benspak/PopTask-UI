@@ -9,6 +9,7 @@ import Register from './views/Register';
 import ForgotPassword from './views/ForgotPassword';
 import ResetPassword from './views/ResetPassword';
 import EmailVerification from './components/EmailVerification';
+import OAuthCallback from './components/OAuthCallback';
 import Dashboard from './components/Dashboard';
 import TaskDashboard from './components/TaskDashboard';
 import SharedView from './components/SharedView';
@@ -30,6 +31,8 @@ import ProposalTemplateList from './components/ProposalTemplateList';
 import JobList from './components/JobList';
 import PublicJobBoard from './components/PublicJobBoard';
 import PublicJobDetail from './components/PublicJobDetail';
+import TermsOfService from './components/TermsOfService';
+import PrivacyPolicy from './components/PrivacyPolicy';
 
 export default function App() {
   // Wrap useAuth in a try-catch to handle any context errors
@@ -83,6 +86,7 @@ export default function App() {
       } />
       <Route path="/verify-email" element={<EmailVerification />} />
       <Route path="/verify-company/:token" element={<CompanyVerification />} />
+      <Route path="/oauth-callback" element={<OAuthCallback />} />
 
       {/* Shared content routes (public) */}
       <Route path="/shared/:type/:token" element={<SharedView />} />
@@ -91,6 +95,8 @@ export default function App() {
       <Route path="/company/:slug/:token" element={<PublicCompanyDetail />} />
       <Route path="/jobs" element={<PublicJobBoard />} />
       <Route path="/jobs/:slug" element={<PublicJobDetail />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
 
       {/* Protected routes */}
       <Route path="/dashboard" element={

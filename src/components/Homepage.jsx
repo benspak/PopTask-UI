@@ -774,6 +774,12 @@ const Homepage = () => {
               <Link href="/jobs" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
                 Jobs
               </Link>
+              <Link href="/terms" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
+                Terms
+              </Link>
+              <Link href="/privacy" color={useColorModeValue('gray.600', 'gray.400')} _hover={{ color: accentColor }}>
+                Privacy
+              </Link>
             </HStack>
           </Flex>
         </Container>
