@@ -233,8 +233,8 @@ export default function InvoiceCreatePanel() {
   };
 
   const handleSubmit = async () => {
-    if (!clientId || !projectId || lineItems.length === 0) {
-      toast({ title: 'Client, project, and at least one line item required', status: 'warning' });
+    if (!clientId || lineItems.length === 0) {
+      toast({ title: 'Client and at least one line item required', status: 'warning' });
       return;
     }
     setSubmitting(true);

@@ -69,7 +69,9 @@ export default function InvoiceEditPanel() {
         // Set invoice data
         if (invoiceData) {
           setClientId(invoiceData.clientId?._id || invoiceData.clientId || '');
-          setProjectId(invoiceData.projectId?._id || invoiceData.projectId || '');
+          // Handle null projectId for general tasks
+          const invoiceProjectId = invoiceData.projectId?._id || invoiceData.projectId;
+          setProjectId(invoiceProjectId || 'general');
           setLineItems(invoiceData.lineItems || []);
           setTotal(invoiceData.total || 0);
         }
@@ -118,8 +120,8 @@ export default function InvoiceEditPanel() {
   };
 
   const handleSubmit = async () => {
-    if (!clientId || !projectId || lineItems.length === 0) {
-      toast({ title: 'Client, project, and at least one line item required', status: 'warning' });
+    if (!clientId || lineItems.length === 0) {
+      toast({ title: 'Client and at least one line item required', status: 'warning' });
       return;
     }
     setSubmitting(true);
@@ -183,6 +185,7 @@ export default function InvoiceEditPanel() {
           ))}
         </Select>
         <Select placeholder="Select project" value={projectId} onChange={e => setProjectId(e.target.value)} bg="gray.700" color="white">
+          <option value="general">General Tasks</option>
           {(projects || []).filter(p => {
             // Handle both populated clientId object and string clientId
             const projectClientId = p.clientId?._id || p.clientId;
