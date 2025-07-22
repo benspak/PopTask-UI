@@ -26,7 +26,7 @@
     "test:react": "node test-react-single-instance.js"
   },
   "dependencies": {
-    "@chakra-ui/icons": "^2.1.1",
+    "@chakra-ui/icons": "^2.2.6",
     "@chakra-ui/react": "^2.8.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
