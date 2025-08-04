@@ -1,19 +1,20 @@
 # PopVia Frontend
 
-A modern, responsive Progressive Web App (PWA) for task management with comprehensive user authentication, collaboration features, time tracking, shared content management, company verification, invoice processing, and advanced project management, built with React, Chakra UI, and Vite.
+A modern, responsive Progressive Web App (PWA) for comprehensive business management with task management, project collaboration, team management, job board, proposal templates, client management, company verification, invoice processing, and advanced analytics, built with React, Chakra UI, and Vite.
 
 ## 💰 Business Value
 
-**Target Market**: SaaS productivity platform serving SMBs and freelancers
+**Target Market**: SaaS productivity platform serving SMBs, freelancers, and agencies
 **Revenue Potential**: $20M+ ARR by 2050 through scalable subscription model
-**Value Delivered**: 10x ROI through time savings, team collaboration, and business management
-**Key Features**: User authentication, task sharing, project management, time tracking, collaboration, shared content management, company verification, invoice processing, payment integration, PWA capabilities
+**Value Delivered**: 10x ROI through time savings, team collaboration, business management, and client acquisition
+**Key Features**: Complete business management suite with authentication, collaboration, job board, proposal templates, invoicing, and analytics
 
 ## ✨ Features
 
 ### 🔐 Authentication & User Management
 - **User Registration** - Secure registration with email verification
 - **User Login** - JWT-based authentication with refresh tokens
+- **OAuth Integration** - Google OAuth login with automatic account creation
 - **Password Reset** - Secure password reset via email
 - **Email Verification** - Required email verification for new accounts
 - **Account Management** - User profile editing and password changes
@@ -22,6 +23,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **User Limits** - Basic users limited to 10 tasks and 5 projects
 - **Public Profiles** - Public user profiles with biography and verification status
 - **Profile Pictures** - Drag-and-drop avatar upload and management
+- **User Types** - Basic, Pro, and Admin user tiers with different capabilities
 
 ### 🏢 Company Management
 - **Company Profiles** - Create and manage company profiles with detailed information
@@ -32,6 +34,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Location Tracking** - City, state, and country-based company organization
 - **Company Search** - Advanced search with industry and location filters
 - **Public Sharing** - Secure token-based company sharing with view tracking
+- **Company Statistics** - Analytics and insights for company management
 
 ### 👥 Client Management
 - **Client Profiles** - Create and manage client contact information
@@ -39,6 +42,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Billing Integration** - Link clients to invoices and payment processing
 - **Communication History** - Track client interactions and communications
 - **Contact Information** - Comprehensive client contact management
+- **Client Analytics** - Track client engagement and project relationships
 
 ### 💰 Invoice & Payment System
 - **Invoice Creation** - Create invoices with line items and automatic calculations
@@ -49,6 +53,36 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Invoice Management** - Edit, update, and manage existing invoices
 - **Client Billing** - Associate invoices with clients and projects
 - **Payment Tracking** - Monitor payment status and webhook processing
+- **Invoice Reports** - Generate detailed invoice reports and analytics
+
+### 🎯 Job Board & Recruitment
+- **Job Posting** - Create and manage job postings with detailed requirements
+- **Public Job Board** - Public-facing job board for candidate applications
+- **Job Categories** - Organize jobs by category (engineering, design, marketing, etc.)
+- **Job Types** - Support for full-time, part-time, contract, internship, freelance
+- **Location Support** - Remote, on-site, and hybrid job locations
+- **Salary Ranges** - Configurable salary ranges with currency support
+- **Application Management** - Track job applications and candidate responses
+- **Job Analytics** - View counts, application rates, and performance metrics
+- **Public Job Sharing** - Share job postings via public links
+
+### 📋 Proposal Templates
+- **Template Creation** - Create reusable proposal templates with variables
+- **Template Categories** - Organize templates by service type
+- **Variable System** - Dynamic content replacement with custom variables
+- **Public Templates** - Share templates publicly for community use
+- **Template Analytics** - Track template usage and effectiveness
+- **Proposal Generation** - Generate client-specific proposals from templates
+- **Template Duplication** - Copy and customize existing templates
+- **Category Filtering** - Filter templates by category and tags
+
+### 👥 Team Management
+- **Team Creation** - Create teams with multiple members and roles
+- **Role Management** - Admin, member, and viewer roles with permissions
+- **Member Invitations** - Invite team members via email
+- **Team Projects** - Associate projects with teams for collaboration
+- **Team Analytics** - Track team performance and project completion
+- **Pro Feature** - Team management available for Pro users only
 
 ### 🚀 PWA Capabilities
 - **Offline Support** - Works without internet connection
@@ -56,6 +90,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **App-like Experience** - Full-screen mode and native app feel
 - **Background Sync** - Automatic data synchronization when online
 - **Push Notifications** - (Coming soon)
+- **Service Worker** - Advanced caching and offline functionality
 
 ### 📋 Task Management
 - **Daily Task Organization** - Organize tasks by day of the week
@@ -76,6 +111,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Project Statistics** - Track completion rates and time spent
 - **Project Sharing** - Share projects with team members
 - **Shared Task Creation** - Allow team members to add tasks to shared projects
+- **Project Analytics** - Detailed project performance metrics
 
 ### 👥 Collaboration Features
 - **Shared Content Panel** - View tasks and projects shared with you
@@ -94,6 +130,15 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Progress Monitoring** - Visual progress indicators and percentages
 - **Time Statistics** - Analytics in task and project views
 
+### 📊 Analytics & Dashboard
+- **Comprehensive Dashboard** - Overview of all business metrics
+- **Task Analytics** - Completion rates, time tracking, and productivity metrics
+- **Project Analytics** - Project performance and team collaboration insights
+- **Client Analytics** - Client engagement and relationship tracking
+- **Company Analytics** - Company performance and verification statistics
+- **Invoice Analytics** - Payment tracking and revenue insights
+- **Real-time Statistics** - Live updates of business metrics
+
 ### 🎨 UI/UX Features
 - **Dark Theme** - Modern dark interface for reduced eye strain
 - **Collapsible Panels** - Customizable layout with collapsible sections
@@ -104,7 +149,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Error Handling** - User-friendly error messages
 - **Limits Display** - Visual indicators for user limits and upgrade prompts
 - **Feedback System** - Built-in feedback collection for user suggestions
-- **Enhanced Navigation** - Dedicated sections for Companies, Clients, and Invoices
+- **Enhanced Navigation** - Dedicated sections for Companies, Clients, Invoices, Teams, Jobs, and Proposals
 - **Keyboard Shortcuts** - (Coming soon)
 - **Drag & Drop** - (Coming soon)
 
@@ -120,6 +165,7 @@ A modern, responsive Progressive Web App (PWA) for task management with comprehe
 - **Routing**: React Router DOM
 - **Icons**: Canvas-generated PNG icons
 - **Testing**: Vitest + Testing Library
+- **E2E Testing**: Playwright
 
 ## 📋 Prerequisites
 
@@ -144,11 +190,11 @@ VITE_API_URL=                    # Backend API URL (empty for relative URLs)
 
 # App Configuration
 VITE_APP_TITLE=PopVia
-VITE_APP_DESCRIPTION=A modern task management application
+VITE_APP_DESCRIPTION=A modern business management application
 
 # PWA Configuration
 VITE_PWA_NAME=PopVia
-VITE_PWA_SHORT_NAME=Tasks
+VITE_PWA_SHORT_NAME=Business
 VITE_PWA_THEME_COLOR=#3182CE
 VITE_PWA_BACKGROUND_COLOR=#1A202C
 
@@ -169,7 +215,7 @@ VITE_SENTRY_DSN=
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd task-dashboard-vite-chakra
+cd PopVia-UI
 
 # Install dependencies
 npm install
@@ -324,8 +370,8 @@ server {
 ```json
 {
   "name": "PopVia",
-  "short_name": "Tasks",
-  "description": "A modern task management application",
+  "short_name": "Business",
+  "description": "A modern business management application",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1A202C",
@@ -393,6 +439,13 @@ src/
 │   ├── SharedView.jsx   # Shared content viewer
 │   ├── LimitsDisplay.jsx # User limits display
 │   ├── FeedbackModal.jsx # Feedback collection
+│   ├── CompanyList.jsx  # Company management
+│   ├── ClientList.jsx   # Client management
+│   ├── InvoiceList.jsx  # Invoice management
+│   ├── TeamList.jsx     # Team management
+│   ├── JobList.jsx      # Job management
+│   ├── PublicJobBoard.jsx # Public job board
+│   ├── ProposalTemplateList.jsx # Proposal templates
 │   └── ...
 ├── views/               # Page components
 │   ├── Login.jsx        # Login page
@@ -403,7 +456,14 @@ src/
 │   └── AuthContext.jsx  # Authentication context
 ├── hooks/               # Custom React hooks
 │   ├── useTasks.js      # Task management hooks
-│   └── useProjects.js   # Project management hooks
+│   ├── useProjects.js   # Project management hooks
+│   ├── useCompanies.js  # Company management hooks
+│   ├── useClients.js    # Client management hooks
+│   ├── useInvoices.js   # Invoice management hooks
+│   ├── useTeams.js      # Team management hooks
+│   ├── useJobs.js       # Job management hooks
+│   ├── useProposalTemplates.js # Proposal template hooks
+│   └── useDashboardData.js # Dashboard data hooks
 ├── services/            # API service layer
 │   └── api.js           # HTTP client and API calls
 ├── assets/              # Static assets
@@ -453,7 +513,7 @@ src/
 - **CORS Handling** - Proper CORS configuration
 
 ### Authentication Flow
-1. User enters credentials
+1. User enters credentials or uses OAuth
 2. Frontend validates input
 3. API call to backend
 4. JWT tokens stored securely
@@ -520,6 +580,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Built with ❤️ for productive task management**
+**Built with ❤️ for productive business management**
 
 *PopVia Frontend - Empowering productivity since 2025*
